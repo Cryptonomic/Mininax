@@ -1,0 +1,40 @@
+$bg-color: #2B2BFF;
+$border-color: red;
+
+
+@font-face {
+  font-family: 'Arcade';
+  src: url('../fonts/arcade-regular.ttf') format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Perfect DOS VGA 437 Win';
+  src: url('../fonts/Perfect-DOS-VGA-437-Win.ttf') format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Perfect DOS VGA 437 Win', sans-serif;
+}
+
+#root {
+  height: 100vh;
+}
