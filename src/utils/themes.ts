@@ -1,12 +1,12 @@
 const themes = {
-  alphanet: {
+  mainnet: {
     mainBgColor: '#2B2BFF',
     fieldBgColor: '#000000',
     searchBgColor: '#ffffff',
     fieldColor: '#ffffff',
     valueColor: '#eeff00'
   },
-  mainnet: {
+  alphanet: {
     mainBgColor: '#000000',
     fieldBgColor: '#00ff66',
     searchBgColor: '#00ff66',

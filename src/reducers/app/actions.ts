@@ -2,9 +2,11 @@ import {
   SET_ITEMS,
   SET_LOADING,
   SET_ERROR,
-  REMOVE_ERROR
+  REMOVE_ERROR,
+  CHANGE_NETWORK
 } from './types';
 
+import { Config } from '../../types';
 
 export function setItemsAction(entity: string, items: any) {
   return {
@@ -32,5 +34,12 @@ export function setErrorAction(error: string, entity: string) {
 export function removeErrorAction() {
   return {
     type: REMOVE_ERROR
+  };
+}
+
+export function changeNetworkAction(config: Config) {
+  return {
+    type: CHANGE_NETWORK,
+    config
   };
 }

@@ -2,7 +2,8 @@ import {
   SET_ITEMS,
   SET_LOADING,
   SET_ERROR,
-  REMOVE_ERROR
+  REMOVE_ERROR,
+  CHANGE_NETWORK
 } from './types';
 import { Config } from '../../types';
 import configs from '../../config';
@@ -40,6 +41,8 @@ export const app = (state = initialState, action) => {
     }
     case REMOVE_ERROR:
       return { ...state, isError: false, error: '' };
+    case CHANGE_NETWORK:
+      return { ...state, selectedConfig: action.config };
   }
   return state;
 };

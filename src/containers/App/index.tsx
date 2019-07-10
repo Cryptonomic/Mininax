@@ -14,7 +14,7 @@ import { Config } from '../../types';
 import themes from '../../utils/themes';
 import { getLoading, getError, getIsError, getConfig } from '../../reducers/app/selectors';
 import { getBlockHashThunk } from '../../reducers/app/thunks';
-import { removeErrorAction, setErrorAction } from '../../reducers/app/actions';
+import { removeErrorAction, setErrorAction, changeNetworkAction } from '../../reducers/app/actions';
 
 import '../../assets/scss/App.scss';
 
@@ -49,6 +49,7 @@ interface OwnProps {
   getHash: (level: number) => string;
   removeError: () => void;
   setError: (error: string) => void;
+  changeNetwork: (config: Config) => void;
 }
 
 type Props = OwnProps & RouteComponentProps;
@@ -92,9 +93,10 @@ class App extends React.Component<Props, States> {
   onRemoveNetworkModal = () => this.setState({isOpenNetworkSelector: false});
   onOpenNetworkModal = () => this.setState({isOpenNetworkSelector: true});
 
-  onChangeNetwork = (config: Config) => {
-    const { selectedConfig, history } = this.props;
+  onChangeNetwork = async (config: Config) => {
+    const { selectedConfig, history, changeNetwork } = this.props;
     if (config.network !== selectedConfig.network) {
+      await changeNetwork(config);
       history.push('/');
     }
     this.setState({isOpenNetworkSelector: false});
@@ -152,7 +154,8 @@ const mapStateToProps = (state: any) => ({
 const mapDispatchToProps = (dispatch: any) => ({
   getHash: (level: number) => dispatch(getBlockHashThunk(level)),
   removeError: () => dispatch(removeErrorAction()),
-  setError: (error: string) => dispatch(setErrorAction(error, ''))
+  setError: (error: string) => dispatch(setErrorAction(error, '')),
+  changeNetwork: (config: Config) => dispatch(changeNetworkAction(config))
 });
 
 export default compose(
