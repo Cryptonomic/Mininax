@@ -64,6 +64,7 @@ const OkBtn = styled.button`
 `;
 
 interface Props {
+  error: string;
   onTry(): void;
 }
 const Error: React.FC<Props> = props => (
@@ -72,7 +73,7 @@ const Error: React.FC<Props> = props => (
       <BorderContainer>
         <ContentContainer>
           <Title>! ERROR !</Title>
-          <ErrTxt>You entered an invalid ID.</ErrTxt>
+          <ErrTxt>{props.error}</ErrTxt>
           <OkBtn>Try Again</OkBtn>
         </ContentContainer>
       </BorderContainer>

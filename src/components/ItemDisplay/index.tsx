@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Container, Title, LinkBtn, SpanIcon,
   MainContainer, FieldLabel, FieldContent, RowContainer,
   LevelLabelContainer, LevelBtn, LevelLabel, CopyImg
 } from './style';
@@ -14,7 +13,7 @@ const options = { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric
 interface Props {
   entity: string;
   item: any;
-  changeLevel(level: string | number, inc: number): void;
+  changeLevel?(level: string | number, inc: number): void;
 }
 
 
@@ -25,13 +24,11 @@ const ItemDisplay: React.FC<Props> = (props) => {
     copyContent(val);
   }
   return (
-    <Container>
-      <Title>{entity}</Title>
       <MainContainer>
         {fields.map((field: Field, index: number) => {
           if (field.name === 'level') {
             return (
-              <RowContainer key={field.name}>
+              <RowContainer key={field.name} isBottom={index === fields.length - 1}>
                 <LevelLabelContainer>
                   <LevelBtn onClick={() => changeLevel(item[field.name], -1)}>{'<'}</LevelBtn>
                   <LevelLabel>Level</LevelLabel>
@@ -41,9 +38,9 @@ const ItemDisplay: React.FC<Props> = (props) => {
               </RowContainer>
             );
           }
-          if (field.name === 'script' || field.name === 'storage') {
+          if (field.name === 'script' || field.name === 'storage' || field.name === 'parameters') {
             return (
-              <RowContainer key={field.name}>
+              <RowContainer key={field.name} isBottom={index === fields.length - 1}>
                 <FieldLabel isBar={index === 0 || index === fields.length - 1}>
                   {field.displayName}
                   <CopyImg src={copySvg} onClick={() => onCopy(item[field.name])} />
@@ -55,7 +52,7 @@ const ItemDisplay: React.FC<Props> = (props) => {
 
           if (field.name === 'timestamp') {
             return (
-              <RowContainer key={field.name}>
+              <RowContainer key={field.name} isBottom={index === fields.length - 1}>
                 <FieldLabel>{field.displayName}</FieldLabel>
                 <FieldContent>{new Intl.DateTimeFormat('en-US', options).format(item[field.name])}</FieldContent>
               </RowContainer>
@@ -63,17 +60,13 @@ const ItemDisplay: React.FC<Props> = (props) => {
           }
 
           return (
-            <RowContainer key={field.name}>
+            <RowContainer key={field.name} isBottom={index === fields.length - 1}>
               <FieldLabel isBar={index === 0 || index === fields.length - 1}>{field.displayName}</FieldLabel>
               <FieldContent>{item[field.name]}</FieldContent>
             </RowContainer>
           );
         })}
       </MainContainer>
-      <LinkBtn>
-        <SpanIcon>⮑</SpanIcon> LINK to all Transactions
-      </LinkBtn>
-    </Container>
   );
 };
 

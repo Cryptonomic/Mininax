@@ -60,10 +60,11 @@ interface Props {
   network: string;
   onOpenNetworkSelector(): void;
   onSearch(val: string): void;
+  gotoHome(): void;
 }
 
 const Footer: React.FC<Props> = props => {
-  const { network, onSearch, onOpenNetworkSelector } = props;
+  const { network, onSearch, onOpenNetworkSelector, gotoHome } = props;
   const [searchVal, setSearchVal] = React.useState('');
 
   function onChange(e) {
@@ -91,7 +92,7 @@ const Footer: React.FC<Props> = props => {
         <SearchImg src={searchSvg} />
       </SearhBtn>
       <ChangeBtn onClick={onOpenNetworkSelector}>{network} <UpDown>⇵</UpDown></ChangeBtn>
-      <CryptoImg src={cryptoLogo} />
+      <CryptoImg src={cryptoLogo} onClick={gotoHome} />
     </Container>
   );
 };

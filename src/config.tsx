@@ -12,7 +12,7 @@ const configs: Config[] = [
     platform: 'tezos',
     network: 'mainnet',
     displayName: 'Tezos Mainnet',
-    url: 'https://conseil-prod2.cryptonomic-infra.tech:443',
+    url: 'https://conseil-prod.cryptonomic-infra.tech:443',
     apiKey: 'galleon'
   }
 ]

@@ -26,9 +26,9 @@ const fields = {
     {name: 'script', displayName: 'Script'},
     {name: 'storage', displayName: 'Storage'},
   ],
-  transaction: [
+  operation: [
     {name: 'operation_group_hash', displayName: 'Operation Hash'},
-    {name: 'block_hash', displayName: 'Black Hash'},
+    {name: 'block_hash', displayName: 'Block Hash'},
     {name: 'source', displayName: 'From'},
     {name: 'destination', displayName: 'To'},
     {name: 'amount', displayName: 'Amount'},
@@ -39,10 +39,10 @@ const fields = {
   ]
 };
 
-export function getQueryForTransactions(operationid: string) {
+export function getQueryForOperations(operationid: string) {
   let query = ConseilQueryBuilder.blankQuery();
   query = ConseilQueryBuilder.addPredicate(query, 'operation_group_hash', ConseilOperator.EQ, [operationid], false);
-  query = ConseilQueryBuilder.addPredicate(query, 'kind', ConseilOperator.EQ, ['transaction'], false);
+  query = ConseilQueryBuilder.addPredicate(query, 'kind', ConseilOperator.IN, ['transaction', 'activate_account', 'reveal', 'delegation', 'origination'], false);
   return query;
 }
 

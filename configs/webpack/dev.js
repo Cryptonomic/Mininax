@@ -18,7 +18,7 @@ module.exports = merge(commonConfig, {
   },
   devServer: {
     port: 8200,
-    hot: true, // enable HMR on the server
+    historyApiFallback: true
   },
   devtool: 'inline-source-map',
   plugins: [
