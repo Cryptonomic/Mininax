@@ -29,6 +29,7 @@ const fields = {
   operation: {
     default: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
+      {name: 'kind', displayName: 'Kind'},
       {name: 'block_hash', displayName: 'Block Hash'},
       {name: 'source', displayName: 'From'},
       {name: 'destination', displayName: 'To'},
