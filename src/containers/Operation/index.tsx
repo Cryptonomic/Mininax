@@ -73,7 +73,7 @@ class Operation extends React.Component<Props, States> {
           ) :
           (<Title>{title}</Title>)
         }
-        {operations && <ItemDisplay entity={entity} item={operations[count]} />}
+        {operations && <ItemDisplay entity={entity} kind={operations[count].kind} item={operations[count]} />}
       </Container>
     );
   }

@@ -26,17 +26,37 @@ const fields = {
     {name: 'script', displayName: 'Script'},
     {name: 'storage', displayName: 'Storage'},
   ],
-  operation: [
-    {name: 'operation_group_hash', displayName: 'Operation Hash'},
-    {name: 'block_hash', displayName: 'Block Hash'},
-    {name: 'source', displayName: 'From'},
-    {name: 'destination', displayName: 'To'},
-    {name: 'amount', displayName: 'Amount'},
-    {name: 'fee', displayName: 'Fee'},
-    {name: 'consumed_gas', displayName: 'Gas Consumed'},
-    {name: 'parameters', displayName: 'Parameter'},
-    {name: 'status', displayName: 'Status'}
-  ]
+  operation: {
+    default: [
+      {name: 'operation_group_hash', displayName: 'Operation Hash'},
+      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'source', displayName: 'From'},
+      {name: 'destination', displayName: 'To'},
+      {name: 'amount', displayName: 'Amount'},
+      {name: 'fee', displayName: 'Fee'},
+      {name: 'consumed_gas', displayName: 'Gas Consumed'},
+      {name: 'parameters', displayName: 'Parameter'},
+      {name: 'status', displayName: 'Status'}
+    ],
+    'activate_account': [
+      {name: 'operation_group_hash', displayName: 'Operation Hash'},
+      {name: 'kind', displayName: 'Kind'},
+      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'pkh', displayName: 'Account ID'},
+      {name: 'secret', displayName: 'Secret'},
+      {name: 'status', displayName: 'Status'}
+    ],
+    reveal: [
+      {name: 'operation_group_hash', displayName: 'Operation Hash'},
+      {name: 'kind', displayName: 'Kind'},
+      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'source', displayName: 'Account ID'},
+      {name: 'public_key', displayName: 'Public Key'},
+      {name: 'fee', displayName: 'Fee'},
+      {name: 'consumed_gas', displayName: 'Gas Consumed'},
+      {name: 'status', displayName: 'Status'}
+    ]
+  }
 };
 
 export function getQueryForOperations(operationid: string) {
@@ -59,11 +79,19 @@ export function convertFromUtezToTez(amountInUtez: number) {
   return `${tezAmount} XTZ`;
 }
 
-export function getFields(key: string) {
+export function getFields(key: string, kind?: string) {
   if (!key) {
     return [];
   }
-  return fields[key];
+  if (key !== 'operation') {
+    return fields[key];
+  }
+
+  if (fields[key][kind]) {
+    return fields[key][kind];
+  }
+
+  return fields[key]['default'];
 }
 
 export function copyContent(val: string) {

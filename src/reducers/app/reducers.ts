@@ -10,6 +10,7 @@ import configs from '../../config';
 
 
 export interface AppState {
+  entity: string;
   isLoading: boolean;
   items: any;
   configs: Config[];
@@ -19,6 +20,7 @@ export interface AppState {
 }
 
 let initialState: AppState = {
+  entity: '',
   isLoading: false,
   items: {},
   configs,
@@ -31,7 +33,7 @@ export const app = (state = initialState, action) => {
   switch (action.type) {
     case SET_ITEMS: {
       const items = { ...state.items, [action.entity]: action.items };
-      return { ...state, items, isLoading: false };
+      return { ...state, items, entity: action.entity, isLoading: false };
     }
     case SET_LOADING:
       return { ...state, isLoading: action.isLoading };

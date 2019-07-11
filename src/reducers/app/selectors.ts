@@ -27,3 +27,8 @@ export const getConfig = createSelector(
   getAppState,
   apps => apps.selectedConfig
 );
+
+export const getEntity = createSelector(
+  getAppState,
+  apps => apps.entity
+);

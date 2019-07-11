@@ -4,7 +4,7 @@ import { match, RouteComponentProps, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ItemDisplay from '../../components/ItemDisplay';
 import { getBlockThunk, getBlockHashThunk, initLoadThunk } from '../../reducers/app/thunks';
-import { getItems, getConfig } from '../../reducers/app/selectors';
+import { getItems } from '../../reducers/app/selectors';
 import { Container, Title, LinkBtn } from '../style';
 import { Config } from '../../types';
 
@@ -16,7 +16,6 @@ interface MatchParams {
 
 interface OwnProps {
   items: any;
-  selectedConfig: Config;
   match?: match<MatchParams>;
   getBlock: (id: string) => void;
   initLoad: () => void;
@@ -37,18 +36,15 @@ class Block extends React.Component<Props, {}> {
   }
 
   componentDidUpdate(prevProps) {
-    const { match, getBlock, initLoad, selectedConfig } = this.props;
+    const { match, getBlock } = this.props;
     if (match.params.id && match.params.id !== prevProps.match.params.id) {
       getBlock(match.params.id);
-    } else if (selectedConfig.network !== prevProps.selectedConfig.network) {
-      initLoad();
     }
   }
 
   getHashByLevel = async (level: number, inc: number) => {
     const { getHash, history } = this.props;
     const hash = await getHash(level + inc);
-    console.log('hash', hash);
     if (hash) {
       history.push(`/blocks/${hash}`);
     }
@@ -71,8 +67,7 @@ class Block extends React.Component<Props, {}> {
 }
 
 const mapStateToProps = (state: any) => ({
-  items: getItems(state),
-  selectedConfig: getConfig(state)
+  items: getItems(state)
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

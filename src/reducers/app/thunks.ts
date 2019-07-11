@@ -74,7 +74,6 @@ export const getOperationsThunk = (id: string) => async (dispatch, state) => {
     console.error('transactions', e);
     return [];
   });
-  console.log('transactions', transactions);
   if (transactions.length > 0) {
     const item = transactions.map(transaction => {
       return {

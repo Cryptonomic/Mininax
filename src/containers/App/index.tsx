@@ -12,8 +12,8 @@ import Error from '../../components/Error';
 import NetworkSelector from '../../components/NetworkSelector';
 import { Config } from '../../types';
 import themes from '../../utils/themes';
-import { getLoading, getError, getIsError, getConfig } from '../../reducers/app/selectors';
-import { getBlockHashThunk } from '../../reducers/app/thunks';
+import { getLoading, getError, getIsError, getConfig, getEntity } from '../../reducers/app/selectors';
+import { getBlockHashThunk, initLoadThunk } from '../../reducers/app/thunks';
 import { removeErrorAction, setErrorAction, changeNetworkAction } from '../../reducers/app/actions';
 
 import '../../assets/scss/App.scss';
@@ -34,6 +34,7 @@ const Header = styled.div`
   color: white;
   line-height: 35px;
   letter-spacing: 3px;
+  cursor: pointer;
 `;
 const MainContainer = styled.div`
   padding: 0 35px;
@@ -42,6 +43,7 @@ const MainContainer = styled.div`
 `;
 
 interface OwnProps {
+  entity: string;
   isLoading: boolean;
   isError: boolean;
   error: string;
@@ -50,6 +52,7 @@ interface OwnProps {
   removeError: () => void;
   setError: (error: string) => void;
   changeNetwork: (config: Config) => void;
+  initLoad: () => void;
 }
 
 type Props = OwnProps & RouteComponentProps;
@@ -94,17 +97,20 @@ class App extends React.Component<Props, States> {
   onOpenNetworkModal = () => this.setState({isOpenNetworkSelector: true});
 
   onChangeNetwork = async (config: Config) => {
-    const { selectedConfig, history, changeNetwork } = this.props;
+    const { selectedConfig, changeNetwork } = this.props;
     if (config.network !== selectedConfig.network) {
       await changeNetwork(config);
-      history.push('/');
+      this.gotoHome();
     }
     this.setState({isOpenNetworkSelector: false});
   }
 
   gotoHome = () => {
-    const { history } = this.props;
+    const { history, entity, initLoad } = this.props;
     history.push('/');
+    if (entity === 'block') {
+      initLoad();
+    }
   }
 
   render() {
@@ -113,10 +119,10 @@ class App extends React.Component<Props, States> {
     return (
       <ThemeProvider theme={themes[selectedConfig.network]}>
         <Container>
-          <Header>MININAX</Header>
+          <Header onClick={this.gotoHome}>MININAX</Header>
           <MainContainer>
             <Switch>
-              <Route exact path='/' component={Block} />
+              <Route exact path='/' component={Block} />} />
               <Route exact path='/blocks/:id' component={Block} />
               <Route exact path='/accounts/:id' component={Account} />
               <Route exact path='/operations/:id' component={Operation} />
@@ -148,14 +154,16 @@ const mapStateToProps = (state: any) => ({
   isLoading: getLoading(state),
   error: getError(state),
   isError: getIsError(state),
-  selectedConfig: getConfig(state)
+  selectedConfig: getConfig(state),
+  entity: getEntity(state)
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
   getHash: (level: number) => dispatch(getBlockHashThunk(level)),
   removeError: () => dispatch(removeErrorAction()),
   setError: (error: string) => dispatch(setErrorAction(error, '')),
-  changeNetwork: (config: Config) => dispatch(changeNetworkAction(config))
+  changeNetwork: (config: Config) => dispatch(changeNetworkAction(config)),
+  initLoad: () => dispatch(initLoadThunk())
 });
 
 export default compose(

@@ -36,6 +36,7 @@ const CryptoImg = styled.img`
   margin-left: 35px;
   width: 55px;
   height: 55px;
+  cursor: pointer;
 `;
 
 const ChangeBtn = styled.button`

@@ -12,14 +12,15 @@ const options = { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric
 
 interface Props {
   entity: string;
+  kind?: string;
   item: any;
   changeLevel?(level: string | number, inc: number): void;
 }
 
 
 const ItemDisplay: React.FC<Props> = (props) => {
-  const { entity, item, changeLevel } = props;
-  const fields = getFields(entity);
+  const { entity, kind, item, changeLevel } = props;
+  const fields = getFields(entity, kind);
   function onCopy(val: string) {
     copyContent(val);
   }
