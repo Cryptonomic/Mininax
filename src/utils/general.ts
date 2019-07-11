@@ -27,7 +27,7 @@ const fields = {
     {name: 'storage', displayName: 'Storage'},
   ],
   operation: {
-    default: [
+    transaction: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
       {name: 'kind', displayName: 'Kind'},
       {name: 'block_hash', displayName: 'Block Hash'},
@@ -55,6 +55,29 @@ const fields = {
       {name: 'public_key', displayName: 'Public Key'},
       {name: 'fee', displayName: 'Fee'},
       {name: 'consumed_gas', displayName: 'Gas Consumed'},
+      {name: 'status', displayName: 'Status'}
+    ],
+    delegation: [
+      {name: 'operation_group_hash', displayName: 'Operation Hash'},
+      {name: 'kind', displayName: 'Kind'},
+      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'source', displayName: 'Account ID'},
+      {name: 'delegate', displayName: 'Delegate'},
+      {name: 'fee', displayName: 'Fee'},
+      {name: 'consumed_gas', displayName: 'Gas Consumed'},
+      {name: 'status', displayName: 'Status'}
+    ],
+    origination: [
+      {name: 'operation_group_hash', displayName: 'Operation Hash'},
+      {name: 'kind', displayName: 'Kind'},
+      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'source', displayName: 'Account ID'},
+      {name: 'delegate', displayName: 'Delegate'},
+      {name: 'amount', displayName: 'Amount'},
+      {name: 'fee', displayName: 'Fee'},
+      {name: 'consumed_gas', displayName: 'Gas Consumed'},
+      {name: 'script', displayName: 'Script'},
+      {name: 'storage', displayName: 'Storage'},
       {name: 'status', displayName: 'Status'}
     ]
   }
@@ -92,7 +115,7 @@ export function getFields(key: string, kind?: string) {
     return fields[key][kind];
   }
 
-  return fields[key]['default'];
+  return [];
 }
 
 export function copyContent(val: string) {

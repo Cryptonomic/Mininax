@@ -58,20 +58,19 @@ class Operation extends React.Component<Props, States> {
     const { count } = this.state;
     const operations = items[entity];
     const total = operations ? operations.length : 0;
-    const title = operations ? Titles[operations[0].kind] : 'Transaction';
     return (
       <Container>
         {total > 1 ?
           (
             <TitleContainer>
-              <Title>{title} ({count + 1}/{total})</Title>
+              <Title>Operation ({count + 1}/{total})</Title>
               <TitleBtnContainer>
                 <TransactionBtn disabled={count === 0} onClick={() => this.changeCount(count - 1)}>{'<'}</TransactionBtn>
                 <TransactionBtn disabled={count === total - 1} onClick={() => this.changeCount(count + 1)}>{'>'}</TransactionBtn>
               </TitleBtnContainer>
             </TitleContainer>
           ) :
-          (<Title>{title}</Title>)
+          (<Title>Operation</Title>)
         }
         {operations && <ItemDisplay entity={entity} kind={operations[count].kind} item={operations[count]} />}
       </Container>
