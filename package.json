@@ -1,7 +1,7 @@
 {
   "name": "mininax",
   "version": "0.1.0",
-  "description": "",
+  "description": "mininax",
   "author": "Cryptonomic",
   "license": "GPL-3.0",
   "homepage": "",
@@ -14,7 +14,7 @@
     "clean-dist": "rm -f -r -d dist",
     "lint": "tslint './src/**/*.ts*' --format stylish --force",
     "start": "npm run start-dev",
-    "start-dev": "webpack-dev-server --config=configs/webpack/dev.js",
+    "start-dev": "webpack-dev-server --config=configs/webpack/dev.js --open",
     "start-prod": "npm run build && node express.js",
     "test": "jest --watch --coverage --config=configs/jest.json"
   },
@@ -40,7 +40,6 @@
     "image-webpack-loader": "^5.0.0",
     "jest": "^24.8.0",
     "node-sass": "^4.12.0",
-    "react-hot-loader": "^4.11.1",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
     "tslint": "^5.18.0",
@@ -53,9 +52,9 @@
     "webpack-merge": "^4.2.1"
   },
   "dependencies": {
-    "@hot-loader/react-dom": "^16.8.6",
     "conseiljs": "^0.2.6",
     "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "react-redux": "^7.1.0",
     "react-router-dom": "^5.0.1",
     "redux": "^4.0.3",
