@@ -1,28 +1,12 @@
 import React from 'react';
-import { match } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ItemDisplay from '../../components/ItemDisplay';
-import { getOperationsThunk } from '../../reducers/app/thunks';
 import { getItems } from '../../reducers/app/selectors';
 import { Container, Title, TransactionBtn, TitleBtnContainer, TitleContainer } from '../style';
 
 const entity = 'operation';
-const Titles = {
-  transaction: 'Transaction',
-  'activate_account': 'Activate Account',
-  reveal: 'Reveal',
-  delegation: 'Delegation',
-  origination: 'Origination'
-};
-
-interface MatchParams {
-  id: string;
-}
-
 interface Props {
   items: any;
-  match?: match<MatchParams>;
-  getOperation: (id: string) => void;
 }
 
 interface States {
@@ -35,18 +19,6 @@ class Operation extends React.Component<Props, States> {
     this.state = {
       count: 0
     };
-    const { match, getOperation } = props;
-    const id = match.params.id;
-    if (id) {
-      getOperation(id);
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const { match, getOperation } = this.props;
-    if (match.params.id && match.params.id !== prevProps.match.params.id) {
-      getOperation(match.params.id);
-    }
   }
 
   changeCount = (count: number) => {
@@ -82,11 +54,7 @@ const mapStateToProps = (state: any) => ({
   items: getItems(state)
 });
 
-const mapDispatchToProps = (dispatch: any) => ({
-  getOperation: (id: string) => dispatch(getOperationsThunk(id))
-});
-
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  null
 )(Operation);

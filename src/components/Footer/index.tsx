@@ -11,7 +11,7 @@ const Container = styled.div`
 `;
 const Input = styled.input`
   height: 60px;
-  width: 600px;
+  width: 800px;
   border-radius: 10px;
   padding: 20px 24px;
   color: #000000;
@@ -64,38 +64,70 @@ interface Props {
   gotoHome(): void;
 }
 
-const Footer: React.FC<Props> = props => {
-  const { network, onSearch, onOpenNetworkSelector, gotoHome } = props;
-  const [searchVal, setSearchVal] = React.useState('');
+interface States {
+  isFocus: boolean;
+  searchVal: string;
+}
 
-  function onChange(e) {
-    setSearchVal(e.target.value);
+class Footer extends React.Component<Props, States> {
+  textInput: React.RefObject<HTMLInputElement> = React.createRef();
+  constructor(props) {
+    super(props);
+    this.state = {
+      isFocus: false,
+      searchVal: ''
+    };
   }
 
-  function search() {
+  onChange = (e) => {
+    const searchVal = e.target.value.replace(/ /g, '');
+    this.setState({searchVal});
+  }
+
+  search = () => {
+    const { onSearch } = this.props;
+    const { searchVal } = this.state;
     if (searchVal !== '') {
       onSearch(searchVal);
     }
   }
-  return (
-    <Container>
-      <Input
-        value={searchVal}
-        placeholder='SEARCH...>>> BLOCK / TRANSACTION ID / ACCOUNT ID'
-        onChange={onChange}
-        onKeyPress= { e => {
-          if (e.key === 'Enter') {
-            search();
-          }
-        }}
-      />
-      <SearhBtn onClick={search}>
-        <SearchImg src={searchSvg} />
-      </SearhBtn>
-      <ChangeBtn onClick={onOpenNetworkSelector}>{network} <UpDown>⇵</UpDown></ChangeBtn>
-      <CryptoImg src={cryptoLogo} onClick={gotoHome} />
-    </Container>
-  );
+
+  focusSearch = () => {
+    const { isFocus } = this.state;
+    if (!isFocus) {
+      setTimeout(() => {
+        this.textInput.current.focus();
+      });
+    }
+  }
+
+  render() {
+    const { network, onOpenNetworkSelector, gotoHome } = this.props;
+    const { searchVal } = this.state;
+
+    return (
+      <Container>
+        <Input
+          ref={this.textInput}
+          value={searchVal}
+          placeholder="Press 's' and search by block ID, operation ID, account ID or block level"
+          onChange={this.onChange}
+          onBlur={() => this.setState({isFocus: false})}
+          onFocus={() => this.setState({isFocus: true})}
+          onKeyPress= { e => {
+            if (e.key === 'Enter') {
+              this.search();
+            }
+          }}
+        />
+        <SearhBtn onClick={this.search}>
+          <SearchImg src={searchSvg} />
+        </SearhBtn>
+        <ChangeBtn onClick={onOpenNetworkSelector}>{network} <UpDown>⇵</UpDown></ChangeBtn>
+        <CryptoImg src={cryptoLogo} onClick={gotoHome} />
+      </Container>
+    );
+  }
 };
 
 export default Footer;

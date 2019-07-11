@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Route, Redirect, Switch, RouteComponentProps, withRouter } from 'react-router-dom';
+import { Route, Redirect, Switch, RouteComponentProps, withRouter, match } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import Block from '../Block';
 import Account from '../Account';
@@ -13,7 +13,7 @@ import NetworkSelector from '../../components/NetworkSelector';
 import { Config } from '../../types';
 import themes from '../../utils/themes';
 import { getLoading, getError, getIsError, getConfig, getEntity } from '../../reducers/app/selectors';
-import { getBlockHashThunk, initLoadThunk } from '../../reducers/app/thunks';
+import { getBlockHashThunk, initLoadThunk, getBlockThunk, getAccountThunk, getOperationsThunk } from '../../reducers/app/thunks';
 import { removeErrorAction, setErrorAction, changeNetworkAction } from '../../reducers/app/actions';
 
 import '../../assets/scss/App.scss';
@@ -28,13 +28,16 @@ const Container = styled.div`
   background-color: ${props => props.theme.mainBgColor};
 `;
 const Header = styled.div`
+  padding: 45px 45px 30px 45px;
+`;
+const HeaderTitle = styled.div`
   font-family: 'Arcade', sans-serif;
   font-size: 60px;
-  padding: 45px 45px 30px 45px;
   color: white;
   line-height: 35px;
   letter-spacing: 3px;
   cursor: pointer;
+  display: inline-block;
 `;
 const MainContainer = styled.div`
   padding: 0 35px;
@@ -42,17 +45,25 @@ const MainContainer = styled.div`
   margin-bottom: 40px;
 `;
 
+interface MatchParams {
+  id: string;
+}
+
 interface OwnProps {
   entity: string;
   isLoading: boolean;
   isError: boolean;
   error: string;
   selectedConfig: Config;
+  match?: match<MatchParams>;
   getHash: (level: number) => string;
   removeError: () => void;
   setError: (error: string) => void;
   changeNetwork: (config: Config) => void;
-  initLoad: () => void;
+  initLoad: () => any;
+  getBlock: (id: string) => any;
+  getOperation: (id: string) => any;
+  getAccount: (id: string) => any;
 }
 
 type Props = OwnProps & RouteComponentProps;
@@ -62,30 +73,50 @@ interface States {
 }
 
 class App extends React.Component<Props, States> {
+  footerRef: any = null;
   constructor(props) {
     super(props);
     this.state = {
       isOpenNetworkSelector: false
     };
+    const { initLoad, match } = this.props;
+    const id = match.params.id;
+    if (id) {
+      this.onSearchById(id);
+    } else {
+      initLoad();
+    }
+
+    this.footerRef = React.createRef();
   }
 
   onSearchById = async (val: string) => {
     const firstChar = val[0].toLowerCase();
     const twoChars = val.substring(0, 2).toLowerCase();
-    const { history, getHash, setError } = this.props;
+    const { history, getHash, setError, getBlock, getAccount, getOperation } = this.props;
+    let item = null;
+    let route = '';
     if (firstChar === 'b') {
-      history.push(`/blocks/${val}`);
+      item = await getBlock(val);
+      route = `/blocks/${val}`;
     } else if (firstChar === 'o') {
-      history.push(`/operations/${val}`);
+      item = await getOperation(val);
+      route = `/operations/${val}`;
     } else if (twoChars === 'tz' || twoChars === 'kt') {
-      history.push(`/accounts/${val}`);
+      item = await getAccount(val);
+      route = `/accounts/${val}`;
     } else if (Number(val)) {
       const hash = await getHash(Number(val));
       if (hash) {
-        history.push(`/blocks/${hash}`);
+        item = await getBlock(val);
+        route = `/blocks/${hash}`;
       }
     } else {
       setError(InvalidId);
+    }
+
+    if (item) {
+      history.push(route);
     }
   }
 
@@ -106,10 +137,14 @@ class App extends React.Component<Props, States> {
   }
 
   gotoHome = () => {
-    const { history, entity, initLoad } = this.props;
+    const { history, initLoad } = this.props;
     history.push('/');
-    if (entity === 'block') {
-      initLoad();
+    initLoad();
+  }
+
+  onKeyEvent = (keyVal) => {
+    if (keyVal.toLowerCase() === 's') {
+      this.footerRef.current.focusSearch();
     }
   }
 
@@ -118,11 +153,13 @@ class App extends React.Component<Props, States> {
     const { isOpenNetworkSelector } = this.state;
     return (
       <ThemeProvider theme={themes[selectedConfig.network]}>
-        <Container>
-          <Header onClick={this.gotoHome}>MININAX</Header>
+        <Container tabIndex={0} onKeyPress={event => this.onKeyEvent(event.key)}>
+          <Header>
+            <HeaderTitle onClick={this.gotoHome}>MININAX</HeaderTitle>
+          </Header>
           <MainContainer>
             <Switch>
-              <Route exact path='/' component={Block} />} />
+              <Route exact path='/' component={Block} />
               <Route exact path='/blocks/:id' component={Block} />
               <Route exact path='/accounts/:id' component={Account} />
               <Route exact path='/operations/:id' component={Operation} />
@@ -130,6 +167,7 @@ class App extends React.Component<Props, States> {
             </Switch>
           </MainContainer>
           <Footer
+            ref={this.footerRef}
             onSearch={this.onSearchById}
             network={selectedConfig.displayName}
             onOpenNetworkSelector={this.onOpenNetworkModal}
@@ -163,7 +201,10 @@ const mapDispatchToProps = (dispatch: any) => ({
   removeError: () => dispatch(removeErrorAction()),
   setError: (error: string) => dispatch(setErrorAction(error, '')),
   changeNetwork: (config: Config) => dispatch(changeNetworkAction(config)),
-  initLoad: () => dispatch(initLoadThunk())
+  initLoad: () => dispatch(initLoadThunk()),
+  getBlock: (id: string) => dispatch(getBlockThunk(id)),
+  getOperation: (id: string) => dispatch(getOperationsThunk(id)),
+  getAccount: (id: string) => dispatch(getAccountThunk(id))
 });
 
 export default compose(

@@ -8,7 +8,7 @@ import { getFields, copyContent } from '../../utils/general';
 import { Field } from '../../types';
 import copySvg from '../../assets/img/copy-yellow.svg';
 
-const options = { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', timeZone: 'UTC', timeZoneName: 'short' };
+const options = { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', timeZoneName: 'short' };
 
 interface Props {
   entity: string;
@@ -55,7 +55,7 @@ const ItemDisplay: React.FC<Props> = (props) => {
             return (
               <RowContainer key={field.name} isBottom={index === fields.length - 1}>
                 <FieldLabel>{field.displayName}</FieldLabel>
-                <FieldContent>{new Intl.DateTimeFormat('en-US', options).format(item[field.name])}</FieldContent>
+                <FieldContent>{new Intl.DateTimeFormat('default', options).format(item[field.name])}</FieldContent>
               </RowContainer>
             );
           }

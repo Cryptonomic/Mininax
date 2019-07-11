@@ -38,8 +38,7 @@ export const app = (state = initialState, action) => {
     case SET_LOADING:
       return { ...state, isLoading: action.isLoading };
     case SET_ERROR: {
-      const items = action.entity ? { ...state.items, [action.entity]: null } : { ...state.items };
-      return { ...state, isError: true, error: action.error, isLoading: false, items };
+      return { ...state, isError: true, error: action.error, isLoading: false };
     }
     case REMOVE_ERROR:
       return { ...state, isError: false, error: '' };

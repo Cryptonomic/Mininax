@@ -36,11 +36,14 @@ export const getBlockThunk = (id: string) => async (dispatch, state) => {
         'baker_priority': 'Coming soon'
       };
       dispatch(setItemsAction(entity, item));
+      return item;
     } else {
       dispatch(setErrorAction(NoAvaialbe, entity));
+      return '';
     }
   } else {
     dispatch(setErrorAction(InvalidId, entity));
+    return '';
   }
 };
 
@@ -59,8 +62,10 @@ export const getAccountThunk = (id: string) => async (dispatch, state) => {
       balance: convertFromUtezToTez(account[0].balance)
     };
     dispatch(setItemsAction(entity, item));
+    return item;
   } else {
     dispatch(setErrorAction(InvalidId, entity));
+    return '';
   }
 };
 
@@ -84,8 +89,10 @@ export const getOperationsThunk = (id: string) => async (dispatch, state) => {
       };
     });
     dispatch(setItemsAction(entity, item));
+    return item;
   } else {
     dispatch(setErrorAction(InvalidId, entity));
+    return '';
   }
 };
 
@@ -110,9 +117,10 @@ export const initLoadThunk = () => async (dispatch, state) => {
     return [];
   });
   if (head.length > 0) {
-    dispatch(getBlockThunk(head[0].hash));
+    return dispatch(getBlockThunk(head[0].hash));
   } else {
     dispatch(setErrorAction(NoAvaialbe, 'block'));
+    return '';
   }
 };
 

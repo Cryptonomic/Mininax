@@ -5,7 +5,7 @@ const fields = {
     {name: 'hash', displayName: 'Hash'},
     {name: 'predecessor', displayName: 'Predecessor'},
     {name: 'level', displayName: 'Level'},
-    {name: 'timestamp', displayName: 'TimeStamp'},
+    {name: 'timestamp', displayName: 'Timestamp'},
     {name: 'chain_id', displayName: 'Chain ID'},
     {name: 'protocol', displayName: 'Protocol'},
     {name: 'consumed_gas', displayName: 'Consumed gas'},
