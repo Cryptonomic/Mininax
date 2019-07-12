@@ -199,6 +199,6 @@ export const shareAccountBakedBlocksLinkThunk = (id: string) => async (dispatch,
 export const shareAccountDepositsLinkThunk = (id: string) => async (dispatch, state) => {
   const { selectedConfig } = state().app;
   const query = getQueryForDepositsAndRewards(id);
-  openSharedUrl(query, selectedConfig.displayName, 'blocks');
+  openSharedUrl(query, selectedConfig.displayName, 'balance_updates');
 };
 

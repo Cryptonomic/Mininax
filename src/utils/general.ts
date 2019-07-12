@@ -27,7 +27,7 @@ const fields = {
     {name: 'script', displayName: 'Script'},
     {name: 'storage', displayName: 'Storage'},
     {name: 'baker_deactivated', displayName: 'Active Baker?'},
-    {name: 'baker_balance', displayName: 'Snapshotted balance'},
+    {name: 'baker_balance', displayName: 'Snapshot balance'},
     {name: 'baker_delegated_balance', displayName: 'Delegated balance'},
     {name: 'baker_frozen_balance', displayName: 'Frozen balance'},
     {name: 'baker_staking_balance', displayName: 'Staking balance'},
