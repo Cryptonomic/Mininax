@@ -162,6 +162,17 @@ class App extends React.Component<Props, States> {
     }
   }
 
+  goToBlockByLevel = async (level: number) => {
+    const { getHash, history, getBlock, selectedConfig } = this.props;
+    const hash = await getHash(level);
+    if (hash) {
+      const block = await getBlock(hash);
+      if (block) {
+        history.push(`/${selectedConfig.network}/blocks/${hash}`);
+      }
+    }
+  }
+
   render() {
     const { isLoading, isError, error, selectedConfig } = this.props;
     const { isOpenNetworkSelector } = this.state;
@@ -173,10 +184,10 @@ class App extends React.Component<Props, States> {
           </Header>
           <MainContainer>
             <Switch>
-              <Route exact path='/' component={Block} />
-              <Route exact path='/:network/blocks/:id' component={Block} />
-              <Route exact path='/:network/accounts/:id' component={Account} />
-              <Route exact path='/:network/operations/:id' component={Operation} />
+              <Route exact path='/' render={props => <Block goToDetail={this.onSearchById} goToBlock={this.goToBlockByLevel} {...props} />} />
+              <Route exact path='/:network/blocks/:id' render={props => <Block goToDetail={this.onSearchById} goToBlock={this.goToBlockByLevel} {...props} />} />
+              <Route exact path='/:network/accounts/:id' render={(props) => <Account goToDetail={this.onSearchById} {...props} />} />
+              <Route exact path='/:network/operations/:id' render={(props) => <Operation goToDetail={this.onSearchById} {...props} />} />
               <Redirect to='/' push/>
             </Switch>
           </MainContainer>
