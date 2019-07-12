@@ -62,6 +62,13 @@ export const LinkBtn = styled.div`
   ${TitleLinkCss}
 `;
 
+export const AccountBtn = styled.div`
+  width: 485px;
+  cursor: pointer;
+  margin-top: 15px;
+  ${TitleLinkCss}
+`;
+
 export const SpanIcon = styled.span`
   font-size: 13px;
   vertical-align: middle;

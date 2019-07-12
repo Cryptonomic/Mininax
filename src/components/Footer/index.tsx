@@ -61,7 +61,6 @@ interface Props {
   network: string;
   onOpenNetworkSelector(): void;
   onSearch(val: string): void;
-  gotoHome(): void;
 }
 
 interface States {
@@ -77,6 +76,10 @@ class Footer extends React.Component<Props, States> {
       isFocus: false,
       searchVal: ''
     };
+  }
+
+  componentDidMount() {
+    this.textInput.current.focus();
   }
 
   onChange = (e) => {
@@ -97,12 +100,17 @@ class Footer extends React.Component<Props, States> {
     if (!isFocus) {
       setTimeout(() => {
         this.textInput.current.focus();
+        this.setState({searchVal: ''});
       });
     }
   }
 
+  openCrypto = () => {
+    window.open('https://cryptonomic.tech/', '_blank');
+  }
+
   render() {
-    const { network, onOpenNetworkSelector, gotoHome } = this.props;
+    const { network, onOpenNetworkSelector } = this.props;
     const { searchVal } = this.state;
 
     return (
@@ -124,10 +132,10 @@ class Footer extends React.Component<Props, States> {
           <SearchImg src={searchSvg} />
         </SearhBtn>
         <ChangeBtn onClick={onOpenNetworkSelector}>{network} <UpDown>⇵</UpDown></ChangeBtn>
-        <CryptoImg src={cryptoLogo} onClick={gotoHome} />
+        <CryptoImg src={cryptoLogo} onClick={this.openCrypto} />
       </Container>
     );
   }
-};
+}
 
 export default Footer;

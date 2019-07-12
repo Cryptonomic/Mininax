@@ -28,6 +28,11 @@ export const getConfig = createSelector(
   apps => apps.selectedConfig
 );
 
+export const getConfigs = createSelector(
+  getAppState,
+  apps => apps.configs
+);
+
 export const getEntity = createSelector(
   getAppState,
   apps => apps.entity

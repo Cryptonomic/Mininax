@@ -1,4 +1,4 @@
-import { ConseilQueryBuilder, ConseilOperator, ConseilFunction} from 'conseiljs';
+import { ConseilQueryBuilder, ConseilOperator, ConseilFunction, ConseilSortDirection} from 'conseiljs';
 
 const fields = {
   block: [
@@ -9,6 +9,7 @@ const fields = {
     {name: 'chain_id', displayName: 'Chain ID'},
     {name: 'protocol', displayName: 'Protocol'},
     {name: 'consumed_gas', displayName: 'Consumed gas'},
+    {name: 'total_amount', displayName: 'Total transacted'},
     {name: 'fee', displayName: 'Total Fees'},
     {name: 'baker', displayName: 'Baker'},
     {name: 'baker_priority', displayName: 'Baker Priority'},
@@ -25,6 +26,11 @@ const fields = {
     {name: 'manager', displayName: 'Manager'},
     {name: 'script', displayName: 'Script'},
     {name: 'storage', displayName: 'Storage'},
+    {name: 'baker_deactivated', displayName: 'Active Baker?'},
+    {name: 'baker_balance', displayName: 'Snapshotted balance'},
+    {name: 'baker_delegated_balance', displayName: 'Delegated balance'},
+    {name: 'baker_frozen_balance', displayName: 'Frozen balance'},
+    {name: 'baker_staking_balance', displayName: 'Staking balance'},
   ],
   operation: {
     transaction: [
@@ -90,11 +96,82 @@ export function getQueryForOperations(operationid: string) {
   return query;
 }
 
-export function getQueryForBlockFee(blockid: string) {
+export function getQueryForBlockTotals(blockid: string) {
   let query = ConseilQueryBuilder.blankQuery();
-  query = ConseilQueryBuilder.addFields(query, 'block_hash', 'fee');
+  query = ConseilQueryBuilder.addFields(query, 'block_hash', 'amount', 'fee');
   query = ConseilQueryBuilder.addPredicate(query, 'block_hash', ConseilOperator.EQ, [blockid], false);
   query = ConseilQueryBuilder.addAggregationFunction(query, 'fee', ConseilFunction.sum);
+  query = ConseilQueryBuilder.addAggregationFunction(query, 'amount', ConseilFunction.sum);
+  return query;
+}
+
+export function getQueryForBlockLink(blockid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'block_hash', 'operation_group_hash', 'kind', 'source', 'destination', 'amount', 'fee', 'slots');
+  query = ConseilQueryBuilder.addPredicate(query, 'block_hash', ConseilOperator.EQ, [blockid], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
+  return query;
+}
+
+export function getQueryForBakerInfo(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'deactivated', 'balance', 'delegated_balance', 'staking_balance', 'frozen_balance');
+  query = ConseilQueryBuilder.addPredicate(query, 'pkh', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.addOrdering(query, 'block_level', ConseilSortDirection.DESC);
+  query = ConseilQueryBuilder.setLimit(query, 1);
+  return query;
+}
+
+export function getQueryForAccountSends(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'timestamp', 'block_hash', 'operation_group_hash', 'kind', 'source', 'destination', 'amount', 'fee', 'status');
+  query = ConseilQueryBuilder.addPredicate(query, 'source', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.addPredicate(query, 'kind', ConseilOperator.EQ, ['transaction'], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
+  return query;
+}
+
+export function getQueryForAccountReceipts(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'timestamp', 'block_hash', 'operation_group_hash', 'kind', 'source', 'destination', 'amount', 'fee', 'status');
+  query = ConseilQueryBuilder.addPredicate(query, 'destination', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.addPredicate(query, 'kind', ConseilOperator.EQ, ['transaction'], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
+  return query;
+}
+
+export function getQueryForOtherOperations(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'timestamp', 'block_hash', 'operation_group_hash', 'source', 'kind', 'status');
+  query = ConseilQueryBuilder.addPredicate(query, 'source', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.addPredicate(query, 'kind', ConseilOperator.IN, ['reveal', 'delegation', 'origination'], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
+  return query;
+}
+
+export function getQueryForEndorsements(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'timestamp', 'block_hash', 'block_level', 'operation_group_hash', 'kind', 'delegate', 'slots');
+  query = ConseilQueryBuilder.addPredicate(query, 'delegate', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.addPredicate(query, 'kind', ConseilOperator.EQ, ['endorsement'], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
+  return query;
+}
+
+export function getQueryForBakedBlocks(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'timestamp', 'hash', 'level', 'baker');
+  query = ConseilQueryBuilder.addPredicate(query, 'baker', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
+  return query;
+}
+
+export function getQueryForDepositsAndRewards(accountid: string) {
+  let query = ConseilQueryBuilder.blankQuery();
+  query = ConseilQueryBuilder.addFields(query, 'source_hash', 'delegate', 'category', 'change');
+  query = ConseilQueryBuilder.addPredicate(query, 'delegate', ConseilOperator.EQ, [accountid], false);
+  query = ConseilQueryBuilder.addPredicate(query, 'source', ConseilOperator.EQ, ['block'], false);
+  query = ConseilQueryBuilder.setLimit(query, 1000);
   return query;
 }
 
