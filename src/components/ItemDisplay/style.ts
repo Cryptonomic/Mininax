@@ -1,31 +1,6 @@
 
 import styled, { css } from 'styled-components';
 
-
-export const Container = styled.div`
-  width: 100%;
-  padding-left: 11px;
-  position: relative;
-  &::before {
-    content: '';
-    position: absolute;
-    width: 2px;
-    height: calc(100% - 29px);
-    background-color: ${props => props.theme.fieldBgColor};
-    left: 0;
-    top: 16px;
-  }
-`;
-
-export const TitleContainer = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-export const TitleBtnContainer = styled.div`
-  margin-left: 30px;
-`;
-
 const LeftBarCss = css`
   &::before {
     content: '';
@@ -49,14 +24,9 @@ const TitleLinkCss = css`
   ${LeftBarCss}
 `;
 
-export const Title = styled.div`
-  text-transform: capitalize;
-  width: 215px;
-  ${TitleLinkCss}
-`;
-
 export const LinkBtn = styled.div`
-  width: 338px;
+  width: 215px;
+  cursor: pointer;
   ${TitleLinkCss}
 `;
 

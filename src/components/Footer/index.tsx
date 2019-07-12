@@ -11,7 +11,7 @@ const Container = styled.div`
 `;
 const Input = styled.input`
   height: 60px;
-  width: 600px;
+  width: 800px;
   border-radius: 10px;
   padding: 20px 24px;
   color: #000000;
@@ -36,6 +36,7 @@ const CryptoImg = styled.img`
   margin-left: 35px;
   width: 55px;
   height: 55px;
+  cursor: pointer;
 `;
 
 const ChangeBtn = styled.button`
@@ -62,38 +63,79 @@ interface Props {
   onSearch(val: string): void;
 }
 
-const Footer: React.FC<Props> = props => {
-  const { network, onSearch, onOpenNetworkSelector } = props;
-  const [searchVal, setSearchVal] = React.useState('');
+interface States {
+  isFocus: boolean;
+  searchVal: string;
+}
 
-  function onChange(e) {
-    setSearchVal(e.target.value);
+class Footer extends React.Component<Props, States> {
+  textInput: React.RefObject<HTMLInputElement> = React.createRef();
+  constructor(props) {
+    super(props);
+    this.state = {
+      isFocus: false,
+      searchVal: ''
+    };
   }
 
-  function search() {
+  componentDidMount() {
+    this.textInput.current.focus();
+  }
+
+  onChange = (e) => {
+    const searchVal = e.target.value.replace(/ /g, '');
+    this.setState({searchVal});
+  }
+
+  search = () => {
+    const { onSearch } = this.props;
+    const { searchVal } = this.state;
     if (searchVal !== '') {
       onSearch(searchVal);
     }
   }
-  return (
-    <Container>
-      <Input
-        value={searchVal}
-        placeholder='SEARCH...>>> BLOCK / TRANSACTION ID / ACCOUNT ID'
-        onChange={onChange}
-        onKeyPress= { e => {
-          if (e.key === 'Enter') {
-            search();
-          }
-        }}
-      />
-      <SearhBtn onClick={search}>
-        <SearchImg src={searchSvg} />
-      </SearhBtn>
-      <ChangeBtn onClick={onOpenNetworkSelector}>{network} <UpDown>⇵</UpDown></ChangeBtn>
-      <CryptoImg src={cryptoLogo} />
-    </Container>
-  );
-};
+
+  focusSearch = () => {
+    const { isFocus } = this.state;
+    if (!isFocus) {
+      setTimeout(() => {
+        this.textInput.current.focus();
+        this.setState({searchVal: ''});
+      });
+    }
+  }
+
+  openCrypto = () => {
+    window.open('https://cryptonomic.tech/', '_blank');
+  }
+
+  render() {
+    const { network, onOpenNetworkSelector } = this.props;
+    const { searchVal } = this.state;
+
+    return (
+      <Container>
+        <Input
+          ref={this.textInput}
+          value={searchVal}
+          placeholder="Press 's' and search by block ID, operation ID, account ID or block level"
+          onChange={this.onChange}
+          onBlur={() => this.setState({isFocus: false})}
+          onFocus={() => this.setState({isFocus: true})}
+          onKeyPress= { e => {
+            if (e.key === 'Enter') {
+              this.search();
+            }
+          }}
+        />
+        <SearhBtn onClick={this.search}>
+          <SearchImg src={searchSvg} />
+        </SearhBtn>
+        <ChangeBtn onClick={onOpenNetworkSelector}>{network} <UpDown>⇵</UpDown></ChangeBtn>
+        <CryptoImg src={cryptoLogo} onClick={this.openCrypto} />
+      </Container>
+    );
+  }
+}
 
 export default Footer;
