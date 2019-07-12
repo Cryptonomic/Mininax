@@ -12,7 +12,7 @@ import Error from '../../components/Error';
 import NetworkSelector from '../../components/NetworkSelector';
 import { Config } from '../../types';
 import themes from '../../utils/themes';
-import { getLoading, getError, getIsError, getConfig, getEntity } from '../../reducers/app/selectors';
+import { getLoading, getError, getIsError, getConfig, getConfigs } from '../../reducers/app/selectors';
 import { getBlockHashThunk, initLoadThunk, getBlockThunk, getAccountThunk, getOperationsThunk } from '../../reducers/app/thunks';
 import { removeErrorAction, setErrorAction, changeNetworkAction } from '../../reducers/app/actions';
 
@@ -46,16 +46,18 @@ const MainContainer = styled.div`
 `;
 
 interface MatchParams {
+  network: string;
   id: string;
 }
 
 interface OwnProps {
-  entity: string;
   isLoading: boolean;
   isError: boolean;
   error: string;
   selectedConfig: Config;
+  configs: Config[];
   match?: match<MatchParams>;
+  location: any;
   getHash: (level: number) => string;
   removeError: () => void;
   setError: (error: string) => void;
@@ -79,37 +81,49 @@ class App extends React.Component<Props, States> {
     this.state = {
       isOpenNetworkSelector: false
     };
-    const { initLoad, match } = this.props;
-    const id = match.params.id;
+
+    this.footerRef = React.createRef();
+  }
+
+  componentWillMount = async () => {
+    const { initLoad, configs, changeNetwork, location } = this.props;
+    const paths = location.pathname.split('/');
+    const network = paths[1];
+    const id = paths[3];
+
     if (id) {
-      this.onSearchById(id);
+      const selectedConfig = configs.find(conf => conf.network === network);
+      if (selectedConfig) {
+        await changeNetwork(selectedConfig);
+        this.onSearchById(id);
+      } else {
+        initLoad();
+      }
     } else {
       initLoad();
     }
-
-    this.footerRef = React.createRef();
   }
 
   onSearchById = async (val: string) => {
     const firstChar = val[0].toLowerCase();
     const twoChars = val.substring(0, 2).toLowerCase();
-    const { history, getHash, setError, getBlock, getAccount, getOperation } = this.props;
+    const { history, getHash, setError, getBlock, getAccount, getOperation, selectedConfig } = this.props;
     let item = null;
     let route = '';
     if (firstChar === 'b') {
       item = await getBlock(val);
-      route = `/blocks/${val}`;
+      route = `/${selectedConfig.network}/blocks/${val}`;
     } else if (firstChar === 'o') {
       item = await getOperation(val);
-      route = `/operations/${val}`;
+      route = `/${selectedConfig.network}/operations/${val}`;
     } else if (twoChars === 'tz' || twoChars === 'kt') {
       item = await getAccount(val);
-      route = `/accounts/${val}`;
+      route = `/${selectedConfig.network}/accounts/${val}`;
     } else if (Number(val)) {
       const hash = await getHash(Number(val));
       if (hash) {
         item = await getBlock(val);
-        route = `/blocks/${hash}`;
+        route = `/${selectedConfig.network}/blocks/${hash}`;
       }
     } else {
       setError(InvalidId);
@@ -160,9 +174,9 @@ class App extends React.Component<Props, States> {
           <MainContainer>
             <Switch>
               <Route exact path='/' component={Block} />
-              <Route exact path='/blocks/:id' component={Block} />
-              <Route exact path='/accounts/:id' component={Account} />
-              <Route exact path='/operations/:id' component={Operation} />
+              <Route exact path='/:network/blocks/:id' component={Block} />
+              <Route exact path='/:network/accounts/:id' component={Account} />
+              <Route exact path='/:network/operations/:id' component={Operation} />
               <Redirect to='/' push/>
             </Switch>
           </MainContainer>
@@ -171,7 +185,6 @@ class App extends React.Component<Props, States> {
             onSearch={this.onSearchById}
             network={selectedConfig.displayName}
             onOpenNetworkSelector={this.onOpenNetworkModal}
-            gotoHome={this.gotoHome}
           />
           {isLoading &&  <Loader />}
           {isError && <Error error={error} onTry={this.onRemoveErrorModal} />}
@@ -193,7 +206,7 @@ const mapStateToProps = (state: any) => ({
   error: getError(state),
   isError: getIsError(state),
   selectedConfig: getConfig(state),
-  entity: getEntity(state)
+  configs: getConfigs(state)
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

@@ -3,30 +3,39 @@ import { compose } from 'redux';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ItemDisplay from '../../components/ItemDisplay';
-import { getBlockThunk, getBlockHashThunk } from '../../reducers/app/thunks';
-import { getItems } from '../../reducers/app/selectors';
+import { getBlockThunk, getBlockHashThunk, shareBlockLinkThunk } from '../../reducers/app/thunks';
+import { getItems, getConfig } from '../../reducers/app/selectors';
 import { Container, Title, LinkBtn } from '../style';
+import { Config } from '../../types';
 
 const entity = 'block';
 
 interface OwnProps {
   items: any;
+  selectedConfig: Config;
   getBlock: (id: string) => any;
   getHash: (level: number) => string;
+  shareUrl: (id: string) => void;
 }
 
 type Props = OwnProps & RouteComponentProps;
 
 class Block extends React.Component<Props, {}> {
   getHashByLevel = async (level: number, inc: number) => {
-    const { getHash, history, getBlock } = this.props;
+    const { getHash, history, getBlock, selectedConfig } = this.props;
     const hash = await getHash(level + inc);
     if (hash) {
       const block = await getBlock(hash);
       if (block) {
-        history.push(`/blocks/${hash}`);
+        history.push(`/${selectedConfig.network}/blocks/${hash}`);
       }
     }
+  }
+
+  onOpenUrl = () => {
+    const { items, shareUrl } = this.props;
+    const id = items[entity].hash;
+    shareUrl(id);
   }
 
   render() {
@@ -37,7 +46,7 @@ class Block extends React.Component<Props, {}> {
         {items[entity] &&
           <ItemDisplay entity={entity} item={items[entity]} changeLevel={this.getHashByLevel} />
         }
-        <LinkBtn>
+        <LinkBtn onClick={this.onOpenUrl}>
           All Operations >>
         </LinkBtn>
       </Container>
@@ -46,12 +55,14 @@ class Block extends React.Component<Props, {}> {
 }
 
 const mapStateToProps = (state: any) => ({
-  items: getItems(state)
+  items: getItems(state),
+  selectedConfig: getConfig(state)
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
   getBlock: (id: string) => dispatch(getBlockThunk(id)),
-  getHash: (level: number) => dispatch(getBlockHashThunk(level))
+  getHash: (level: number) => dispatch(getBlockHashThunk(level)),
+  shareUrl: (id: string) => dispatch(shareBlockLinkThunk(id))
 });
 
 export default compose(
