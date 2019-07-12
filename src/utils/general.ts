@@ -50,8 +50,7 @@ const fields = {
       {name: 'kind', displayName: 'Kind'},
       {name: 'block_hash', displayName: 'Block Hash'},
       {name: 'pkh', displayName: 'Account ID'},
-      {name: 'secret', displayName: 'Secret'},
-      {name: 'status', displayName: 'Status'}
+      {name: 'secret', displayName: 'Secret'}
     ],
     reveal: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
