@@ -7,6 +7,7 @@ import { Container, Title, TransactionBtn, TitleBtnContainer, TitleContainer } f
 const entity = 'operation';
 interface Props {
   items: any;
+  goToDetail?: (id: string) => void;
 }
 
 interface States {
@@ -26,7 +27,7 @@ class Operation extends React.Component<Props, States> {
   }
 
   render() {
-    const { items } = this.props;
+    const { items, goToDetail } = this.props;
     const { count } = this.state;
     const operations = items[entity];
     const total = operations ? operations.length : 0;
@@ -44,7 +45,7 @@ class Operation extends React.Component<Props, States> {
           ) :
           (<Title>Operation</Title>)
         }
-        {operations && <ItemDisplay entity={entity} kind={operations[count].kind} item={operations[count]} />}
+        {operations && <ItemDisplay entity={entity} kind={operations[count].kind} item={operations[count]} goToDetail={goToDetail} />}
       </Container>
     );
   }

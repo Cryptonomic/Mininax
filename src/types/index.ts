@@ -9,4 +9,5 @@ export interface Config {
 export interface Field {
   name: string;
   displayName: string;
+  isLink?: boolean;
 }

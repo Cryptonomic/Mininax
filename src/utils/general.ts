@@ -3,7 +3,7 @@ import { ConseilQueryBuilder, ConseilOperator, ConseilFunction, ConseilSortDirec
 const fields = {
   block: [
     {name: 'hash', displayName: 'Hash'},
-    {name: 'predecessor', displayName: 'Predecessor'},
+    {name: 'predecessor', displayName: 'Predecessor', isLink: true},
     {name: 'level', displayName: 'Level'},
     {name: 'timestamp', displayName: 'Timestamp'},
     {name: 'chain_id', displayName: 'Chain ID'},
@@ -11,7 +11,7 @@ const fields = {
     {name: 'consumed_gas', displayName: 'Consumed gas'},
     {name: 'total_amount', displayName: 'Total transacted'},
     {name: 'fee', displayName: 'Total Fees'},
-    {name: 'baker', displayName: 'Baker'},
+    {name: 'baker', displayName: 'Baker', isLink: true},
     {name: 'baker_priority', displayName: 'Baker Priority'},
     {name: 'meta_cycle', displayName: 'Cycle'},
     {name: 'meta_cycle_position', displayName: 'Cycle Position'},
@@ -21,9 +21,9 @@ const fields = {
   ],
   account: [
     {name: 'account_id', displayName: 'Address'},
-    {name: 'block_id', displayName: 'Last Updated'},
+    {name: 'block_id', displayName: 'Last Updated', isLink: true},
     {name: 'balance', displayName: 'Balance'},
-    {name: 'manager', displayName: 'Manager'},
+    {name: 'manager', displayName: 'Manager', isLink: true},
     {name: 'script', displayName: 'Script'},
     {name: 'storage', displayName: 'Storage'},
     {name: 'baker_deactivated', displayName: 'Active Baker?'},
@@ -36,7 +36,7 @@ const fields = {
     transaction: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
       {name: 'kind', displayName: 'Kind'},
-      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'source', displayName: 'From'},
       {name: 'destination', displayName: 'To'},
       {name: 'amount', displayName: 'Amount'},
@@ -48,14 +48,14 @@ const fields = {
     'activate_account': [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
       {name: 'kind', displayName: 'Kind'},
-      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'pkh', displayName: 'Account ID'},
       {name: 'secret', displayName: 'Secret'}
     ],
     reveal: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
       {name: 'kind', displayName: 'Kind'},
-      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'source', displayName: 'Account ID'},
       {name: 'public_key', displayName: 'Public Key'},
       {name: 'fee', displayName: 'Fee'},
@@ -65,7 +65,7 @@ const fields = {
     delegation: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
       {name: 'kind', displayName: 'Kind'},
-      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'source', displayName: 'Account ID'},
       {name: 'delegate', displayName: 'Delegate'},
       {name: 'fee', displayName: 'Fee'},
@@ -75,7 +75,7 @@ const fields = {
     origination: [
       {name: 'operation_group_hash', displayName: 'Operation Hash'},
       {name: 'kind', displayName: 'Kind'},
-      {name: 'block_hash', displayName: 'Block Hash'},
+      {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'source', displayName: 'Account ID'},
       {name: 'delegate', displayName: 'Delegate'},
       {name: 'amount', displayName: 'Amount'},

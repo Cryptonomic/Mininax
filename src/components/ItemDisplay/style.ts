@@ -110,6 +110,16 @@ export const FieldContent = styled.div`
   flex: 1;
 `;
 
+export const LinkContent = styled.div`
+  margin-left: 30px;
+  color: ${props => props.theme.valueColor};
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: underline;
+  cursor: pointer;
+`;
+
 export const CopyImg = styled.img`
   float: right;
   cursor: pointer;

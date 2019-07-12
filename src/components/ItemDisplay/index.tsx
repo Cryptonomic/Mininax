@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   MainContainer, FieldLabel, FieldContent, RowContainer,
-  LevelLabelContainer, LevelBtn, LevelLabel, CopyImg
+  LevelLabelContainer, LevelBtn, LevelLabel, CopyImg, LinkContent
 } from './style';
 
 import { getFields, copyContent } from '../../utils/general';
@@ -14,12 +14,13 @@ interface Props {
   entity: string;
   kind?: string;
   item: any;
-  changeLevel?(level: string | number, inc: number): void;
+  changeLevel?(level: number): void;
+  goToDetail?(id: string): void;
 }
 
 
 const ItemDisplay: React.FC<Props> = (props) => {
-  const { entity, kind, item, changeLevel } = props;
+  const { entity, kind, item, changeLevel, goToDetail } = props;
   const fields = getFields(entity, kind);
   function onCopy(val: string) {
     copyContent(val);
@@ -31,9 +32,9 @@ const ItemDisplay: React.FC<Props> = (props) => {
             return (
               <RowContainer key={field.name} isBottom={index === fields.length - 1}>
                 <LevelLabelContainer>
-                  <LevelBtn onClick={() => changeLevel(item[field.name], -1)}>{'<'}</LevelBtn>
+                  <LevelBtn onClick={() => changeLevel(item[field.name] - 1)}>{'<'}</LevelBtn>
                   <LevelLabel>Level</LevelLabel>
-                  <LevelBtn onClick={() => changeLevel(item[field.name], 1)}>{'>'}</LevelBtn>
+                  <LevelBtn onClick={() => changeLevel(item[field.name] + 1)}>{'>'}</LevelBtn>
                 </LevelLabelContainer>
                 <FieldContent>{item[field.name]}</FieldContent>
               </RowContainer>
@@ -56,6 +57,15 @@ const ItemDisplay: React.FC<Props> = (props) => {
               <RowContainer key={field.name} isBottom={index === fields.length - 1}>
                 <FieldLabel>{field.displayName}</FieldLabel>
                 <FieldContent>{new Intl.DateTimeFormat('default', options).format(item[field.name])}</FieldContent>
+              </RowContainer>
+            );
+          }
+
+          if (field.isLink) {
+            return (
+              <RowContainer key={field.name} isBottom={index === fields.length - 1}>
+                <FieldLabel isBar={index === 0 || index === fields.length - 1}>{field.displayName}</FieldLabel>
+                <LinkContent onClick={() => goToDetail(item[field.name])}>{item[field.name]}</LinkContent>
               </RowContainer>
             );
           }

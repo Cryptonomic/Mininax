@@ -22,6 +22,7 @@ interface Props {
   openAccountEndorsements: (id: string) => void;
   openAccountBakedBlocks: (id: string) => void;
   openAccountDeposits: (id: string) => void;
+  goToDetail?: (id: string) => void;
 }
 
 class Account extends React.Component<Props, {}> {
@@ -62,12 +63,12 @@ class Account extends React.Component<Props, {}> {
   }
 
   render() {
-    const { items } = this.props;
+    const { items, goToDetail } = this.props;
     return (
       <Container>
         <Title>Account</Title>
         {items[entity] &&
-          <ItemDisplay entity={entity} item={items[entity]} />
+          <ItemDisplay entity={entity} item={items[entity]} goToDetail={goToDetail} />
         }
         <AccountBtn onClick={this.onOpenAccountSends}>
           All sent transactions
