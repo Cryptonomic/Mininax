@@ -76,8 +76,9 @@ export const getAccountThunk = (id: string) => async (dispatch, state) => {
     const result = await ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', query).catch(e => {
       return [];
     });
+    let item;
     if (result.length > 0) {
-      const item = {
+      item = {
         ...account[0],
         balance: convertFromUtezToTez(account[0].balance),
         'baker_deactivated': result[0].deactivated ? 'No' : 'Yes',
@@ -86,12 +87,19 @@ export const getAccountThunk = (id: string) => async (dispatch, state) => {
         'baker_frozen_balance': convertFromUtezToTez(result[0].frozen_balance),
         'baker_staking_balance': convertFromUtezToTez(result[0].staking_balance)
       };
-      dispatch(setItemsAction(entity, item));
-      return item;
     } else {
-      dispatch(setErrorAction(NoAvaialbe, entity));
-      return '';
+      item = {
+        ...account[0],
+        balance: convertFromUtezToTez(account[0].balance),
+        'baker_deactivated': '',
+        'baker_balance': '',
+        'baker_delegated_balance': '',
+        'baker_frozen_balance': '',
+        'baker_staking_balance': ''
+      };
     }
+    dispatch(setItemsAction(entity, item));
+    return item;
   } else {
     dispatch(setErrorAction(InvalidId, entity));
     return '';
