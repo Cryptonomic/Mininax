@@ -91,7 +91,7 @@ export const getAccountThunk = (id: string) => async (dispatch, state) => {
       item = {
         ...account[0],
         balance: convertFromUtezToTez(account[0].balance),
-        'baker_deactivated': '',
+        'baker_deactivated': 'No',
         'baker_balance': '',
         'baker_delegated_balance': '',
         'baker_frozen_balance': '',
