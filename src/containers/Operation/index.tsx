@@ -7,7 +7,7 @@ import { Container, Title, TransactionBtn, TitleBtnContainer, TitleContainer } f
 const entity = 'operation';
 interface Props {
   items: any;
-  goToDetail?: (id: string) => void;
+  goToDetail: (id: string) => void;
 }
 
 interface States {

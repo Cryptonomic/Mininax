@@ -22,7 +22,7 @@ interface Props {
   openAccountEndorsements: (id: string) => void;
   openAccountBakedBlocks: (id: string) => void;
   openAccountDeposits: (id: string) => void;
-  goToDetail?: (id: string) => void;
+  goToDetail: (id: string) => void;
 }
 
 class Account extends React.Component<Props, {}> {

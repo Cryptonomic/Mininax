@@ -11,3 +11,9 @@ export interface Field {
   displayName: string;
   isLink?: boolean;
 }
+
+export interface MatchParams {
+  network?: string;
+  entity?: string;
+  id?: string;
+}
