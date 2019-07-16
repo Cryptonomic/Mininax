@@ -10,8 +10,8 @@ const entity = 'block';
 interface Props {
   items: any;
   shareUrl: (id: string) => void;
-  goToDetail?: (id: string) => void;
-  goToBlock?: (level: number) => void;
+  goToDetail: (id: string) => void;
+  goToBlock: (level: number) => void;
 }
 
 class Block extends React.Component<Props, {}> {

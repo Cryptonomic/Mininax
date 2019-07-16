@@ -1,11 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { Route, Redirect, Switch, RouteComponentProps, withRouter, match } from 'react-router-dom';
+import { Route, Redirect, Switch, RouteComponentProps, withRouter } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
-import Block from '../Block';
-import Account from '../Account';
-import Operation from '../Operation';
+import RouterWrapper from '../RouterWrapper';
 import Footer from '../../components/Footer';
 import Loader from '../../components/Loader';
 import Error from '../../components/Error';
@@ -15,7 +13,7 @@ import themes from '../../utils/themes';
 import { getLoading, getError, getIsError, getConfig, getConfigs } from '../../reducers/app/selectors';
 import { getBlockHashThunk, initLoadThunk, getBlockThunk, getAccountThunk, getOperationsThunk } from '../../reducers/app/thunks';
 import { removeErrorAction, setErrorAction, changeNetworkAction } from '../../reducers/app/actions';
-
+import { MatchParams } from '../../types';
 import '../../assets/scss/App.scss';
 
 const InvalidId = 'You entered an invalid ID.';
@@ -45,18 +43,12 @@ const MainContainer = styled.div`
   margin-bottom: 40px;
 `;
 
-interface MatchParams {
-  network: string;
-  id: string;
-}
-
 interface OwnProps {
   isLoading: boolean;
   isError: boolean;
   error: string;
   selectedConfig: Config;
   configs: Config[];
-  match?: match<MatchParams>;
   location: any;
   getHash: (level: number) => string;
   removeError: () => void;
@@ -85,22 +77,21 @@ class App extends React.Component<Props, States> {
     this.footerRef = React.createRef();
   }
 
-  componentWillMount = async () => {
-    const { initLoad, configs, changeNetwork, location } = this.props;
-    const paths = location.pathname.split('/');
-    const network = paths[1];
-    const id = paths[3];
-
-    if (id) {
+  initData = async (params: MatchParams) => {
+    const { id, network, entity } = params;
+    const { initLoad, configs, changeNetwork, history } = this.props;
+    if (!id && !network && !entity) {
+      initLoad();
+    } else if (!id || !network || !entity) {
+      history.push('/');
+    } else {
       const selectedConfig = configs.find(conf => conf.network === network);
       if (selectedConfig) {
         await changeNetwork(selectedConfig);
         this.onSearchById(id);
       } else {
-        initLoad();
+        this.gotoHome();
       }
-    } else {
-      initLoad();
     }
   }
 
@@ -184,10 +175,8 @@ class App extends React.Component<Props, States> {
           </Header>
           <MainContainer>
             <Switch>
-              <Route exact path='/' render={props => <Block goToDetail={this.onSearchById} goToBlock={this.goToBlockByLevel} {...props} />} />
-              <Route exact path='/:network/blocks/:id' render={props => <Block goToDetail={this.onSearchById} goToBlock={this.goToBlockByLevel} {...props} />} />
-              <Route exact path='/:network/accounts/:id' render={(props) => <Account goToDetail={this.onSearchById} {...props} />} />
-              <Route exact path='/:network/operations/:id' render={(props) => <Operation goToDetail={this.onSearchById} {...props} />} />
+            <Route exact path='/:network/:entity/:id' render={props => <RouterWrapper initData={this.initData} goToDetail={this.onSearchById} goToBlock={this.goToBlockByLevel} {...props} />} />
+              <Route exact path='/' render={props => <RouterWrapper initData={this.initData} goToDetail={this.onSearchById} goToBlock={this.goToBlockByLevel} {...props} />} />
               <Redirect to='/' push/>
             </Switch>
           </MainContainer>
