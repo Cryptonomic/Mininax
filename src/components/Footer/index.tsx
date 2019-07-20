@@ -59,13 +59,14 @@ const SearchImg = styled.img``;
 
 interface Props {
   network: string;
-  onOpenNetworkSelector(): void;
-  onSearch(val: string): void;
+  id: string;
+  onChangeId: (id: string) => void;
+  onOpenNetworkSelector: () => void;
+  onSearch: (id: string) => void;
 }
 
 interface States {
   isFocus: boolean;
-  searchVal: string;
 }
 
 class Footer extends React.Component<Props, States> {
@@ -73,8 +74,7 @@ class Footer extends React.Component<Props, States> {
   constructor(props) {
     super(props);
     this.state = {
-      isFocus: false,
-      searchVal: ''
+      isFocus: false
     };
   }
 
@@ -83,24 +83,25 @@ class Footer extends React.Component<Props, States> {
   }
 
   onChange = (e) => {
+    const { onChangeId } = this.props;
     const searchVal = e.target.value.replace(/ /g, '');
-    this.setState({searchVal});
+    onChangeId(searchVal);
   }
 
   search = () => {
-    const { onSearch } = this.props;
-    const { searchVal } = this.state;
-    if (searchVal !== '') {
-      onSearch(searchVal);
+    const { onSearch, id } = this.props;
+    if (id !== '') {
+      onSearch(id);
     }
   }
 
   focusSearch = () => {
+    const { onChangeId } = this.props;
     const { isFocus } = this.state;
     if (!isFocus) {
       setTimeout(() => {
         this.textInput.current.focus();
-        this.setState({searchVal: ''});
+        onChangeId('');
       });
     }
   }
@@ -110,14 +111,13 @@ class Footer extends React.Component<Props, States> {
   }
 
   render() {
-    const { network, onOpenNetworkSelector } = this.props;
-    const { searchVal } = this.state;
+    const { network, onOpenNetworkSelector, id } = this.props;
 
     return (
       <Container>
         <Input
           ref={this.textInput}
-          value={searchVal}
+          value={id}
           placeholder="Press 's' and search by block ID, operation ID, account ID or block level"
           onChange={this.onChange}
           onBlur={() => this.setState({isFocus: false})}

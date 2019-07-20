@@ -10,9 +10,9 @@ import Error from '../../components/Error';
 import NetworkSelector from '../../components/NetworkSelector';
 import { Config } from '../../types';
 import themes from '../../utils/themes';
-import { getLoading, getError, getIsError, getConfig, getConfigs } from '../../reducers/app/selectors';
+import { getLoading, getError, getIsError, getConfig, getConfigs, getEntity, getId } from '../../reducers/app/selectors';
 import { getBlockHashThunk, initLoadThunk, getBlockThunk, getAccountThunk, getOperationsThunk } from '../../reducers/app/thunks';
-import { removeErrorAction, setErrorAction, changeNetworkAction } from '../../reducers/app/actions';
+import { removeErrorAction, setErrorAction, changeNetworkAction, setParamsAction, setIdAction } from '../../reducers/app/actions';
 import { MatchParams } from '../../types';
 import '../../assets/scss/App.scss';
 
@@ -50,6 +50,8 @@ interface OwnProps {
   selectedConfig: Config;
   configs: Config[];
   location: any;
+  entity: string;
+  id: string;
   getHash: (level: number) => string;
   removeError: () => void;
   setError: (error: string) => void;
@@ -58,6 +60,8 @@ interface OwnProps {
   getBlock: (id: string) => any;
   getOperation: (id: string) => any;
   getAccount: (id: string) => any;
+  setParams: (entity: string, id: string) => void;
+  setId: (id: string) => void;
 }
 
 type Props = OwnProps & RouteComponentProps;
@@ -79,7 +83,7 @@ class App extends React.Component<Props, States> {
 
   initData = async (params: MatchParams) => {
     const { id, network, entity } = params;
-    const { initLoad, configs, changeNetwork, history } = this.props;
+    const { initLoad, configs, changeNetwork, setParams, history } = this.props;
     if (!id && !network && !entity) {
       initLoad();
     } else if (!id || !network || !entity) {
@@ -88,39 +92,56 @@ class App extends React.Component<Props, States> {
       const selectedConfig = configs.find(conf => conf.network === network);
       if (selectedConfig) {
         await changeNetwork(selectedConfig);
-        this.onSearchById(id);
+        await setParams(entity, id);
+        this.loadData();
       } else {
         this.gotoHome();
       }
     }
   }
 
+  loadData = async () => {
+    const { entity, id, getBlock, getOperation, getAccount} = this.props;
+    if (entity === 'blocks') {
+      await getBlock(id);
+    } else if (entity === 'operations') {
+      await getOperation(id);
+    } else if (entity === 'accounts') {
+      await getAccount(id);
+    } else {
+      this.gotoHome();
+    }
+  }
+
   onSearchById = async (val: string) => {
     const firstChar = val[0].toLowerCase();
     const twoChars = val.substring(0, 2).toLowerCase();
-    const { history, getHash, setError, getBlock, getAccount, getOperation, selectedConfig } = this.props;
+    const { history, getHash, setError, getBlock, getAccount, getOperation, selectedConfig, setParams } = this.props;
     let item = null;
-    let route = '';
+    let id = val;
+    let entity = '';
     if (firstChar === 'b') {
       item = await getBlock(val);
-      route = `/${selectedConfig.network}/blocks/${val}`;
+      entity = 'blocks';
     } else if (firstChar === 'o') {
       item = await getOperation(val);
-      route = `/${selectedConfig.network}/operations/${val}`;
+      entity = 'operations';
     } else if (twoChars === 'tz' || twoChars === 'kt') {
       item = await getAccount(val);
-      route = `/${selectedConfig.network}/accounts/${val}`;
+      entity = 'accounts';
     } else if (Number(val)) {
       const hash = await getHash(Number(val));
       if (hash) {
         item = await getBlock(val);
-        route = `/${selectedConfig.network}/blocks/${hash}`;
+        entity = 'blocks';
+        id = hash;
       }
     } else {
       setError(InvalidId);
     }
-
     if (item) {
+      const route = `/${selectedConfig.network}/${entity}/${id}`;
+      setParams(entity, id);
       history.push(route);
     }
   }
@@ -141,8 +162,9 @@ class App extends React.Component<Props, States> {
     this.setState({isOpenNetworkSelector: false});
   }
 
-  gotoHome = () => {
-    const { history, initLoad } = this.props;
+  gotoHome = async () => {
+    const { history, initLoad, setParams } = this.props;
+    await setParams('', '');
     history.push('/');
     initLoad();
   }
@@ -164,8 +186,13 @@ class App extends React.Component<Props, States> {
     }
   }
 
+  onChangeId = (id: string) => {
+    const { setId } = this.props;
+    setId(id);
+  }
+
   render() {
-    const { isLoading, isError, error, selectedConfig } = this.props;
+    const { isLoading, isError, error, selectedConfig, id } = this.props;
     const { isOpenNetworkSelector } = this.state;
     return (
       <ThemeProvider theme={themes[selectedConfig.network]}>
@@ -182,12 +209,14 @@ class App extends React.Component<Props, States> {
           </MainContainer>
           <Footer
             ref={this.footerRef}
+            id={id}
+            onChangeId={this.onChangeId}
             onSearch={this.onSearchById}
             network={selectedConfig.displayName}
             onOpenNetworkSelector={this.onOpenNetworkModal}
           />
           {isLoading &&  <Loader />}
-          {isError && <Error error={error} onTry={this.onRemoveErrorModal} />}
+          {isError && <Error error={error} onCancel={this.onRemoveErrorModal} onTry={this.loadData} />}
           {isOpenNetworkSelector &&
             <NetworkSelector
               selectedConfig={selectedConfig}
@@ -206,7 +235,9 @@ const mapStateToProps = (state: any) => ({
   error: getError(state),
   isError: getIsError(state),
   selectedConfig: getConfig(state),
-  configs: getConfigs(state)
+  configs: getConfigs(state),
+  entity: getEntity(state),
+  id: getId(state)
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
@@ -217,7 +248,9 @@ const mapDispatchToProps = (dispatch: any) => ({
   initLoad: () => dispatch(initLoadThunk()),
   getBlock: (id: string) => dispatch(getBlockThunk(id)),
   getOperation: (id: string) => dispatch(getOperationsThunk(id)),
-  getAccount: (id: string) => dispatch(getAccountThunk(id))
+  getAccount: (id: string) => dispatch(getAccountThunk(id)),
+  setParams: (entity: string, id: string) => dispatch(setParamsAction(entity, id)),
+  setId: (id: string) => dispatch(setIdAction(id))
 });
 
 export default compose(
