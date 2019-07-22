@@ -174,9 +174,12 @@ export function getQueryForDepositsAndRewards(accountid: string) {
   return query;
 }
 
-export function convertFromUtezToTez(amountInUtez: number) {
+export function convertFromUtezToTez(amountInUtez: number, isXtz?: boolean) {
   const tezAmount = amountInUtez / 1000000;
-  return `${tezAmount} XTZ`;
+  if (!isXtz) {
+    return `${tezAmount} XTZ`;
+  }
+  return tezAmount;
 }
 
 export function getFields(key: string, kind?: string) {
