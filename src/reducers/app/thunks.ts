@@ -4,7 +4,7 @@ import { setLoadingAction, setItemsAction, setErrorAction } from './actions';
 import { Config } from '../../types';
 import {
   getQueryForBlockTotals,
-  convertFromUtezToTez,
+  formatNumber,
   getQueryForOperations,
   getQueryForBlockLink,
   getQueryForBakerInfo,
@@ -45,9 +45,9 @@ export const getBlockThunk = (id: string) => async (dispatch, state) => {
     if (totals.length > 0) {
       const item = {
         ...block[0],
-        'consumed_gas': convertFromUtezToTez(block[0].consumed_gas),
-        total_amount: convertFromUtezToTez(totals[0].sum_amount),
-        fee: convertFromUtezToTez(totals[0].sum_fee),
+        'consumed_gas': formatNumber(block[0].consumed_gas),
+        'total_amount': formatNumber(totals[0].sum_amount, true),
+        fee: formatNumber(totals[0].sum_fee, true),
         'baker_priority': 'Coming soon'
       };
       dispatch(setItemsAction(entity, item));
@@ -80,17 +80,17 @@ export const getAccountThunk = (id: string) => async (dispatch, state) => {
     if (result.length > 0) {
       item = {
         ...account[0],
-        balance: convertFromUtezToTez(account[0].balance),
+        balance: formatNumber(account[0].balance, true),
         'baker_deactivated': result[0].deactivated ? 'No' : 'Yes',
-        'baker_balance': convertFromUtezToTez(result[0].balance),
-        'baker_delegated_balance': convertFromUtezToTez(result[0].delegated_balance),
-        'baker_frozen_balance': convertFromUtezToTez(result[0].frozen_balance),
-        'baker_staking_balance': convertFromUtezToTez(result[0].staking_balance)
+        'baker_balance': formatNumber(result[0].balance, true),
+        'baker_delegated_balance': formatNumber(result[0].delegated_balance, true),
+        'baker_frozen_balance': formatNumber(result[0].frozen_balance, true),
+        'baker_staking_balance': formatNumber(result[0].staking_balance, true)
       };
     } else {
       item = {
         ...account[0],
-        balance: convertFromUtezToTez(account[0].balance),
+        balance: formatNumber(account[0].balance, true),
         'baker_deactivated': 'No',
         'baker_balance': '',
         'baker_delegated_balance': '',
@@ -120,9 +120,9 @@ export const getOperationsThunk = (id: string) => async (dispatch, state) => {
     const item = transactions.map(transaction => {
       return {
         ...transaction,
-        amount: convertFromUtezToTez(transaction.amount),
-        fee: convertFromUtezToTez(transaction.fee),
-        'consumed_gas': convertFromUtezToTez(transaction.consumed_gas)
+        amount: formatNumber(transaction.amount, true),
+        fee: formatNumber(transaction.fee, true),
+        'consumed_gas': formatNumber(transaction.consumed_gas),
       };
     });
     dispatch(setItemsAction(entity, item));

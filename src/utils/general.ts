@@ -174,9 +174,33 @@ export function getQueryForDepositsAndRewards(accountid: string) {
   return query;
 }
 
-export function convertFromUtezToTez(amountInUtez: number) {
-  const tezAmount = amountInUtez / 1000000;
-  return tezAmount;
+export function formatNumber(value: number, isScale?: boolean) {
+  if (value === undefined) { return ''; }
+  let t = '';
+  if (isScale) {
+    const d = value / Math.pow(10, 6);
+    let minimumFractionDigits = 0;
+    let maximumFractionDigits = 0;
+    if (value < 10000) {
+      minimumFractionDigits = 6;
+      maximumFractionDigits = 6;
+    } else if (value < 100000) {
+      minimumFractionDigits = 4;
+      maximumFractionDigits = 4;
+    } else if (value < 1000000000) {
+      minimumFractionDigits = 2;
+      maximumFractionDigits = 2;
+    }
+    t = (new Intl.NumberFormat(window.navigator.languages[0], { style: 'decimal', minimumFractionDigits, maximumFractionDigits })).format(d);
+  } else {
+    if (Number.isInteger(value)) { // HACK: until accounts.block_level reports as 'Int'
+      t = (new Intl.NumberFormat(window.navigator.languages[0], { style: 'decimal', useGrouping: false, minimumFractionDigits: 0, maximumFractionDigits: 1 })).format(value);
+    } else {
+      t = (new Intl.NumberFormat(window.navigator.languages[0], { style: 'decimal', minimumFractionDigits: 6, maximumFractionDigits: 6 })).format(value);
+    }
+  }
+
+  return t;
 }
 
 export function getFields(key: string, kind?: string) {
