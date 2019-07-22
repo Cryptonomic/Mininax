@@ -67,7 +67,7 @@ const fields = {
       {name: 'kind', displayName: 'Kind'},
       {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'source', displayName: 'Account ID', isLink: true},
-      {name: 'delegate', displayName: 'Delegate'},
+      {name: 'delegate', displayName: 'Delegate', isLink: true},
       {name: 'fee', displayName: 'Fee'},
       {name: 'consumed_gas', displayName: 'Gas Consumed'},
       {name: 'status', displayName: 'Status'}
@@ -77,7 +77,7 @@ const fields = {
       {name: 'kind', displayName: 'Kind'},
       {name: 'block_hash', displayName: 'Block Hash', isLink: true},
       {name: 'source', displayName: 'Account ID', isLink: true},
-      {name: 'delegate', displayName: 'Delegate'},
+      {name: 'delegate', displayName: 'Delegate', isLink: true},
       {name: 'amount', displayName: 'Amount'},
       {name: 'fee', displayName: 'Fee'},
       {name: 'consumed_gas', displayName: 'Gas Consumed'},
