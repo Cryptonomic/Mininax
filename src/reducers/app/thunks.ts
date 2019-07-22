@@ -45,7 +45,7 @@ export const getBlockThunk = (id: string) => async (dispatch, state) => {
     if (totals.length > 0) {
       const item = {
         ...block[0],
-        'consumed_gas': convertFromUtezToTez(block[0].consumed_gas, true),
+        'consumed_gas': convertFromUtezToTez(block[0].consumed_gas),
         total_amount: convertFromUtezToTez(totals[0].sum_amount),
         fee: convertFromUtezToTez(totals[0].sum_fee),
         'baker_priority': 'Coming soon'
@@ -122,7 +122,7 @@ export const getOperationsThunk = (id: string) => async (dispatch, state) => {
         ...transaction,
         amount: convertFromUtezToTez(transaction.amount),
         fee: convertFromUtezToTez(transaction.fee),
-        'consumed_gas': convertFromUtezToTez(transaction.consumed_gas, true)
+        'consumed_gas': convertFromUtezToTez(transaction.consumed_gas)
       };
     });
     dispatch(setItemsAction(entity, item));
