@@ -1,4 +1,1 @@
-ReactDOMRe.renderToElementWithId(
-  <Mininax view="block" id="head" network="mininax" />,
-  "mininax",
-);
+ReactDOMRe.renderToElementWithId(<App />, "root");
