@@ -36,9 +36,9 @@ let reducer = (state, action) =>
     | SetParams(entity, id) => {...state, entity, id}
     | SetError(error) => {...state, error, isError: true, isLoading: false}
     | RemoveError => {...state, error: "", isError: false, isLoading: false}
-    | SetBlock(block) => {...state, block, isLoading: false}
-    | SetAccount(account) => {...state, account, isLoading: false}
-    | SetOperations(operation) => {...state, operation, isLoading: false}
+    | SetBlock(block, id) => {...state, block, entity: "blocks", id, isLoading: false}
+    | SetAccount(account, id) => {...state, account, entity: "accounts", id, isLoading: false}
+    | SetOperations(operation, id) => {...state, operation, entity: "operations", id, isLoading: false}
     | OpenNetwork(status) => {...state, isOpenNetworkSelector: status}
   };
 
@@ -51,7 +51,7 @@ let make = () => {
   let footerRef = ref(None);
   let (state, dispatch) = React.useReducer(reducer, initState);
 
-  let getBlock = (id: string, isRoute: bool) => {
+  let getBlock = (id: string, isRoute: bool, isMain: bool) => {
     dispatch(SetLoading);
     Js.Promise.(
       ApiCall.getBlockThunk(id, configs[selectedConfig^])
@@ -59,13 +59,14 @@ let make = () => {
           switch result {
           | ("Error", Some(error), _) => resolve(dispatch(SetError(error)))
           | ("Valid", _, Some(block)) => {
-            switch isRoute {
-              | true => {
+            switch (isRoute, isMain) {
+              | (true, false) => {
                 let url = Utils.makeUrl(configs[selectedConfig^].network, "blocks", id);
                 ReasonReactRouter.push(url);
-                resolve(dispatch(SetBlock(block)));
+                resolve(dispatch(SetBlock(block, id)));
               }
-              | false => resolve(dispatch(SetBlock(block)))
+              | (false, false) => resolve(dispatch(SetBlock(block, id)))
+              | _ => resolve(dispatch(SetBlock(block, "")))
             };
           }
           | _ => resolve(dispatch(SetError(Utils.noAvaialbel)))
@@ -88,9 +89,9 @@ let make = () => {
               | true => {
                 let url = Utils.makeUrl(configs[selectedConfig^].network, "operations", id);
                 ReasonReactRouter.push(url);
-                resolve(dispatch(SetOperations(operations)));
+                resolve(dispatch(SetOperations(operations, id)));
               }
-              | false => resolve(dispatch(SetOperations(operations)));
+              | false => resolve(dispatch(SetOperations(operations, id)));
             };
           }
           | _ => resolve(dispatch(SetError(Utils.noAvaialbel)))
@@ -113,9 +114,9 @@ let make = () => {
               | true => {
                 let url = Utils.makeUrl(configs[selectedConfig^].network, "accounts", id);
                 ReasonReactRouter.push(url);
-                resolve(dispatch(SetAccount(account)));
+                resolve(dispatch(SetAccount(account, id)));
               }
-              | false => resolve(dispatch(SetAccount(account)));
+              | false => resolve(dispatch(SetAccount(account, id)));
             };
           }
           | _ => resolve(dispatch(SetError(Utils.noAvaialbel)))
@@ -132,7 +133,7 @@ let make = () => {
       ApiCall.getBlockHashThunk(level, configs[selectedConfig^])
       |> then_(result =>
         switch (result) {
-          | Some(head) => resolve(getBlock(head##hash, true))
+          | Some(head) => resolve(getBlock(head##hash, true, false))
           | None => resolve(dispatch(SetError(Utils.noAvaialbel)))
         }
       )
@@ -147,7 +148,7 @@ let make = () => {
       ApiCall.getBlockHeadThunk(configs[selectedConfig^])
       |> then_(result =>
         switch (result) {
-          | Some(head) => resolve(getBlock(head##hash, false))
+          | Some(head) => resolve(getBlock(head##hash, false, true))
           | None => resolve(dispatch(SetError(Utils.noAvaialbel)))
         }
       )
@@ -167,9 +168,8 @@ let make = () => {
       | _ => {
         dispatch(ChangeNetwork(selectedIndex));
         selectedConfig := selectedIndex;
-        dispatch(SetParams(entity, id));
         switch entity {
-          | "blocks" => getBlock(id, false)
+          | "blocks" => getBlock(id, false, false);
           | "accounts" => getAccount(id, false)
           | "operations" => getOperation(id, false)
           | _ => goToMainPage()
@@ -180,13 +180,16 @@ let make = () => {
 
   let setFooterRef = (ref) => {
     footerRef := Js.Nullable.toOption(ref);
-  }
+  };
 
-  let testRef = (_event) => {
+  let setFocusOfSearch = () => {
     switch (footerRef^) {
       | Some(el) => {
-        let elementObj = ReactDOMRe.domElementToObj(el);
-        elementObj##focus();
+        Js.Global.setTimeout(_=> {
+          let elementObj = ReactDOMRe.domElementToObj(el);
+          elementObj##focus();
+        }, 100);
+        ();
       }
       | None => ignore()
     };
@@ -201,7 +204,7 @@ let make = () => {
     let twoChars = id |> Js.String.slice(~from=0, ~to_=2) |> Js.String.toLowerCase;
     let isNumber = id |> Utils.isNumber;
     switch (firstChar, twoChars, isNumber) {
-      | ("b", _, _) => getBlock(id, true)
+      | ("b", _, _) => getBlock(id, true, false)
       | ("o", _, _) => getOperation(id, true)
       | (_, "tz", _) | (_, "kt", _) => getAccount(id, true)
       | (_, _, true) => getHashByLevel(id |> int_of_string)
@@ -230,8 +233,20 @@ let make = () => {
 
   <ReactIntl.IntlProvider>
     <ContextProvider value={state.selectedConfig}>
-      <div className=Styles.container(state.selectedConfig)>
-        <div className=Styles.header onClick={testRef}>
+      <div
+        className=Styles.container(state.selectedConfig)
+        tabIndex={0}
+        onKeyPress={
+          event =>
+            switch (event |> ReactEvent.Keyboard.key ) {
+            | "s" | "S" => {
+              setFocusOfSearch();
+            }
+            | _ => ignore()
+            };
+        }
+      >
+        <div className=Styles.header>
           <div className=Styles.headerTitle>{ReasonReact.string("MININAX")}</div>
         </div>
         <div className=Styles.mainContainer>

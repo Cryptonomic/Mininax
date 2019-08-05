@@ -169,16 +169,24 @@ function Footer(Props) {
   var onSearch = Props.onSearch;
   var onOpenNetworkSelector = Props.onOpenNetworkSelector;
   var theme = React.useContext(ContextProvider$ReactHooksTemplate.themeContext);
+  var match = React.useState((function () {
+          return false;
+        }));
+  var setIsFirstLoad = match[1];
+  var isFirstLoad = match[0];
   return React.createElement("div", {
               className: container
             }, React.createElement("input", {
                   ref: (function (ref) {
                       var ref$1 = ref;
                       Curry._1(setRef, ref$1);
-                      if (ref$1 == null) {
-                        return /* () */0;
-                      } else {
+                      if (!(ref$1 == null) && !isFirstLoad) {
+                        Curry._1(setIsFirstLoad, (function (param) {
+                                return true;
+                              }));
                         return ref$1.focus();
+                      } else {
+                        return /* () */0;
                       }
                     }),
                   className: input(theme),

@@ -177,8 +177,8 @@ function reducer(state, action) {
                 ];
       case 4 : 
           return /* record */[
-                  /* entity */state[/* entity */0],
-                  /* id */state[/* id */1],
+                  /* entity */"blocks",
+                  /* id */action[1],
                   /* isLoading */false,
                   /* selectedConfig */state[/* selectedConfig */3],
                   /* isOpenNetworkSelector */state[/* isOpenNetworkSelector */4],
@@ -190,8 +190,8 @@ function reducer(state, action) {
                 ];
       case 5 : 
           return /* record */[
-                  /* entity */state[/* entity */0],
-                  /* id */state[/* id */1],
+                  /* entity */"accounts",
+                  /* id */action[1],
                   /* isLoading */false,
                   /* selectedConfig */state[/* selectedConfig */3],
                   /* isOpenNetworkSelector */state[/* isOpenNetworkSelector */4],
@@ -203,8 +203,8 @@ function reducer(state, action) {
                 ];
       case 6 : 
           return /* record */[
-                  /* entity */state[/* entity */0],
-                  /* id */state[/* id */1],
+                  /* entity */"operations",
+                  /* id */action[1],
                   /* isLoading */false,
                   /* selectedConfig */state[/* selectedConfig */3],
                   /* isOpenNetworkSelector */state[/* isOpenNetworkSelector */4],
@@ -242,7 +242,7 @@ function App(Props) {
   var match = React.useReducer(reducer, Type$ReactHooksTemplate.initState);
   var dispatch = match[1];
   var state = match[0];
-  var getBlock = function (id, isRoute) {
+  var getBlock = function (id, isRoute, isMain) {
     Curry._1(dispatch, /* SetLoading */0);
     ApiCall$ReactHooksTemplate.getBlockThunk(id, Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])).then((function (result) {
               switch (result[0]) {
@@ -258,11 +258,29 @@ function App(Props) {
                     if (match$1 !== undefined) {
                       var block = Caml_option.valFromOption(match$1);
                       if (isRoute) {
-                        var url = Utils$ReactHooksTemplate.makeUrl(Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])[/* network */3], "blocks", id);
-                        ReasonReactRouter.push(url);
-                        return Promise.resolve(Curry._1(dispatch, /* SetBlock */Block.__(4, [block])));
+                        if (isMain) {
+                          return Promise.resolve(Curry._1(dispatch, /* SetBlock */Block.__(4, [
+                                            block,
+                                            ""
+                                          ])));
+                        } else {
+                          var url = Utils$ReactHooksTemplate.makeUrl(Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])[/* network */3], "blocks", id);
+                          ReasonReactRouter.push(url);
+                          return Promise.resolve(Curry._1(dispatch, /* SetBlock */Block.__(4, [
+                                            block,
+                                            id
+                                          ])));
+                        }
+                      } else if (isMain) {
+                        return Promise.resolve(Curry._1(dispatch, /* SetBlock */Block.__(4, [
+                                          block,
+                                          ""
+                                        ])));
                       } else {
-                        return Promise.resolve(Curry._1(dispatch, /* SetBlock */Block.__(4, [block])));
+                        return Promise.resolve(Curry._1(dispatch, /* SetBlock */Block.__(4, [
+                                          block,
+                                          id
+                                        ])));
                       }
                     } else {
                       return Promise.resolve(Curry._1(dispatch, /* SetError */Block.__(3, [Utils$ReactHooksTemplate.noAvaialbel])));
@@ -293,9 +311,15 @@ function App(Props) {
                       if (isRoute) {
                         var url = Utils$ReactHooksTemplate.makeUrl(Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])[/* network */3], "operations", id);
                         ReasonReactRouter.push(url);
-                        return Promise.resolve(Curry._1(dispatch, /* SetOperations */Block.__(6, [operations])));
+                        return Promise.resolve(Curry._1(dispatch, /* SetOperations */Block.__(6, [
+                                          operations,
+                                          id
+                                        ])));
                       } else {
-                        return Promise.resolve(Curry._1(dispatch, /* SetOperations */Block.__(6, [operations])));
+                        return Promise.resolve(Curry._1(dispatch, /* SetOperations */Block.__(6, [
+                                          operations,
+                                          id
+                                        ])));
                       }
                     } else {
                       return Promise.resolve(Curry._1(dispatch, /* SetError */Block.__(3, [Utils$ReactHooksTemplate.noAvaialbel])));
@@ -326,9 +350,15 @@ function App(Props) {
                       if (isRoute) {
                         var url = Utils$ReactHooksTemplate.makeUrl(Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])[/* network */3], "accounts", id);
                         ReasonReactRouter.push(url);
-                        return Promise.resolve(Curry._1(dispatch, /* SetAccount */Block.__(5, [account])));
+                        return Promise.resolve(Curry._1(dispatch, /* SetAccount */Block.__(5, [
+                                          account,
+                                          id
+                                        ])));
                       } else {
-                        return Promise.resolve(Curry._1(dispatch, /* SetAccount */Block.__(5, [account])));
+                        return Promise.resolve(Curry._1(dispatch, /* SetAccount */Block.__(5, [
+                                          account,
+                                          id
+                                        ])));
                       }
                     } else {
                       return Promise.resolve(Curry._1(dispatch, /* SetError */Block.__(3, [Utils$ReactHooksTemplate.noAvaialbel])));
@@ -345,7 +375,7 @@ function App(Props) {
     Curry._1(dispatch, /* SetLoading */0);
     ApiCall$ReactHooksTemplate.getBlockHashThunk(level, Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])).then((function (result) {
               if (result !== undefined) {
-                return Promise.resolve(getBlock(Caml_option.valFromOption(result).hash, true));
+                return Promise.resolve(getBlock(Caml_option.valFromOption(result).hash, true, false));
               } else {
                 return Promise.resolve(Curry._1(dispatch, /* SetError */Block.__(3, [Utils$ReactHooksTemplate.noAvaialbel])));
               }
@@ -358,7 +388,7 @@ function App(Props) {
     Curry._1(dispatch, /* SetLoading */0);
     ApiCall$ReactHooksTemplate.getBlockHeadThunk(Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, selectedConfig[0])).then((function (result) {
             if (result !== undefined) {
-              return Promise.resolve(getBlock(Caml_option.valFromOption(result).hash, false));
+              return Promise.resolve(getBlock(Caml_option.valFromOption(result).hash, false, true));
             } else {
               return Promise.resolve(Curry._1(dispatch, /* SetError */Block.__(3, [Utils$ReactHooksTemplate.noAvaialbel])));
             }
@@ -372,15 +402,11 @@ function App(Props) {
     if (selectedIndex !== -1) {
       Curry._1(dispatch, /* ChangeNetwork */Block.__(1, [selectedIndex]));
       selectedConfig[0] = selectedIndex;
-      Curry._1(dispatch, /* SetParams */Block.__(2, [
-              entity,
-              id
-            ]));
       switch (entity) {
         case "accounts" : 
             return getAccount(id, false);
         case "blocks" : 
-            return getBlock(id, false);
+            return getBlock(id, false, false);
         case "operations" : 
             return getOperation(id, false);
         default:
@@ -395,14 +421,6 @@ function App(Props) {
     footerRef[0] = (ref == null) ? undefined : Caml_option.some(ref);
     return /* () */0;
   };
-  var testRef = function (_event) {
-    var match = footerRef[0];
-    if (match !== undefined) {
-      return Caml_option.valFromOption(match).focus();
-    } else {
-      return /* () */0;
-    }
-  };
   var onChangeId = function (id) {
     var newId = id.replace((/ /g), "");
     return Curry._1(dispatch, /* SetId */Block.__(0, [newId]));
@@ -413,7 +431,7 @@ function App(Props) {
     var isNumber = Utils$ReactHooksTemplate.isNumber(id);
     switch (firstChar) {
       case "b" : 
-          return getBlock(id, true);
+          return getBlock(id, true, false);
       case "o" : 
           return getOperation(id, true);
       default:
@@ -511,10 +529,29 @@ function App(Props) {
   var match$10 = state[/* isOpenNetworkSelector */4];
   return React.createElement(ReactIntl.IntlProvider, {
               children: React.createElement(ContextProvider$ReactHooksTemplate.make, ContextProvider$ReactHooksTemplate.makeProps(state[/* selectedConfig */3], React.createElement("div", {
-                            className: container(state[/* selectedConfig */3])
+                            className: container(state[/* selectedConfig */3]),
+                            tabIndex: 0,
+                            onKeyPress: (function ($$event) {
+                                var match = $$event.key;
+                                switch (match) {
+                                  case "S" : 
+                                  case "s" : 
+                                      var match$1 = footerRef[0];
+                                      if (match$1 !== undefined) {
+                                        var el = Caml_option.valFromOption(match$1);
+                                        setTimeout((function (param) {
+                                                return el.focus();
+                                              }), 100);
+                                        return /* () */0;
+                                      } else {
+                                        return /* () */0;
+                                      }
+                                  default:
+                                    return /* () */0;
+                                }
+                              })
                           }, React.createElement("div", {
-                                className: header,
-                                onClick: testRef
+                                className: header
                               }, React.createElement("div", {
                                     className: headerTitle
                                   }, "MININAX")), React.createElement("div", {

@@ -2,7 +2,9 @@
 'use strict';
 
 var React = require("react");
+var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Utils$ReactHooksTemplate = require("./Utils.bs.js");
+var Configs$ReactHooksTemplate = require("./configs.bs.js");
 var Styles1$ReactHooksTemplate = require("./Styles1.bs.js");
 var ItemDisplay$ReactHooksTemplate = require("./ItemDisplay.bs.js");
 var ContextProvider$ReactHooksTemplate = require("./ContextProvider.bs.js");
@@ -12,6 +14,12 @@ function Block(Props) {
   var goToBlock = Props.goToBlock;
   var goToDetail = Props.goToDetail;
   var theme = React.useContext(ContextProvider$ReactHooksTemplate.themeContext);
+  var onOpenUrl = function (_ev) {
+    var hash = Utils$ReactHooksTemplate.getValueFromDict(items, "hash");
+    var query = Utils$ReactHooksTemplate.getQueryForBlockLink(hash);
+    var displayName = Utils$ReactHooksTemplate.getDisplayName(Caml_array.caml_array_get(Configs$ReactHooksTemplate.configs, theme));
+    return Utils$ReactHooksTemplate.openSharedUrl(query, displayName, "operations");
+  };
   return React.createElement("div", {
               className: Styles1$ReactHooksTemplate.container(theme)
             }, React.createElement("div", {
@@ -22,7 +30,8 @@ function Block(Props) {
                   changeLevel: goToBlock,
                   goToDetail: goToDetail
                 }), React.createElement("div", {
-                  className: Styles1$ReactHooksTemplate.linkBtn(theme)
+                  className: Styles1$ReactHooksTemplate.linkBtn(theme),
+                  onClick: onOpenUrl
                 }, "All Operations >>"));
 }
 

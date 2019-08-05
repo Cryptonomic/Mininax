@@ -1,4 +1,5 @@
 open ConseiljsRe;
+open Type;
 [@bs.val] external btoa : string => string = "window.btoa";
 [@bs.val] external encodeURIComponent : string => string = "encodeURIComponent";
 [@bs.scope "window"] [@bs.val] external open_ : (string, string) => unit = "open";
@@ -254,10 +255,70 @@ let getQueryForBlockLink = (id: string) => {
   ConseilQueryBuilder.setLimit(query, 1000);
 };
 
+let getQueryForAccountSends = (id: string) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["timestamp", "block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "status"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"transaction"|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
+};
+
+let getQueryForAccountReceipts = (id: string) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["timestamp", "block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "status"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  let query = ConseilQueryBuilder.addPredicate(query, "destination", ConseiljsType.EQ, [|id|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"transaction"|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
+};
+
+let getQueryForOtherOperations = (id: string) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["timestamp", "block_hash", "operation_group_hash", "source", "kind", "status"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"reveal", "delegation", "origination"|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
+};
+
+let getQueryForEndorsements = (id: string) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["timestamp", "block_hash", "block_level", "operation_group_hash", "kind", "delegate", "slots"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, [|id|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"endorsement"|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
+};
+
+let getQueryForBakedBlocks = (id: string) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["timestamp", "hash", "level", "baker"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  let query = ConseilQueryBuilder.addPredicate(query, "baker", ConseiljsType.EQ, [|id|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
+};
+
+let getQueryForDepositsAndRewards = (id: string) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["source_hash", "delegate", "category", "change"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, [|id|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|"block"|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
+};
+
 let isNumber = (id: string) => {
   switch (int_of_string(id)) {
     | exception _ => false
     | _ => true
+  };
+};
+
+let getValueFromDict = (dict: Js.Dict.t(string), key_: string) => {
+  switch (Js.Dict.get(dict, key_)) {
+    | None => ""
+    | Some(value) => value
   };
 };
 
@@ -272,16 +333,15 @@ let copyContent: (string) => unit = [%bs.raw {|
     }
   |}];
 
+let jsonConvertQuery: (ConseiljsType.conseilQuery) => string = [%bs.raw {|
+    function (value) {
+      return JSON.stringify(value)
+    }
+  |}];
+
 let openSharedUrl = (query: ConseiljsType.conseilQuery, displayName: string, entity: string) => {
-  // let newQuery = Js.Dict.empty();
-  // Js.Dict.set(newQuery, "fields", query##fields);
-  // Js.Dict.set(newQuery, "predicates", query##predicates);
-  // Js.Dict.set(newQuery, "orderBy", query##orderBy);
-  // Js.Dict.set(newQuery, "limit", query##limit);
-  // Js.Dict.set(newQuery, "aggregation", query##aggregation);
-  // Js.Dict.set(newQuery, "output", query##output);
-  // let serializedQuery = Js.Json.stringify(query);
-  // let encodedUrl = btoa(serializedQuery);
-  // let shareLink = arronaxURL ++ "?e=" ++ encodeURIComponent(displayName) ++ "/" ++ encodeURIComponent(entity) ++ "&q=" ++ encodedUrl;
-  // open_(shareLink, "_blank");
+  let serializedQuery = jsonConvertQuery(query);
+  let encodedUrl = btoa(serializedQuery);
+  let shareLink = arronaxURL ++ "?e=" ++ encodeURIComponent(displayName) ++ "/" ++ encodeURIComponent(entity) ++ "&q=" ++ encodedUrl;
+  open_(shareLink, "_blank");
 };

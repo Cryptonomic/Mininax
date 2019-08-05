@@ -2,10 +2,12 @@
 'use strict';
 
 var Curry = require("bs-platform/lib/js/curry.js");
+var Js_dict = require("bs-platform/lib/js/js_dict.js");
 var Caml_format = require("bs-platform/lib/js/caml_format.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var ConseiljsRe = require("bs-conseiljs/src/ConseiljsRe.js");
-var CamlinternalOO = require("bs-platform/lib/js/camlinternalOO.js");
+
+var arronaxURL = "https://arronax-beta.cryptonomic.tech/";
 
 function getInfo(config) {
   var conseilServerInfo = {
@@ -611,6 +613,174 @@ function getQueryForBlockLink(id) {
   return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$2, 1000);
 }
 
+function getQueryForAccountSends(id) {
+  var query = ConseiljsRe.ConseilQueryBuilder[/* blankQuery */0](/* () */0);
+  var query$1 = ConseiljsRe.ConseilQueryBuilder[/* addFields */3](query, /* :: */[
+        "timestamp",
+        /* :: */[
+          "block_hash",
+          /* :: */[
+            "operation_group_hash",
+            /* :: */[
+              "kind",
+              /* :: */[
+                "source",
+                /* :: */[
+                  "destination",
+                  /* :: */[
+                    "amount",
+                    /* :: */[
+                      "fee",
+                      /* :: */[
+                        "status",
+                        /* [] */0
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]);
+  var query$2 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$1, "source", /* EQ */1, /* array */[id], false);
+  var query$3 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$2, "kind", /* EQ */1, /* array */["transaction"], false);
+  return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$3, 1000);
+}
+
+function getQueryForAccountReceipts(id) {
+  var query = ConseiljsRe.ConseilQueryBuilder[/* blankQuery */0](/* () */0);
+  var query$1 = ConseiljsRe.ConseilQueryBuilder[/* addFields */3](query, /* :: */[
+        "timestamp",
+        /* :: */[
+          "block_hash",
+          /* :: */[
+            "operation_group_hash",
+            /* :: */[
+              "kind",
+              /* :: */[
+                "source",
+                /* :: */[
+                  "destination",
+                  /* :: */[
+                    "amount",
+                    /* :: */[
+                      "fee",
+                      /* :: */[
+                        "status",
+                        /* [] */0
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]);
+  var query$2 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$1, "destination", /* EQ */1, /* array */[id], false);
+  var query$3 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$2, "kind", /* EQ */1, /* array */["transaction"], false);
+  return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$3, 1000);
+}
+
+function getQueryForOtherOperations(id) {
+  var query = ConseiljsRe.ConseilQueryBuilder[/* blankQuery */0](/* () */0);
+  var query$1 = ConseiljsRe.ConseilQueryBuilder[/* addFields */3](query, /* :: */[
+        "timestamp",
+        /* :: */[
+          "block_hash",
+          /* :: */[
+            "operation_group_hash",
+            /* :: */[
+              "source",
+              /* :: */[
+                "kind",
+                /* :: */[
+                  "status",
+                  /* [] */0
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]);
+  var query$2 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$1, "source", /* EQ */1, /* array */[id], false);
+  var query$3 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$2, "kind", /* EQ */1, /* array */[
+        "reveal",
+        "delegation",
+        "origination"
+      ], false);
+  return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$3, 1000);
+}
+
+function getQueryForEndorsements(id) {
+  var query = ConseiljsRe.ConseilQueryBuilder[/* blankQuery */0](/* () */0);
+  var query$1 = ConseiljsRe.ConseilQueryBuilder[/* addFields */3](query, /* :: */[
+        "timestamp",
+        /* :: */[
+          "block_hash",
+          /* :: */[
+            "block_level",
+            /* :: */[
+              "operation_group_hash",
+              /* :: */[
+                "kind",
+                /* :: */[
+                  "delegate",
+                  /* :: */[
+                    "slots",
+                    /* [] */0
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]);
+  var query$2 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$1, "delegate", /* EQ */1, /* array */[id], false);
+  var query$3 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$2, "kind", /* EQ */1, /* array */["endorsement"], false);
+  return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$3, 1000);
+}
+
+function getQueryForBakedBlocks(id) {
+  var query = ConseiljsRe.ConseilQueryBuilder[/* blankQuery */0](/* () */0);
+  var query$1 = ConseiljsRe.ConseilQueryBuilder[/* addFields */3](query, /* :: */[
+        "timestamp",
+        /* :: */[
+          "hash",
+          /* :: */[
+            "level",
+            /* :: */[
+              "baker",
+              /* [] */0
+            ]
+          ]
+        ]
+      ]);
+  var query$2 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$1, "baker", /* EQ */1, /* array */[id], false);
+  return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$2, 1000);
+}
+
+function getQueryForDepositsAndRewards(id) {
+  var query = ConseiljsRe.ConseilQueryBuilder[/* blankQuery */0](/* () */0);
+  var query$1 = ConseiljsRe.ConseilQueryBuilder[/* addFields */3](query, /* :: */[
+        "source_hash",
+        /* :: */[
+          "delegate",
+          /* :: */[
+            "category",
+            /* :: */[
+              "change",
+              /* [] */0
+            ]
+          ]
+        ]
+      ]);
+  var query$2 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$1, "delegate", /* EQ */1, /* array */[id], false);
+  var query$3 = ConseiljsRe.ConseilQueryBuilder[/* addPredicate */1](query$2, "source", /* EQ */1, /* array */["block"], false);
+  return ConseiljsRe.ConseilQueryBuilder[/* setLimit */5](query$3, 1000);
+}
+
 function isNumber(id) {
   try {
     Caml_format.caml_int_of_string(id);
@@ -618,6 +788,15 @@ function isNumber(id) {
   }
   catch (exn){
     return false;
+  }
+}
+
+function getValueFromDict(dict, key_) {
+  var match = Js_dict.get(dict, key_);
+  if (match !== undefined) {
+    return match;
+  } else {
+    return "";
   }
 }
 
@@ -632,28 +811,19 @@ var copyContent = (
     }
   );
 
-var class_tables = [
-  0,
-  0,
-  0
-];
+var jsonConvertQuery = (
+    function (value) {
+      return JSON.stringify(value)
+    }
+  );
 
 function openSharedUrl(query, displayName, entity) {
-  if (!class_tables[0]) {
-    var $$class = CamlinternalOO.create_table(0);
-    var env = CamlinternalOO.new_variable($$class, "");
-    var env_init = function (env$1) {
-      var self = CamlinternalOO.create_object_opt(0, $$class);
-      self[env] = env$1;
-      return self;
-    };
-    CamlinternalOO.init_class($$class);
-    class_tables[0] = env_init;
-  }
-  return Curry._1(class_tables[0], 0);
+  var serializedQuery = Curry._1(jsonConvertQuery, query);
+  var encodedUrl = window.btoa(serializedQuery);
+  var shareLink = arronaxURL + ("?e=" + (encodeURIComponent(displayName) + ("/" + (encodeURIComponent(entity) + ("&q=" + encodedUrl)))));
+  window.open(shareLink, "_blank");
+  return /* () */0;
 }
-
-var arronaxURL = "https://arronax-beta.cryptonomic.tech/";
 
 var invalidId = "You entered an invalid ID.";
 
@@ -677,7 +847,15 @@ exports.getQueryForBlockTotals = getQueryForBlockTotals;
 exports.getQueryForOperations = getQueryForOperations;
 exports.getQueryForBakerInfo = getQueryForBakerInfo;
 exports.getQueryForBlockLink = getQueryForBlockLink;
+exports.getQueryForAccountSends = getQueryForAccountSends;
+exports.getQueryForAccountReceipts = getQueryForAccountReceipts;
+exports.getQueryForOtherOperations = getQueryForOtherOperations;
+exports.getQueryForEndorsements = getQueryForEndorsements;
+exports.getQueryForBakedBlocks = getQueryForBakedBlocks;
+exports.getQueryForDepositsAndRewards = getQueryForDepositsAndRewards;
 exports.isNumber = isNumber;
+exports.getValueFromDict = getValueFromDict;
 exports.copyContent = copyContent;
+exports.jsonConvertQuery = jsonConvertQuery;
 exports.openSharedUrl = openSharedUrl;
 /* copyContent Not a pure module */

@@ -64,14 +64,16 @@ module Styles = {
 [@react.component]
 let make = (~searhVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkSelector) => {
   let theme = React.useContext(ContextProvider.themeContext);
+  let (isFirstLoad, setIsFirstLoad) = React.useState(() => false);
   let doEffectWhenRefChanges = (ref) => {
     setRef(ref);
-    switch (Js.Nullable.toOption(ref)) {
-    | Some(el) => {
+    switch (Js.Nullable.toOption(ref), isFirstLoad) {
+    | (Some(el), false) => {
       let elementObj = ReactDOMRe.domElementToObj(el);
+      setIsFirstLoad(_ => true);
       elementObj##focus();
     }
-    | None => ignore()
+    | _ => ignore()
     };
   };
 

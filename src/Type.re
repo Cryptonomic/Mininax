@@ -58,7 +58,7 @@ type action =
   | SetParams(string, string)
   | SetError(string)
   | RemoveError
-  | SetBlock(Js.Dict.t(string))
-  | SetAccount(Js.Dict.t(string))
-  | SetOperations(array(Js.Dict.t(string)))
+  | SetBlock(Js.Dict.t(string), string)
+  | SetAccount(Js.Dict.t(string), string)
+  | SetOperations(array(Js.Dict.t(string)), string)
   | OpenNetwork(bool);
