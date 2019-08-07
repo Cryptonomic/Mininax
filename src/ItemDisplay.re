@@ -33,6 +33,8 @@ module Styles = {
   ]);
 
   let fieldLabel = (isBar, index) => style([
+    display(flexBox),
+    justifyContent(spaceBetween),
     width(px(215)),
     isBar?before([
       contentRule(""),
@@ -83,7 +85,6 @@ module Styles = {
   ]);
 
   let copyImg = style([
-    float(`right),
     cursor(`pointer)
   ]);
 };

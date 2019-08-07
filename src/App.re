@@ -73,8 +73,8 @@ let make = () => {
           };
       })
       |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> ignore
     );
-    ();
   };
 
   let getOperation = (id: string, isRoute: bool) => {
@@ -98,8 +98,8 @@ let make = () => {
           };
       })
       |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> ignore
     );
-    ();
   };
 
   let getAccount = (id: string, isRoute: bool) => {
@@ -123,8 +123,8 @@ let make = () => {
           };
       })
       |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> ignore
     );
-    ();
   };
 
   let getHashByLevel = (level: int) => {
@@ -138,8 +138,8 @@ let make = () => {
         }
       )
       |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> ignore
     );
-    ();
   };
 
   let getMainPage = () => {
@@ -185,11 +185,10 @@ let make = () => {
   let setFocusOfSearch = () => {
     switch (footerRef^) {
       | Some(el) => {
-        Js.Global.setTimeout(_=> {
+        let _ = Js.Global.setTimeout(_=> {
           let elementObj = ReactDOMRe.domElementToObj(el);
           elementObj##focus();
         }, 100);
-        ();
       }
       | None => ignore()
     };

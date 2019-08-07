@@ -5,6 +5,7 @@ let make = (~items, ~goToDetail) => {
   let (count, setCount) = React.useState(() => 0);
   let total = items |> Js.Array.length;
   let changeLevel = (level) => {
+    Js.log2("level", level);
     ();
   };
   <div className=container(theme)>

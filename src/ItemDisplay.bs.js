@@ -77,31 +77,37 @@ function levelLabel(index) {
 
 function fieldLabel(isBar, index) {
   return Css.style(/* :: */[
-              Css.width(Css.px(215)),
+              Css.display(Css.flexBox),
               /* :: */[
-                isBar ? Css.before(/* :: */[
-                        Css.contentRule(""),
-                        /* :: */[
-                          Css.position(Css.absolute),
-                          /* :: */[
-                            Css.width(Css.px(8)),
+                Css.justifyContent(Css.spaceBetween),
+                /* :: */[
+                  Css.width(Css.px(215)),
+                  /* :: */[
+                    isBar ? Css.before(/* :: */[
+                            Css.contentRule(""),
                             /* :: */[
-                              Css.height(Css.px(2)),
+                              Css.position(Css.absolute),
                               /* :: */[
-                                Css.backgroundColor(Css.hex(Caml_array.caml_array_get(Themes$ReactHooksTemplate.themes, index)[/* fieldBgColor */1])),
+                                Css.width(Css.px(8)),
                                 /* :: */[
-                                  Css.left(Css.px(-9)),
+                                  Css.height(Css.px(2)),
                                   /* :: */[
-                                    Css.top(Css.px(16)),
-                                    /* [] */0
+                                    Css.backgroundColor(Css.hex(Caml_array.caml_array_get(Themes$ReactHooksTemplate.themes, index)[/* fieldBgColor */1])),
+                                    /* :: */[
+                                      Css.left(Css.px(-9)),
+                                      /* :: */[
+                                        Css.top(Css.px(16)),
+                                        /* [] */0
+                                      ]
+                                    ]
                                   ]
                                 ]
                               ]
                             ]
-                          ]
-                        ]
-                      ]) : Css.before(/* [] */0),
-                labelCss(index)
+                          ]) : Css.before(/* [] */0),
+                    labelCss(index)
+                  ]
+                ]
               ]
             ]);
 }
@@ -196,11 +202,8 @@ function linkContent(index) {
 }
 
 var copyImg = Css.style(/* :: */[
-      Css.$$float(/* right */-379319332),
-      /* :: */[
-        Css.cursor(/* pointer */-786317123),
-        /* [] */0
-      ]
+      Css.cursor(/* pointer */-786317123),
+      /* [] */0
     ]);
 
 var Styles = /* module */[

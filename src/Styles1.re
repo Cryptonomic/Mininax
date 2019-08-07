@@ -8,7 +8,7 @@ let container = index => style([
     contentRule(""),
     position(absolute),
     width(px(2)),
-    height(Calc.(pct(100.) - px(29))),
+    height(Calc.(-)(pct(100.), px(29))),
     backgroundColor(hex(themes[index].fieldBgColor)),
     left(px(0)),
     top(px(16))

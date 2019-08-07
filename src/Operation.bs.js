@@ -19,6 +19,7 @@ function Operation(Props) {
   var count = match[0];
   var total = items.length;
   var changeLevel = function (level) {
+    console.log("level", level);
     return /* () */0;
   };
   var match$1 = total > 1;

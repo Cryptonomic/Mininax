@@ -14,6 +14,7 @@ function Account(Props) {
   var goToDetail = Props.goToDetail;
   var theme = React.useContext(ContextProvider$ReactHooksTemplate.themeContext);
   var changeLevel = function (level) {
+    console.log("level", level);
     return /* () */0;
   };
   var id = Utils$ReactHooksTemplate.getValueFromDict(items, "account_id");

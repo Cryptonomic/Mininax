@@ -4,6 +4,7 @@ open Configs;
 let make = (~items, ~goToDetail) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let changeLevel = (level) => {
+    Js.log2("level", level);
     ();
   };
   let id = Utils.getValueFromDict(items, "account_id");
