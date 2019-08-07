@@ -3,3 +3,5 @@ node_modules/
 lib/
 build/
 src/*.js
+src/configs.re
+.merlin

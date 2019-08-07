@@ -1,4 +1,4 @@
-# mininax-reason
+# mininax
 
 ## Run Project
 

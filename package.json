@@ -1,5 +1,5 @@
 {
-  "name": "mininax-reason",
+  "name": "mininax",
   "version": "0.1.0",
   "scripts": {
     "build": "bsb -make-world",
@@ -13,8 +13,8 @@
   "keywords": [
     "BuckleScript"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Cryptonomic Inc",
+  "license": "GPL",
   "dependencies": {
     "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#9d88c727b96fcebe437ea6b2d3819c1083927b74",
     "bs-css": "^9.0.1",
