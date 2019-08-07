@@ -256,7 +256,7 @@ let make = () => {
           }}
         </div>
         <Footer
-          searhVal={state.id}
+          searchVal={state.id}
           network={configs[state.selectedConfig].displayName}
           setRef={setFooterRef}
           changeId={onChangeId}

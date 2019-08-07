@@ -62,7 +62,7 @@ module Styles = {
   ]);
 };
 [@react.component]
-let make = (~searhVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkSelector) => {
+let make = (~searchVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkSelector) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let (isFirstLoad, setIsFirstLoad) = React.useState(() => false);
   let doEffectWhenRefChanges = (ref) => {
@@ -87,7 +87,7 @@ let make = (~searhVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkSe
       ref={ReactDOMRe.Ref.callbackDomRef(ref =>
         doEffectWhenRefChanges(ref)
       )}
-      value={searhVal}
+      value={searchVal}
       onChange={
         event => changeId(ReactEvent.Form.target(event)##value)
       }
