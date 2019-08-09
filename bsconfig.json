@@ -15,7 +15,10 @@
   "suffix": ".bs.js",
   "namespace": true,
   "bs-dependencies": [
-    "reason-react"
+    "bs-conseiljs",
+    "reason-react",
+    "bs-css",
+    "bs-react-intl"
   ],
   "refmt": 3
 }

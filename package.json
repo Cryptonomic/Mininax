@@ -16,13 +16,20 @@
   "author": "Cryptonomic Inc",
   "license": "GPL",
   "dependencies": {
+    "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#9d88c727b96fcebe437ea6b2d3819c1083927b74",
+    "bs-css": "^9.0.1",
+    "bs-react-intl": "git+https://github.com/reasonml-community/bs-react-intl.git",
+    "conseiljs": "^0.2.7",
     "react": "^16.8.1",
     "react-dom": "^16.8.1",
+    "react-intl": "3.0.0-beta-8",
     "reason-react": ">=0.7.0"
   },
   "devDependencies": {
     "bs-platform": "^5.0.4",
+    "copy-webpack-plugin": "^5.0.3",
     "html-webpack-plugin": "^3.2.0",
+    "url-loader": "^2.1.0",
     "webpack": "^4.0.1",
     "webpack-cli": "^3.1.1",
     "webpack-dev-server": "^3.1.8"
