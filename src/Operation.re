@@ -16,8 +16,8 @@ let make = (~items, ~goToDetail) => {
             {ReasonReact.string("Operation (" ++ string_of_int(count+1) ++ "/" ++ string_of_int(total) ++ ")" )}
           </div>
           <div className=titleBtnContainer>
-            <div className=transactionBtn(theme, count === 0) onClick={_=>setCount(count => count - 1)}>{ReasonReact.string("<")}</div>
-            <div className=transactionBtn(theme, count === total - 1) onClick={_=>setCount(count => count + 1)}>{ReasonReact.string(">")}</div>
+            <button disabled={count === 0} className=transactionBtn(theme, count === 0) onClick={_=>setCount(count => count - 1)}>{ReasonReact.string("<")}</button>
+            <button disabled={count === total - 1} className=transactionBtn(theme, count === total - 1) onClick={_=>setCount(count => count + 1)}>{ReasonReact.string(">")}</button>
           </div>
         </div>
       ) :
@@ -25,6 +25,6 @@ let make = (~items, ~goToDetail) => {
         <div className=title(theme)>{ReasonReact.string("Operation")}</div>
       )
     }
-    <ItemDisplay entity="operation" items=items[count] changeLevel={changeLevel} goToDetail={goToDetail} />
+    {total > 0 ? <ItemDisplay entity="operation" items=items[count] changeLevel={changeLevel} goToDetail={goToDetail} /> : ReasonReact.null}
   </div>
 }

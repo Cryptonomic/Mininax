@@ -5,3 +5,4 @@ build/
 src/*.js
 src/configs.re
 .merlin
+.bsb.lock
