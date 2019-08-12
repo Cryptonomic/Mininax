@@ -1,5 +1,6 @@
 open ConseiljsRe;
 open Type;
+
 [@bs.val] external btoa : string => string = "window.btoa";
 [@bs.val] external encodeURIComponent : string => string = "encodeURIComponent";
 [@bs.scope "window"] [@bs.val] external open_ : (string, string) => unit = "open";
@@ -16,7 +17,31 @@ let getInfo = (config: Type.config) => {
 
 let getDisplayName = (config: Type.config) => config.displayName;
 
-let convertFromUtezToTez = (amountInUtez: int) => amountInUtez / 1000000;
+let convertNumberByIntl: (bool, int, int, float ) => string = [%bs.raw {|
+    function (useGrouping, minimumFractionDigits, maximumFractionDigits, value) {
+      return new Intl.NumberFormat(window.navigator.languages[0], { style: 'decimal', useGrouping, minimumFractionDigits, maximumFractionDigits }).format(value);
+    }
+  |}];
+
+let formatNumber = (value, isScale) => {
+  let realVal = Js.Nullable.toOption(value);
+  switch (realVal, isScale) {
+  | (Some(val_), true) => {
+    let d = float_of_int(val_) /. 1000000.;
+    let (minimumFractionDigits, maximumFractionDigits) =
+      if (val_ < 10000) {
+        (6, 6);
+      } else if (val_ < 100000) {
+        (4, 4);
+      } else {
+        (2, 2);
+      };
+      convertNumberByIntl(true, minimumFractionDigits, maximumFractionDigits, d);
+  }
+  | (Some(val_), false) => convertNumberByIntl(false, 0, 1, float_of_int(val_))
+  | _ => ""
+  };
+};
 
 let makeUrl = (network: string, entity: string, id: string) => "/" ++ network ++ "/" ++ entity ++ "/" ++ id;
 
@@ -118,7 +143,7 @@ let convertBlock = (~block, ~total=?, ()) => {
   Js.Dict.set(newBlock, "timestamp", assBlock##timestamp |> string_of_int);
   Js.Dict.set(newBlock, "chain_id", assBlock##chain_id);
   Js.Dict.set(newBlock, "protocol", assBlock##protocol);
-  Js.Dict.set(newBlock, "consumed_gas", assBlock##consumed_gas |> string_of_int);
+  Js.Dict.set(newBlock, "consumed_gas", formatNumber(assBlock##consumed_gas, false));
   Js.Dict.set(newBlock, "baker", assBlock##baker);
   Js.Dict.set(newBlock, "baker_priority", "Coming Soon");
   Js.Dict.set(newBlock, "meta_cycle", assBlock##meta_cycle |> string_of_int);
@@ -134,8 +159,8 @@ let convertBlock = (~block, ~total=?, ()) => {
   }
   | Some(tt) => {
     let assTotal = Js.Obj.assign (Js.Obj.empty(), tt);
-    Js.Dict.set(newBlock, "total_amount", assTotal##sum_amount |> convertFromUtezToTez |> string_of_int);
-    Js.Dict.set(newBlock, "fee", assTotal##sum_fee |> convertFromUtezToTez |> string_of_int);
+    Js.Dict.set(newBlock, "total_amount", formatNumber(assTotal##sum_amount, true));
+    Js.Dict.set(newBlock, "fee", formatNumber(assTotal##sum_fee, true));
     newBlock;
   }}
 };
@@ -150,9 +175,9 @@ let convertOperation = (operation) => {
     | "transaction" => {
       Js.Dict.set(newOp, "source", assOp##source);
       Js.Dict.set(newOp, "destination", assOp##destination);
-      Js.Dict.set(newOp, "amount", assOp##amount |> convertFromUtezToTez |> string_of_int);
-      Js.Dict.set(newOp, "fee", assOp##fee |> convertFromUtezToTez |> string_of_int);
-      Js.Dict.set(newOp, "consumed_gas", assOp##consumed_gas |> convertFromUtezToTez |> string_of_int);
+      Js.Dict.set(newOp, "amount", formatNumber(assOp##amount, true));
+      Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
+      Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
       Js.Dict.set(newOp, "parameters", assOp##parameters);
       Js.Dict.set(newOp, "status", assOp##status);
       newOp;
@@ -165,25 +190,25 @@ let convertOperation = (operation) => {
     | "reveal" => {
       Js.Dict.set(newOp, "source", assOp##source);
       Js.Dict.set(newOp, "public_key", assOp##public_key);
-      Js.Dict.set(newOp, "fee", assOp##fee |> convertFromUtezToTez |> string_of_int);
-      Js.Dict.set(newOp, "consumed_gas", assOp##consumed_gas |> convertFromUtezToTez |> string_of_int);
+      Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
+      Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
       Js.Dict.set(newOp, "status", assOp##status);
       newOp;
     }
     | "delegation" => {
       Js.Dict.set(newOp, "source", assOp##source);
       Js.Dict.set(newOp, "delegate", assOp##delegate);
-      Js.Dict.set(newOp, "fee", assOp##fee |> convertFromUtezToTez |> string_of_int);
-      Js.Dict.set(newOp, "consumed_gas", assOp##consumed_gas |> convertFromUtezToTez |> string_of_int);
+      Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
+      Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
       Js.Dict.set(newOp, "status", assOp##status);
       newOp;
     }
     | "origination" => {
       Js.Dict.set(newOp, "source", assOp##source);
       Js.Dict.set(newOp, "delegate", assOp##delegate);
-      Js.Dict.set(newOp, "amount", assOp##amount |> convertFromUtezToTez |> string_of_int);
-      Js.Dict.set(newOp, "fee", assOp##fee |> convertFromUtezToTez |> string_of_int);
-      Js.Dict.set(newOp, "consumed_gas", assOp##consumed_gas |> convertFromUtezToTez |> string_of_int);
+      Js.Dict.set(newOp, "amount", formatNumber(assOp##amount, true));
+      Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
+      Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
       Js.Dict.set(newOp, "script", assOp##script);
       Js.Dict.set(newOp, "storage", assOp##storage);
       Js.Dict.set(newOp, "status", assOp##status);
@@ -201,7 +226,7 @@ let convertAccount = (~account, ~baker=?, ()) => {
   Js.Dict.set(newAccount, "manager", assAccount##manager);
   Js.Dict.set(newAccount, "script", assAccount##script);
   Js.Dict.set(newAccount, "storage", assAccount##storage);
-  Js.Dict.set(newAccount, "balance", assAccount##balance |> convertFromUtezToTez |> string_of_int);
+  Js.Dict.set(newAccount, "balance", formatNumber(assAccount##balance, true));
   switch (baker) {
   | None => {
     Js.Dict.set(newAccount, "baker_deactivated", "No");
@@ -214,10 +239,10 @@ let convertAccount = (~account, ~baker=?, ()) => {
   | Some(tt) => {
     let assBaker = Js.Obj.assign (Js.Obj.empty(), tt);
     Js.Dict.set(newAccount, "baker_deactivated", assBaker##deactivated ? "No" : "Yes");
-    Js.Dict.set(newAccount, "baker_balance", assBaker##balance |> convertFromUtezToTez |> string_of_int);
-    Js.Dict.set(newAccount, "baker_delegated_balance", assBaker##delegated_balance |> convertFromUtezToTez |> string_of_int);
-    Js.Dict.set(newAccount, "baker_frozen_balance", assBaker##frozen_balance |> convertFromUtezToTez |> string_of_int);
-    Js.Dict.set(newAccount, "baker_staking_balance", assBaker##staking_balance |> convertFromUtezToTez |> string_of_int);
+    Js.Dict.set(newAccount, "baker_balance", formatNumber(assBaker##balance , true));
+    Js.Dict.set(newAccount, "baker_delegated_balance", formatNumber(assBaker##delegated_balance, true));
+    Js.Dict.set(newAccount, "baker_frozen_balance", formatNumber(assBaker##frozen_balance, true));
+    Js.Dict.set(newAccount, "baker_staking_balance", formatNumber(assBaker##staking_balance, true));
     newAccount;
   }}
 };
