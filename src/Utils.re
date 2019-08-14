@@ -43,11 +43,22 @@ let formatNumber = (value, isScale) => {
   };
 };
 
+let formatString = (value, isConvert) => {
+  let realVal = Js.Nullable.toOption(value);
+  switch (realVal, isConvert) {
+    | (Some(val_), true) => {
+      val_ |> Js.String.split("_") |> Js.Array.map(s => Js.String.toUpperCase(Js.String.charAt(0, s)) ++ Js.String.slice(~from=1, ~to_= Js.String.length(s), s)) |> Js.Array.joinWith(" ");
+    }
+    | (Some(val_), false) => val_
+    | _ => ""
+  };
+};
+
 let makeUrl = (network: string, entity: string, id: string) => "/" ++ network ++ "/" ++ entity ++ "/" ++ id;
 
 let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
   switch (entity, kind) {
-    | ("operation", Some("transaction")) => [|
+    | ("operation", Some("Transaction")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
@@ -59,14 +70,14 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "parameters", displayName: "Parameter", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
-    | ("operation", Some("activate_account")) => [|
+    | ("operation", Some("Activate Account")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
         {name: "pkh", displayName: "Account ID", isLink: false},
         {name: "secret", displayName: "Secret", isLink: false}
       |]
-    | ("operation", Some("reveal")) => [|
+    | ("operation", Some("Reveal")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
@@ -76,7 +87,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "consumed_gas", displayName: "Gas Consumed", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
-    | ("operation", Some("delegation")) => [|
+    | ("operation", Some("Delegation")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
@@ -86,7 +97,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "consumed_gas", displayName: "Gas Consumed", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
-    | ("operation", Some("origination")) => [|
+    | ("operation", Some("Origination")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
@@ -137,20 +148,20 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
 let convertBlock = (~block, ~total=?, ()) => {
   let assBlock = Js.Obj.assign (Js.Obj.empty(), block);
   let newBlock = Js.Dict.empty();
-  Js.Dict.set(newBlock, "hash", assBlock##hash);
-  Js.Dict.set(newBlock, "predecessor", assBlock##predecessor);
+  Js.Dict.set(newBlock, "hash", formatString(assBlock##hash, false));
+  Js.Dict.set(newBlock, "predecessor", formatString(assBlock##predecessor, false));
   Js.Dict.set(newBlock, "level", assBlock##level |> string_of_int);
   Js.Dict.set(newBlock, "timestamp", assBlock##timestamp |> string_of_int);
-  Js.Dict.set(newBlock, "chain_id", assBlock##chain_id);
-  Js.Dict.set(newBlock, "protocol", assBlock##protocol);
+  Js.Dict.set(newBlock, "chain_id", formatString(assBlock##chain_id, true));
+  Js.Dict.set(newBlock, "protocol", formatString(assBlock##protocol, false));
   Js.Dict.set(newBlock, "consumed_gas", formatNumber(assBlock##consumed_gas, false));
-  Js.Dict.set(newBlock, "baker", assBlock##baker);
-  Js.Dict.set(newBlock, "baker_priority", "Coming Soon");
+  Js.Dict.set(newBlock, "baker", formatString(assBlock##baker, false));
+  Js.Dict.set(newBlock, "baker_priority", formatNumber(assBlock##priority, false));
   Js.Dict.set(newBlock, "meta_cycle", assBlock##meta_cycle |> string_of_int);
   Js.Dict.set(newBlock, "meta_cycle_position", assBlock##meta_cycle_position |> string_of_int);
-  Js.Dict.set(newBlock, "period_kind", assBlock##period_kind);
-  Js.Dict.set(newBlock, "active_proposal", assBlock##active_proposal);
-  Js.Dict.set(newBlock, "signature", assBlock##signature);
+  Js.Dict.set(newBlock, "period_kind", formatString(assBlock##period_kind, true));
+  Js.Dict.set(newBlock, "active_proposal", formatString(assBlock##active_proposal, true));
+  Js.Dict.set(newBlock, "signature", formatString(assBlock##signature, false));
   switch (total) {
   | None => {
     Js.Dict.set(newBlock, "total_amount", "");
@@ -168,50 +179,50 @@ let convertBlock = (~block, ~total=?, ()) => {
 let convertOperation = (operation) => {
   let assOp = Js.Obj.assign (Js.Obj.empty(), operation);
   let newOp = Js.Dict.empty();
-  Js.Dict.set(newOp, "operation_group_hash", assOp##operation_group_hash);
-  Js.Dict.set(newOp, "kind", assOp##kind);
-  Js.Dict.set(newOp, "block_hash", assOp##block_hash);
+  Js.Dict.set(newOp, "operation_group_hash", formatString(assOp##operation_group_hash, false));
+  Js.Dict.set(newOp, "kind", formatString(assOp##kind, true));
+  Js.Dict.set(newOp, "block_hash", formatString(assOp##block_hash, false));
   switch assOp##kind {
     | "transaction" => {
-      Js.Dict.set(newOp, "source", assOp##source);
-      Js.Dict.set(newOp, "destination", assOp##destination);
+      Js.Dict.set(newOp, "source", formatString(assOp##source, false));
+      Js.Dict.set(newOp, "destination", formatString(assOp##destination, false));
       Js.Dict.set(newOp, "amount", formatNumber(assOp##amount, true));
       Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
       Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
-      Js.Dict.set(newOp, "parameters", assOp##parameters);
-      Js.Dict.set(newOp, "status", assOp##status);
+      Js.Dict.set(newOp, "parameters", formatString(assOp##parameters, false));
+      Js.Dict.set(newOp, "status", formatString(assOp##status, true));
       newOp;
     }
     | "activate_account" => {
-      Js.Dict.set(newOp, "pkh", assOp##pkh);
-      Js.Dict.set(newOp, "secret", assOp##secret);
+      Js.Dict.set(newOp, "pkh", formatString(assOp##pkh, false));
+      Js.Dict.set(newOp, "secret", formatString(assOp##secret, false));
       newOp;
     }
     | "reveal" => {
-      Js.Dict.set(newOp, "source", assOp##source);
-      Js.Dict.set(newOp, "public_key", assOp##public_key);
+      Js.Dict.set(newOp, "source", formatString(assOp##source, false));
+      Js.Dict.set(newOp, "public_key", formatString(assOp##public_key, false));
       Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
       Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
-      Js.Dict.set(newOp, "status", assOp##status);
+      Js.Dict.set(newOp, "status", formatString(assOp##status, true));
       newOp;
     }
     | "delegation" => {
-      Js.Dict.set(newOp, "source", assOp##source);
+      Js.Dict.set(newOp, "source", formatString(assOp##source, false));
       Js.Dict.set(newOp, "delegate", assOp##delegate);
       Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
       Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
-      Js.Dict.set(newOp, "status", assOp##status);
+      Js.Dict.set(newOp, "status", formatString(assOp##status, true));
       newOp;
     }
     | "origination" => {
-      Js.Dict.set(newOp, "source", assOp##source);
-      Js.Dict.set(newOp, "delegate", assOp##delegate);
+      Js.Dict.set(newOp, "source", formatString(assOp##source, false));
+      Js.Dict.set(newOp, "delegate", formatString(assOp##delegate, false));
       Js.Dict.set(newOp, "amount", formatNumber(assOp##amount, true));
       Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
       Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
-      Js.Dict.set(newOp, "script", assOp##script);
-      Js.Dict.set(newOp, "storage", assOp##storage);
-      Js.Dict.set(newOp, "status", assOp##status);
+      Js.Dict.set(newOp, "script", formatString(assOp##script, false));
+      Js.Dict.set(newOp, "storage", formatString(assOp##storage, false));
+      Js.Dict.set(newOp, "status", formatString(assOp##status, true));
       newOp;
     }
     | _ => newOp
@@ -221,11 +232,11 @@ let convertOperation = (operation) => {
 let convertAccount = (~account, ~baker=?, ()) => {
   let assAccount = Js.Obj.assign (Js.Obj.empty(), account);
   let newAccount = Js.Dict.empty();
-  Js.Dict.set(newAccount, "account_id", assAccount##account_id);
-  Js.Dict.set(newAccount, "block_id", assAccount##block_id);
-  Js.Dict.set(newAccount, "manager", assAccount##manager);
-  Js.Dict.set(newAccount, "script", assAccount##script);
-  Js.Dict.set(newAccount, "storage", assAccount##storage);
+  Js.Dict.set(newAccount, "account_id", formatString(assAccount##account_id, false));
+  Js.Dict.set(newAccount, "block_id", formatString(assAccount##block_id, false));
+  Js.Dict.set(newAccount, "manager", formatString(assAccount##manager, false));
+  Js.Dict.set(newAccount, "script", formatString(assAccount##script, false));
+  Js.Dict.set(newAccount, "storage", formatString(assAccount##storage, false));
   Js.Dict.set(newAccount, "balance", formatNumber(assAccount##balance, true));
   switch (baker) {
   | None => {
@@ -259,8 +270,7 @@ let getQueryForBlockTotals = (blockid: string) => {
 
 let getQueryForOperations = (operationid: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let query = ConseilQueryBuilder.addPredicate(query, "operation_group_hash", ConseiljsType.EQ, [|operationid|], false);
-  ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.IN, [|"transaction", "activate_account", "reveal", "delegation", "origination"|], false);
+  ConseilQueryBuilder.addPredicate(query, "operation_group_hash", ConseiljsType.EQ, [|operationid|], false);
 };
 
 let getQueryForBakerInfo = (accountid: string) => {

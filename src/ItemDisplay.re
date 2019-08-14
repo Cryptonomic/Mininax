@@ -8,13 +8,16 @@ module Styles = {
     display(flexBox),
     flexDirection(column),
     marginTop(px(20)),
-    marginBottom(px(8))
+    marginBottom(px(5))
   ]);
 
-  let rowContainer = isBottom => style([
+  let rowContainer = style([
     display(flexBox),
     alignItems(center),
-    marginBottom(isBottom?px(0):px(10))
+    marginBottom(px(10)),
+    lastChild([
+      marginBottom(px(0))
+    ])
   ]);
 
   let labelCss = index => [
@@ -105,7 +108,7 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
     }
     | _ => Utils.getFields(~entity=entity, ())
   };
-  let fieldsLength = fields |> Js.Array.length;
+  let fieldsLength = ref(fields |> Js.Array.length);
   <div className=Styles.mainContainer>
     (
       fields
@@ -114,9 +117,13 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
             | None => ""
             | Some(value) => value
           };
-          switch (field.name, field.isLink) {
-            | ("level", _) => (
-              <div className=Styles.rowContainer(index === fieldsLength - 1) key=field.name>
+
+          switch (field.name, field.isLink, fieldVal) {
+            | (_, _, "") => {
+              ReasonReact.null;
+            }
+            | ("level", _, _) => (
+              <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.levelLabelContainer>
                   <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(int_of_string(fieldVal) - 1)}>(ReasonReact.string("<"))</button>
                   <div className=Styles.levelLabel(theme)>(ReasonReact.string("Level"))</div>
@@ -125,18 +132,18 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))</div>
               </div>
             )
-            | ("script", _) | ("storage", _) | ("parameters", _) => (
-              <div className=Styles.rowContainer(index === fieldsLength - 1) key=field.name>
-                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength - 1, theme)>
+            | ("script", _, _) | ("storage", _, _) | ("parameters", _, _) => (
+              <div className=Styles.rowContainer key=field.name>
+                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
                   <img className=Styles.copyImg src={copyYellow} onClick={_=> Utils.copyContent(fieldVal)} />
                 </div>
                 <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))</div>
               </div>
             )
-            | ("timestamp", _) => (
-              <div className=Styles.rowContainer(index === fieldsLength - 1) key=field.name>
-                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength - 1, theme)>
+            | ("timestamp", _, _) => (
+              <div className=Styles.rowContainer key=field.name>
+                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
                 </div>
                 <div className=Styles.fieldContent(theme)>
@@ -144,17 +151,17 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 </div>
               </div>
             )
-            | (_, true) => (
-              <div className=Styles.rowContainer(index === fieldsLength - 1) key=field.name>
-                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength - 1, theme)>
+            | (_, true, _) => (
+              <div className=Styles.rowContainer key=field.name>
+                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
                 </div>
                 <div className=Styles.linkContent(theme) onClick={_ => goToDetail(fieldVal)}>(ReasonReact.string(fieldVal))</div>
               </div>
             )
             | _ => (
-              <div className=Styles.rowContainer(index === fieldsLength - 1) key=field.name>
-                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength - 1, theme)>
+              <div className=Styles.rowContainer key=field.name>
+                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
                 </div>
                 <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))</div>
