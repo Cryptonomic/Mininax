@@ -25,6 +25,10 @@ module.exports = {
             mimetype: 'image/svg+xml'
           }
         }
+      },
+      {
+        test: /\.css$/,
+        use: [{ loader: "style-loader" }, { loader: "css-loader" }]
       }
     ]
   },

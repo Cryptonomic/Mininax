@@ -1,6 +1,6 @@
 {
   "name": "mininax",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
@@ -10,11 +10,17 @@
     "webpack:production": "NODE_ENV=production webpack",
     "server": "webpack-dev-server"
   },
+  "description": "Block explorer for the Tezos chain made for quick and fun lookups of chain entities for wallets.",
+  "author": "Cryptonomic",
+  "license": "GPL-3.0",
+  "homepage": "https://mininax.cryptonomic.tech",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cryptonomic/Mininax"
+  },
   "keywords": [
-    "BuckleScript"
+    "Tezos", "Block explorer", "ReasonML"
   ],
-  "author": "Cryptonomic Inc",
-  "license": "GPL",
   "dependencies": {
     "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#6394b044c884d352322983812390974b419b43ad",
     "bs-css": "^9.0.1",
@@ -28,7 +34,9 @@
   "devDependencies": {
     "bs-platform": "^5.0.4",
     "copy-webpack-plugin": "^5.0.3",
+    "css-loader": "3.2.0",
     "html-webpack-plugin": "^3.2.0",
+    "style-loader": "1.0.0",
     "url-loader": "^2.1.0",
     "webpack": "^4.0.1",
     "webpack-cli": "^3.1.1",
