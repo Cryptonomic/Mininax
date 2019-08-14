@@ -267,13 +267,12 @@ let make = () => {
         {state.isLoading ? <Loader /> : ReasonReact.null}
         {state.isError ? <Error error={state.error} onTry={_ => dispatch(RemoveError)} /> : ReasonReact.null}
         {state.isOpenNetworkSelector ?
-          (
             <NetworkSelector
               selectedIndex={state.selectedConfig}
               onChange={onChangeNetwork}
               onCancel={_ => dispatch(OpenNetwork(false))}
             />
-          ):ReasonReact.null
+          :ReasonReact.null
         }
       </div>
     </ContextProvider>

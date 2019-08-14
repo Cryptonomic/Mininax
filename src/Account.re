@@ -41,7 +41,7 @@ let make = (~items, ~goToDetail) => {
 
   <div className=container(theme)>
     <div className=title(theme)>{ReasonReact.string("Account")}</div>
-    <ItemDisplay entity="account" items=items changeLevel={changeLevel} goToDetail={goToDetail} />
+    <ItemDisplay entity="account" items changeLevel goToDetail />
     <div className=accountBtn(theme) onClick={onOpenAccountSends}>{ReasonReact.string("All sent transactions")}</div>
     <div className=accountBtn(theme) onClick={onOpenAccountReceipts}>{ReasonReact.string("All received transactions")}</div>
     <div className=accountBtn(theme) onClick={onOpenAccountOtherOperations}>{ReasonReact.string("All reveals, delegations and originations")}</div>

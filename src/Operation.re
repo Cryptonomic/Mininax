@@ -25,6 +25,6 @@ let make = (~items, ~goToDetail) => {
         <div className=title(theme)>{ReasonReact.string("Operation")}</div>
       )
     }
-    {total > 0 ? <ItemDisplay entity="operation" items=items[count] changeLevel={changeLevel} goToDetail={goToDetail} /> : ReasonReact.null}
+    {total > 0 ? <ItemDisplay entity="operation" items=items[count] changeLevel goToDetail /> : ReasonReact.null}
   </div>
 }
