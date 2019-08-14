@@ -187,7 +187,8 @@ let make = () => {
       | Some(el) => {
         let _ = Js.Global.setTimeout(_=> {
           let elementObj = ReactDOMRe.domElementToObj(el);
-          elementObj##focus();
+          ignore(elementObj##focus());
+          elementObj##select();
         }, 100);
       }
       | None => ignore()

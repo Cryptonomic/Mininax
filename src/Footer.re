@@ -1,6 +1,7 @@
 open Themes;
 [@bs.module] external searchSvg : string = "./images/search.svg";
 [@bs.module] external cryptoLogo : string = "./images/cryptonomic.svg";
+[@bs.val] external scrollTo : (float, float) => unit = "scrollTo";
 module Styles = {
   open Css;
   let container = style([
@@ -71,7 +72,8 @@ let make = (~searchVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkS
     | (Some(el), false) => {
       let elementObj = ReactDOMRe.domElementToObj(el);
       setIsFirstLoad(_ => true);
-      elementObj##focus();
+      ignore(elementObj##focus());
+      scrollTo(0., 0.);
     }
     | _ => ignore()
     };
