@@ -253,7 +253,7 @@ let make = () => {
           {switch (url.path) {
             | [_, "accounts", _] => <Account items=state.account goToDetail={onSearchById} />
             | [_, "operations", _] => <Operation items=state.operation goToDetail={onSearchById} />
-            | _ => <Block items=state.block goToDetail={onSearchById} goToBlock={getHashByLevel} />
+            | _ => <Block items=state.block goToDetail={onSearchById} changeLevel={getHashByLevel} />
           }}
         </div>
         <Footer

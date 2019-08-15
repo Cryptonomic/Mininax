@@ -6,7 +6,7 @@
   },
   "sources": {
     "dir" : "src",
-    "subdirs" : true
+    "subdirs": ["components", "helpers"]
   },
   "package-specs": [{
     "module": "commonjs",
