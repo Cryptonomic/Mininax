@@ -1,6 +1,6 @@
 open Themes;
-[@bs.module] external searchSvg : string = "../images/search.svg";
-[@bs.module] external cryptoLogo : string = "../images/cryptonomic.svg";
+[@bs.module] external searchSvg : string = "../assets/images/search.svg";
+[@bs.module] external cryptoLogo : string = "../assets/images/cryptonomic.svg";
 [@bs.val] external scrollTo : (float, float) => unit = "scrollTo";
 module Styles = {
   open Css;

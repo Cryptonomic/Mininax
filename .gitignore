@@ -5,6 +5,5 @@
 build/
 lib/
 node_modules/
-src/*/*.js
-src/*.js
+src/**/*.js
 src/configs.re

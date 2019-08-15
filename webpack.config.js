@@ -38,7 +38,9 @@ module.exports = {
       inject: false
     }),
     new CopyPlugin([
-      { from: 'assets', to: 'assets' }
+      { from: 'assets/fonts', to: 'assets/fonts' },
+      { from: 'assets/favicon.ico', to: 'assets/avicon.ico' },
+      { from: 'assets/style.css', to: 'assets/style.css' }
     ])
   ],
   devServer: {
