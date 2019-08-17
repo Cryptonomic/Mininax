@@ -1,8 +1,9 @@
-.idea/
-node_modules/
-lib/
-build/
-src/*.js
-src/configs.re
-.merlin
 .bsb.lock
+.DS_Store
+.merlin
+.idea/
+build/
+lib/
+node_modules/
+src/**/*.js
+src/configs.re

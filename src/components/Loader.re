@@ -1,4 +1,4 @@
-[@bs.module] external loadingSvg : string = "./images/loading.svg";
+[@bs.module] external loadingSvg : string = "../assets/images/loading.svg";
 module Styles = {
   open Css;
   let container = style([

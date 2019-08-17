@@ -1,7 +1,7 @@
 open Themes;
 open Type;
 open ReactIntl;
-[@bs.module] external copyYellow : string = "./images/copy-yellow.svg";
+[@bs.module] external copyYellow : string = "../assets/images/copy-yellow.svg";
 module Styles = {
   open Css;
   let mainContainer = style([

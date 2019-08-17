@@ -1,12 +1,12 @@
 
 {
-  "name": "react-hooks-template",
+  "name": "mininax",
   "reason": {
     "react-jsx": 3
   },
   "sources": {
     "dir" : "src",
-    "subdirs" : true
+    "subdirs": ["components", "utils", "styles"]
   },
   "package-specs": [{
     "module": "commonjs",

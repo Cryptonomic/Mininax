@@ -253,7 +253,7 @@ let make = () => {
           {switch (url.path) {
             | [_, "accounts", _] => <Account items=state.account goToDetail={onSearchById} />
             | [_, "operations", _] => <Operation items=state.operation goToDetail={onSearchById} />
-            | _ => <Block items=state.block goToDetail={onSearchById} goToBlock={getHashByLevel} />
+            | _ => <Block items=state.block goToDetail={onSearchById} changeLevel={getHashByLevel} />
           }}
         </div>
         <Footer
@@ -267,13 +267,12 @@ let make = () => {
         {state.isLoading ? <Loader /> : ReasonReact.null}
         {state.isError ? <Error error={state.error} onTry={_ => dispatch(RemoveError)} /> : ReasonReact.null}
         {state.isOpenNetworkSelector ?
-          (
             <NetworkSelector
               selectedIndex={state.selectedConfig}
               onChange={onChangeNetwork}
               onCancel={_ => dispatch(OpenNetwork(false))}
             />
-          ):ReasonReact.null
+          :ReasonReact.null
         }
       </div>
     </ContextProvider>

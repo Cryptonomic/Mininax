@@ -1,6 +1,6 @@
 open Themes;
-[@bs.module] external searchSvg : string = "./images/search.svg";
-[@bs.module] external cryptoLogo : string = "./images/cryptonomic.svg";
+[@bs.module] external searchSvg : string = "../assets/images/search.svg";
+[@bs.module] external cryptoLogo : string = "../assets/images/cryptonomic.svg";
 [@bs.val] external scrollTo : (float, float) => unit = "scrollTo";
 module Styles = {
   open Css;
@@ -79,7 +79,7 @@ let make = (~searchVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkS
     };
   };
 
-  let openCrypto = () => {
+  let openCrypto = (_ev) => {
     Utils.open_("https://cryptonomic.tech/", "_blank");
   };
 
@@ -110,6 +110,6 @@ let make = (~searchVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkS
       {ReasonReact.string(network)}
       <span className=Styles.upDown>{ReasonReact.string({js|⇵|js})}</span>
     </button>
-    <img className=Styles.cryptoImg src=cryptoLogo onClick={_ => openCrypto()} />
+    <img className=Styles.cryptoImg src=cryptoLogo onClick={openCrypto} />
   </div>
 }
