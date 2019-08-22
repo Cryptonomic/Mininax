@@ -158,13 +158,25 @@ let make = () => {
 
   let goToMainPage = () => {
     getMainPage();
-    ReasonReactRouter.push("/");
+    ReasonReactRouter.push("/" ++ configs[selectedConfig^].network);
   };
+
+  let goToNetwork = (network) => {
+    let selectedIndex = configs |> Js.Array.findIndex(conf => conf.network === network);
+    switch (selectedIndex) {
+      | -1 => goToMainPage()
+      | _ => {
+        dispatch(ChangeNetwork(selectedIndex));
+        selectedConfig := selectedIndex;
+        goToMainPage()
+      }
+    };
+  }
 
   let goToPage = (network: string, entity: string, id: string) => {
     let selectedIndex = configs |> Js.Array.findIndex(conf => conf.network === network);
     switch (selectedIndex) {
-      | -1 => ReasonReactRouter.push("/")
+      | -1 => goToMainPage()
       | _ => {
         dispatch(ChangeNetwork(selectedIndex));
         selectedConfig := selectedIndex;
@@ -226,7 +238,7 @@ let make = () => {
     isFirstLoad := true;
     switch (url.path) {
       | [network, entity, id] => goToPage(network, entity, id)
-      | [] => getMainPage()
+      | [network] => goToNetwork(network)
       | _ => goToMainPage()
     };
   };
