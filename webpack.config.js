@@ -39,7 +39,7 @@ module.exports = {
     }),
     new CopyPlugin([
       { from: 'assets/fonts', to: 'assets/fonts' },
-      { from: 'assets/favicon.ico', to: 'assets/favicon.ico' },
+      { from: 'assets/favicon.ico', to: 'assets/avicon.ico' },
       { from: 'assets/style.css', to: 'assets/style.css' }
     ])
   ],
