@@ -18,11 +18,7 @@
     "type": "git",
     "url": "https://github.com/Cryptonomic/Mininax"
   },
-  "keywords": [
-    "Tezos",
-    "Block explorer",
-    "ReasonML"
-  ],
+  "keywords": [ "Tezos", "Block explorer", "ReasonML" ],
   "dependencies": {
     "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#6394b044c884d352322983812390974b419b43ad",
     "bs-css": "^9.0.1",

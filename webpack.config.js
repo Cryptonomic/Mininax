@@ -39,7 +39,7 @@ module.exports = {
     }),
     new CopyPlugin([
       { from: 'assets/fonts', to: 'assets/fonts' },
-      { from: 'assets/favicon.ico', to: 'assets/avicon.ico' },
+      { from: 'assets/favicon.ico', to: 'assets/favicon.ico' },
       { from: 'assets/style.css', to: 'assets/style.css' }
     ])
   ],
@@ -50,8 +50,7 @@ module.exports = {
     historyApiFallback: true
   },
   node: {
-    // handle "Can't resolve 'fs'" issue
-    fs: 'empty',
+    fs: 'empty', // handle "Can't resolve 'fs'" issue
     child_process: 'empty'
   }
 };
