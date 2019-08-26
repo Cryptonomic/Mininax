@@ -110,6 +110,11 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "storage", displayName: "Storage", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
+    | ("operation", _) => [|
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
+        {name: "kind", displayName: "Kind", isLink: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true}
+      |]
     | ("block", None) => [|
         {name: "hash", displayName: "Hash", isLink: false},
         {name: "predecessor", displayName: "Predecessor", isLink: true},
