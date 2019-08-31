@@ -3,3 +3,5 @@ export const SET_LOADING = 'SET_LOADING';
 export const SET_ERROR = 'SET_ERROR';
 export const REMOVE_ERROR = 'REMOVE_ERROR';
 export const CHANGE_NETWORK = 'CHANGE_NETWORK';
+export const SET_PARAMS = 'SET_PARAMS';
+export const SET_ID = 'SET_ID';

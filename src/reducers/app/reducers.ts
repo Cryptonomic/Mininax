@@ -3,7 +3,9 @@ import {
   SET_LOADING,
   SET_ERROR,
   REMOVE_ERROR,
-  CHANGE_NETWORK
+  CHANGE_NETWORK,
+  SET_ID,
+  SET_PARAMS
 } from './types';
 import { Config } from '../../types';
 import configs from '../../config';
@@ -11,6 +13,7 @@ import configs from '../../config';
 
 export interface AppState {
   entity: string;
+  id: string;
   isLoading: boolean;
   items: any;
   configs: Config[];
@@ -21,6 +24,7 @@ export interface AppState {
 
 let initialState: AppState = {
   entity: '',
+  id: '',
   isLoading: false,
   items: {},
   configs,
@@ -44,6 +48,10 @@ export const app = (state = initialState, action) => {
       return { ...state, isError: false, error: '' };
     case CHANGE_NETWORK:
       return { ...state, selectedConfig: action.config };
+    case SET_PARAMS:
+      return { ...state, entity: action.entity, id: action.id };
+    case SET_ID:
+      return { ...state, id: action.id };
   }
   return state;
 };

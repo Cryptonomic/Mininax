@@ -65,20 +65,41 @@ const OkBtn = styled.button`
 
 interface Props {
   error: string;
+  entity?: string;
   onTry(): void;
+  onCancel(): void;
 }
-const Error: React.FC<Props> = props => (
-  <Container onClick={props.onTry}>
-    <MainContainer>
-      <BorderContainer>
-        <ContentContainer>
-          <Title>! ERROR !</Title>
-          <ErrTxt>{props.error}</ErrTxt>
-          <OkBtn>Try Again</OkBtn>
-        </ContentContainer>
-      </BorderContainer>
-    </MainContainer>
-  </Container>
-);
+const Error: React.FC<Props> = props => {
+  const { error, entity, onCancel, onTry } = props;
+  const btnTitle = entity === 'operations' ? 'Try Again' : 'Ok';
+  function stop(event: any) {
+    event.stopPropagation();
+  }
+  function confirm(event: any) {
+    if (entity === 'operations') {
+      onTry();
+    } else {
+      onCancel();
+    }
+    event.stopPropagation();
+  }
+  return (
+    <Container onClick={onCancel}>
+      <MainContainer onClick={stop}>
+        <BorderContainer>
+          <ContentContainer>
+            <Title>! ERROR !</Title>
+            <ErrTxt>{error}</ErrTxt>
+            <OkBtn onClick={confirm}>{btnTitle}</OkBtn>
+          </ContentContainer>
+        </BorderContainer>
+      </MainContainer>
+    </Container>
+  );
+};
+
+Error.defaultProps = {
+  entity: 'blocks'
+};
 
 export default Error;

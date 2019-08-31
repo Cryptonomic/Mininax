@@ -37,3 +37,8 @@ export const getEntity = createSelector(
   getAppState,
   apps => apps.entity
 );
+
+export const getId = createSelector(
+  getAppState,
+  apps => apps.id
+);

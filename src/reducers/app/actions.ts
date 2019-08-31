@@ -3,7 +3,9 @@ import {
   SET_LOADING,
   SET_ERROR,
   REMOVE_ERROR,
-  CHANGE_NETWORK
+  CHANGE_NETWORK,
+  SET_ID,
+  SET_PARAMS
 } from './types';
 
 import { Config } from '../../types';
@@ -41,5 +43,20 @@ export function changeNetworkAction(config: Config) {
   return {
     type: CHANGE_NETWORK,
     config
+  };
+}
+
+export function setParamsAction(entity: string, id: string) {
+  return {
+    type: SET_PARAMS,
+    entity,
+    id
+  };
+}
+
+export function setIdAction(id: string) {
+  return {
+    type: SET_ID,
+    id
   };
 }
