@@ -62,11 +62,11 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "source", displayName: "From", isLink: false},
-        {name: "destination", displayName: "To", isLink: false},
+        {name: "source", displayName: "From", isLink: true},
+        {name: "destination", displayName: "To", isLink: true},
         {name: "amount", displayName: "Amount", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas Consumed", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "parameters", displayName: "Parameter", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
@@ -74,38 +74,38 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "pkh", displayName: "Account ID", isLink: false},
+        {name: "pkh", displayName: "Account ID", isLink: true},
         {name: "secret", displayName: "Secret", isLink: false}
       |]
     | ("operation", Some("Reveal")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "source", displayName: "Account ID", isLink: false},
+        {name: "source", displayName: "Account ID", isLink: true},
         {name: "public_key", displayName: "Public Key", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas Consumed", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
     | ("operation", Some("Delegation")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "source", displayName: "Account ID", isLink: false},
+        {name: "source", displayName: "Account ID", isLink: true},
         {name: "delegate", displayName: "Delegate", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas Consumed", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
     | ("operation", Some("Origination")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "source", displayName: "Account ID", isLink: false},
+        {name: "source", displayName: "Account ID", isLink: true},
         {name: "delegate", displayName: "Delegate", isLink: false},
         {name: "amount", displayName: "Amount", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas Consumed", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "script", displayName: "Script", isLink: false},
         {name: "storage", displayName: "Storage", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
@@ -122,15 +122,15 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "chain_id", displayName: "Chain ID", isLink: false},
         {name: "protocol", displayName: "Protocol", isLink: false},
-        {name: "consumed_gas", displayName: "Consumed gas", isLink: false},
-        {name: "total_amount", displayName: "Total transacted", isLink: false},
+        {name: "consumed_gas", displayName: "Consumed Gas", isLink: false},
+        {name: "total_amount", displayName: "Total Transacted", isLink: false},
         {name: "fee", displayName: "Total Fees", isLink: false},
         {name: "baker", displayName: "Baker", isLink: true},
         {name: "baker_priority", displayName: "Baker Priority", isLink: false},
         {name: "meta_cycle", displayName: "Cycle", isLink: false},
         {name: "meta_cycle_position", displayName: "Cycle Position", isLink: false},
         {name: "period_kind", displayName: "Governance Period", isLink: false},
-        {name: "active_proposal", displayName: "Active proposal", isLink: false},
+        {name: "active_proposal", displayName: "Active Proposal", isLink: false},
         {name: "signature", displayName: "Signature", isLink: false}
       |]
     | ("account", None) => [|
@@ -140,11 +140,11 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "manager", displayName: "Manager", isLink: true},
         {name: "script", displayName: "Script", isLink: false},
         {name: "storage", displayName: "Storage", isLink: false},
-        {name: "baker_deactivated", displayName: "Active Baker?", isLink: false},
-        {name: "baker_balance", displayName: "Snapshot balance", isLink: false},
-        {name: "baker_delegated_balance", displayName: "Delegated balance", isLink: false},
-        {name: "baker_frozen_balance", displayName: "Frozen balance", isLink: false},
-        {name: "baker_staking_balance", displayName: "Staking balance", isLink: false},
+        {name: "baker_deactivated", displayName: "Active Baker", isLink: false},
+        {name: "baker_balance", displayName: "Snapshot Balance", isLink: false},
+        {name: "baker_delegated_balance", displayName: "Delegated Balance", isLink: false},
+        {name: "baker_frozen_balance", displayName: "Frozen Balance", isLink: false},
+        {name: "baker_staking_balance", displayName: "Staking Balance", isLink: false},
       |]
     | _ => [||]
   };
