@@ -111,6 +111,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "amount", displayName: "Amount", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
         {name: "consumed_gas", displayName: "Gas", isLink: false},
+        {name: "originated_contracts", displayName: "Originated Contracts", isLink: true},
         {name: "script", displayName: "Script", isLink: false},
         {name: "storage", displayName: "Storage", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
@@ -174,6 +175,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "block_id", displayName: "Last Updated", isLink: true},
         {name: "balance", displayName: "Balance", isLink: false},
         {name: "manager", displayName: "Manager", isLink: true},
+        {name: "delegate_value", displayName: "Delegate", isLink: true},
         {name: "script", displayName: "Script", isLink: false},
         {name: "storage", displayName: "Storage", isLink: false},
         {name: "baker_deactivated", displayName: "Active Baker", isLink: false},
@@ -276,6 +278,7 @@ let convertOperation = (operation) => {
       Js.Dict.set(newOp, "amount", formatNumber(assOp##amount, true));
       Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
       Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
+      Js.Dict.set(newOp, "originated_contracts", formatString(assOp##originated_contracts, false));
       Js.Dict.set(newOp, "script", formatString(assOp##script, false));
       Js.Dict.set(newOp, "storage", formatString(assOp##storage, false));
       Js.Dict.set(newOp, "status", formatString(assOp##status, true));
@@ -291,6 +294,7 @@ let convertAccount = (~account, ~baker=?, ()) => {
   Js.Dict.set(newAccount, "account_id", formatString(assAccount##account_id, false));
   Js.Dict.set(newAccount, "block_id", formatString(assAccount##block_id, false));
   Js.Dict.set(newAccount, "manager", formatString(assAccount##manager, false));
+  Js.Dict.set(newAccount, "delegate_value", formatString(assAccount##delegate_value, false));
   Js.Dict.set(newAccount, "script", formatString(assAccount##script, false));
   Js.Dict.set(newAccount, "storage", formatString(assAccount##storage, false));
   Js.Dict.set(newAccount, "balance", formatNumber(assAccount##balance, true));
@@ -367,7 +371,7 @@ let getQueryForAccountReceipts = (id: string) => {
 
 let getQueryForOtherOperations = (id: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "source", "kind", "status"];
+  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "source", "kind", "status", "originated_contracts"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
   let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"reveal", "delegation", "origination"|], false);
