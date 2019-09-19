@@ -62,6 +62,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "source", displayName: "From", isLink: true},
         {name: "destination", displayName: "To", isLink: true},
         {name: "amount", displayName: "Amount", isLink: false},
@@ -74,6 +75,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "pkh", displayName: "Account ID", isLink: true},
         {name: "secret", displayName: "Secret", isLink: false}
       |]
@@ -81,6 +83,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "source", displayName: "Account ID", isLink: true},
         {name: "public_key", displayName: "Public Key", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
@@ -91,6 +94,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "source", displayName: "Account ID", isLink: true},
         {name: "delegate", displayName: "Delegate", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
@@ -101,6 +105,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
         {name: "kind", displayName: "Kind", isLink: false},
         {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "source", displayName: "Account ID", isLink: true},
         {name: "delegate", displayName: "Delegate", isLink: false},
         {name: "amount", displayName: "Amount", isLink: false},
@@ -108,6 +113,37 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "script", displayName: "Script", isLink: false},
         {name: "storage", displayName: "Storage", isLink: false},
+        {name: "status", displayName: "Status", isLink: false}
+      |]
+    | ("operation", Some("Ballot")) => [|
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
+        {name: "kind", displayName: "Kind", isLink: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
+        {name: "source", displayName: "Account ID", isLink: true},
+        {name: "proposal", displayName: "Proposal", isLink: false},
+        {name: "ballot", displayName: "Vote", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
+        {name: "status", displayName: "Status", isLink: false}
+      |]
+    | ("operation", Some("Seed Nonce Revelation")) => [|
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
+        {name: "kind", displayName: "Kind", isLink: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
+        {name: "source", displayName: "Account ID", isLink: true},
+        {name: "nonce", displayName: "Nonce", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
+        {name: "status", displayName: "Status", isLink: false}
+      |]
+    | ("operation", Some("Proposals")) => [|
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
+        {name: "kind", displayName: "Kind", isLink: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
+        {name: "source", displayName: "Account ID", isLink: true},
+        {name: "proposal", displayName: "Proposal", isLink: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
     | ("operation", _) => [|
@@ -186,7 +222,9 @@ let convertOperation = (operation) => {
   let newOp = Js.Dict.empty();
   Js.Dict.set(newOp, "operation_group_hash", formatString(assOp##operation_group_hash, false));
   Js.Dict.set(newOp, "kind", formatString(assOp##kind, true));
+  Js.Dict.set(newOp, "level", assOp##level |> string_of_int);
   Js.Dict.set(newOp, "block_hash", formatString(assOp##block_hash, false));
+  Js.Dict.set(newOp, "timestamp", assOp##timestamp |> string_of_int);
   switch assOp##kind {
     | "transaction" => {
       Js.Dict.set(newOp, "source", formatString(assOp##source, false));
@@ -201,6 +239,19 @@ let convertOperation = (operation) => {
     | "activate_account" => {
       Js.Dict.set(newOp, "pkh", formatString(assOp##pkh, false));
       Js.Dict.set(newOp, "secret", formatString(assOp##secret, false));
+      newOp;
+    }
+    | "ballot" => {
+      Js.Dict.set(newOp, "proposal", formatString(assOp##proposal, false));
+      Js.Dict.set(newOp, "ballot", formatString(assOp##ballot, true));
+      newOp;
+    }
+    | "proposals" => {
+      Js.Dict.set(newOp, "proposal", formatString(assOp##proposal, false));
+      newOp;
+    }
+    | "seed_nonce_revelation" => {
+      Js.Dict.set(newOp, "nonce", formatString(assOp##nonce, false));
       newOp;
     }
     | "reveal" => {
@@ -275,7 +326,8 @@ let getQueryForBlockTotals = (blockid: string) => {
 
 let getQueryForOperations = (operationid: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  ConseilQueryBuilder.addPredicate(query, "operation_group_hash", ConseiljsType.EQ, [|operationid|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "operation_group_hash", ConseiljsType.EQ, [|operationid|], false);
+  ConseilQueryBuilder.setLimit(query, 1000);
 };
 
 let getQueryForBakerInfo = (accountid: string) => {
@@ -315,8 +367,8 @@ let getQueryForAccountReceipts = (id: string) => {
 
 let getQueryForOtherOperations = (id: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "block_hash", "operation_group_hash", "source", "kind", "status"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
+  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "source", "kind", "status"];
+  let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
   let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"reveal", "delegation", "origination"|], false);
   ConseilQueryBuilder.setLimit(query, 1000);
@@ -324,8 +376,8 @@ let getQueryForOtherOperations = (id: string) => {
 
 let getQueryForEndorsements = (id: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "block_hash", "block_level", "operation_group_hash", "kind", "delegate", "slots"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
+  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "kind", "delegate", "slots"];
+  let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, [|id|], false);
   let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"endorsement"|], false);
   ConseilQueryBuilder.setLimit(query, 1000);
@@ -333,16 +385,16 @@ let getQueryForEndorsements = (id: string) => {
 
 let getQueryForBakedBlocks = (id: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "hash", "level", "baker"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
+  let attributes = ["timestamp", "hash", "level", "baker"];
+  let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "baker", ConseiljsType.EQ, [|id|], false);
   ConseilQueryBuilder.setLimit(query, 1000);
 };
 
 let getQueryForDepositsAndRewards = (id: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["source_hash", "delegate", "category", "change"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
+  let attributes = ["source_hash", "delegate", "category", "change"];
+  let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, [|id|], false);
   let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|"block"|], false);
   ConseilQueryBuilder.setLimit(query, 1000);
