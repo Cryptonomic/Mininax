@@ -11,7 +11,7 @@ let noBlock = "There is no block for the Level.";
 let noAvaialbel = "Not available";
 
 let getInfo = (config: Type.config) => {
-  let conseilServerInfo: Type.conseilServerInfo = [%bs.obj {url: config.url, apiKey: config.apiKey}];
+  let conseilServerInfo: Type.conseilServerInfo = [%bs.obj {url: config.url, apiKey: config.apiKey, network: config.network}];
   (conseilServerInfo, config.platform, config.network);
 };
 
