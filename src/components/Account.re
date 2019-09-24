@@ -31,12 +31,12 @@ let make = (~items, ~goToDetail) => {
 
   let onOpenAccountBakedBlocks = (_ev) => {
     let query = Utils.getQueryForBakedBlocks(id);
-    Utils.openSharedUrl(query, displayName, "operations");
+    Utils.openSharedUrl(query, displayName, "blocks");
   };
 
   let onOpenAccountDeposits = (_ev) => {
     let query = Utils.getQueryForDepositsAndRewards(id);
-    Utils.openSharedUrl(query, displayName, "operations");
+    Utils.openSharedUrl(query, displayName, "balance_updates");
   };
 
   <div className=container(theme)>
