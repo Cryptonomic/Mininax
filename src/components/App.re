@@ -259,7 +259,7 @@ let make = () => {
         }
       >
         <div className=Styles.header>
-          <div className=Styles.headerTitle>{ReasonReact.string("MININAX")}</div>
+          <div className=Styles.headerTitle onClick={_ => goToMainPage()}>{ReasonReact.string("MININAX")}</div>
         </div>
         <div className=Styles.mainContainer>
           {switch (url.path) {
