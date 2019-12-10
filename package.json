@@ -1,6 +1,6 @@
 {
   "name": "mininax",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "scripts": {
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
@@ -20,11 +20,11 @@
   },
   "keywords": [
     "Tezos",
-    "Block explorer",
+    "Blocky explorer",
     "ReasonML"
   ],
   "dependencies": {
-    "bs-conseiljs": "../../ReasonBindings/master",
+    "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#51ac88cda86f0668758a22dd0252778b898d9b3a",
     "bs-css": "9.0.1",
     "bs-react-intl": "1.0.0",
     "conseiljs": "0.3.1",
@@ -35,13 +35,13 @@
   },
   "devDependencies": {
     "bs-platform": "5.2.1",
-    "copy-webpack-plugin": "5.0.3",
+    "copy-webpack-plugin": "^5.1.0",
     "css-loader": "3.2.0",
     "html-webpack-plugin": "3.2.0",
     "style-loader": "1.0.0",
     "url-loader": "2.1.0",
-    "webpack": "4.0.1",
-    "webpack-cli": "3.1.1",
+    "webpack": "4.41.2",
+    "webpack-cli": "3.3.10",
     "webpack-dev-server": "3.9.0"
   },
   "engines": {

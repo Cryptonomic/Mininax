@@ -41,7 +41,7 @@ let getBlockThunk = (id: string, config: Type.config) => {
         | _ => resolve(("Error", Some(Utils.invalidId), None))
       };
     })
-    |> catch(_err => resolve(("Error", Some(Utils.noAvaialbel), None)))
+    |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None)))
   );
 };
 
@@ -49,9 +49,9 @@ let getBlockHashThunk = (level: int, config: Type.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
     ConseiljsRe.TezosConseilClient.getBlockByLevel(conseilServerInfo, network, level)
-    |> then_(hashs => {
-      if(hashs |> Js.Array.length > 0) {
-        resolve(Some(hashs[0]));
+    |> then_(hashes => {
+      if(hashes |> Js.Array.length > 0) {
+        resolve(Some(hashes[0]));
       } else {
         resolve(None);
       }
@@ -86,10 +86,10 @@ let getOperationThunk = (id: string, config: Type.config) => {
           let realOp = operations |> Array.map(op => Utils.convertOperation(op));
           resolve(("Valid", None, Some(realOp)));
         } else {
-          resolve(("Error", Some(Utils.invalidId), None))
+            resolve(("Error", Some(Utils.operationNotFound), None))
         }
     })
-    |> catch(_err => resolve(("Error", Some(Utils.noAvaialbel), None)))
+    |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None)))
   );
 };
 
@@ -111,6 +111,6 @@ let getAccountThunk = (id: string, config: Type.config) => {
         | _ => resolve(("Error", Some(Utils.invalidId), None))
       };
     })
-    |> catch(_err => resolve(("Error", Some(Utils.noAvaialbel), None)))
+    |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None)))
   );
 };
