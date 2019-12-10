@@ -5,10 +5,11 @@ open Type;
 [@bs.val] external encodeURIComponent : string => string = "encodeURIComponent";
 [@bs.scope "window"] [@bs.val] external open_ : (string, string) => unit = "open";
 
-let arronaxURL = "https://arronax-beta.cryptonomic.tech/";
+let arronaxURL = "https://arronax.io/";
 let invalidId = "You entered an invalid ID.";
-let noBlock = "There is no block for the Level.";
-let noAvaialbel = "Not available";
+let operationNotFound = "Operation not found or not yet recorded. Check back in a bit.";
+let noBlock = "There is no block at this level.";
+let noAvailable = "Not available";
 
 let getInfo = (config: Type.config) => {
   let conseilServerInfo: Type.conseilServerInfo = [%bs.obj {url: config.url, apiKey: config.apiKey, network: config.network}];
@@ -68,7 +69,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "amount", displayName: "Amount", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
         {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "parameters", displayName: "Parameter", isLink: false},
+        {name: "parameters", displayName: "Parameters", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
       |]
     | ("operation", Some("Activate Account")) => [|
@@ -146,6 +147,14 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "proposal", displayName: "Proposal", isLink: false},
         {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "status", displayName: "Status", isLink: false}
+      |]
+    | ("operation", Some("Endorsement")) => [|
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
+        {name: "kind", displayName: "Kind", isLink: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true},
+        {name: "timestamp", displayName: "Timestamp", isLink: false},
+        {name: "delegate", displayName: "Delegate", isLink: true},
+        {name: "slots", displayName: "Slots", isLink: false}
       |]
     | ("operation", _) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
@@ -284,6 +293,11 @@ let convertOperation = (operation) => {
       Js.Dict.set(newOp, "status", formatString(assOp##status, true));
       newOp;
     }
+    | "endorsement" => {
+      Js.Dict.set(newOp, "delegate", formatString(assOp##delegate, false));
+      Js.Dict.set(newOp, "slots", formatString(assOp##slots, false));
+      newOp;
+    }
     | _ => newOp
   };
 };
@@ -374,7 +388,7 @@ let getQueryForOtherOperations = (id: string) => {
   let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "source", "kind", "status", "originated_contracts"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"reveal", "delegation", "origination"|], false);
+  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.IN, [|"reveal", "delegation", "origination"|], false);
   ConseilQueryBuilder.setLimit(query, 1000);
 };
 

@@ -69,10 +69,10 @@ let make = () => {
               | _ => resolve(dispatch(SetBlock(block, "")))
             };
           }
-          | _ => resolve(dispatch(SetError(Utils.noAvaialbel)))
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
           };
       })
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
       |> ignore
     );
   };
@@ -94,10 +94,10 @@ let make = () => {
               | false => resolve(dispatch(SetOperations(operations, id)));
             };
           }
-          | _ => resolve(dispatch(SetError(Utils.noAvaialbel)))
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
           };
       })
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
       |> ignore
     );
   };
@@ -119,10 +119,10 @@ let make = () => {
               | false => resolve(dispatch(SetAccount(account, id)));
             };
           }
-          | _ => resolve(dispatch(SetError(Utils.noAvaialbel)))
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
           };
       })
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
       |> ignore
     );
   };
@@ -134,10 +134,10 @@ let make = () => {
       |> then_(result =>
         switch (result) {
           | Some(head) => resolve(getBlock(head##hash, true, false))
-          | None => resolve(dispatch(SetError(Utils.noAvaialbel)))
+          | None => resolve(dispatch(SetError(Utils.noAvailable)))
         }
       )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvaialbel))))
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
       |> ignore
     );
   };
@@ -149,7 +149,7 @@ let make = () => {
       |> then_(result =>
         switch (result) {
           | Some(head) => resolve(getBlock(head##hash, false, true))
-          | None => resolve(dispatch(SetError(Utils.noAvaialbel)))
+          | None => resolve(dispatch(SetError(Utils.noAvailable)))
         }
       )
       |> ignore
