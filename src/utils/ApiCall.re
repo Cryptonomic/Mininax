@@ -50,7 +50,7 @@ let getBlockHashThunk = (level: int, config: Type.config) => {
   Js.Promise.(
     ConseiljsRe.TezosConseilClient.getBlockByLevel(conseilServerInfo, network, level)
     |> then_(hashes => {
-      if(hashes |> Js.Array.length > 0) {
+      if (hashes |> Js.Array.length > 0) {
         resolve(Some(hashes[0]));
       } else {
         resolve(None);
@@ -108,7 +108,16 @@ let getAccountThunk = (id: string, config: Type.config) => {
           let realAcc = Utils.convertAccount(~account=accounts[0], ());
           resolve(("Valid", None, Some(realAcc)));
         }
-        | _ => resolve(("Error", Some(Utils.invalidId), None))
+        | _ => {
+            let twoChars = id |> Js.String.slice(~from=0, ~to_=2) |> Js.String.toLowerCase;
+            if (twoChars === "tz") {
+                resolve(("Error", Some(Utils.missingAccount), None));
+            } else if (twoChars === "kt") {
+                resolve(("Error", Some(Utils.missingContract), None));
+            } else {
+                resolve(("Error", Some(Utils.invalidAccountId), None));
+            }
+        }
       };
     })
     |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None)))
