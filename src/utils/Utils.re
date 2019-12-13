@@ -112,7 +112,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "timestamp", displayName: "Timestamp", isLink: false},
         {name: "source", displayName: "Account ID", isLink: true},
         {name: "delegate", displayName: "Delegate", isLink: false},
-        {name: "amount", displayName: "Amount", isLink: false},
+        {name: "balance", displayName: "Balance", isLink: false},
         {name: "fee", displayName: "Fee", isLink: false},
         {name: "consumed_gas", displayName: "Gas", isLink: false},
         {name: "originated_contracts", displayName: "Originated Contracts", isLink: true},
@@ -287,7 +287,7 @@ let convertOperation = (operation) => {
     | "origination" => {
       Js.Dict.set(newOp, "source", formatString(assOp##source, false));
       Js.Dict.set(newOp, "delegate", formatString(assOp##delegate, false));
-      Js.Dict.set(newOp, "amount", formatNumber(assOp##amount, true));
+      Js.Dict.set(newOp, "balance", formatNumber(assOp##balance, true));
       Js.Dict.set(newOp, "fee", formatNumber(assOp##fee, true));
       Js.Dict.set(newOp, "consumed_gas", formatNumber(assOp##consumed_gas, false));
       Js.Dict.set(newOp, "originated_contracts", formatString(assOp##originated_contracts, false));
