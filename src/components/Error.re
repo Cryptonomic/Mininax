@@ -78,7 +78,7 @@ let make = (~error, ~onTry) => {
         <div className=Styles.contentContainer>
           <div className=Styles.title>{ReasonReact.string("! ERROR !")}</div>
           <p className=Styles.errTxt>{ReasonReact.string(error)}</p>
-          <button className=Styles.okBtn(theme)>{ReasonReact.string("Try Again")}</button>
+          <button className=Styles.okBtn(theme)>{ReasonReact.string("OK")}</button>
         </div>
       </div>
     </div>
