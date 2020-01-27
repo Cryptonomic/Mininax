@@ -23,19 +23,25 @@ let getBlockHeadThunk = (config: Type.config) => {
   );
 };
 
+let getBlockFromApi = (conseilServerInfo: Type.conseilServerInfo, network: string, id: string) => {  Js.Promise.(
+  ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id)
+    |> then_(block => resolve(Some(block)))
+    |> catch(_err => resolve(None))
+  );
+};
+
 let getBlockThunk = (id: string, config: Type.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
-    all2((ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id), getBlockTotalsThunk(id, config)))
+    all2((getBlockFromApi(conseilServerInfo, network, id), getBlockTotalsThunk(id, config)))
     |> then_(((blocks, totals)) => {
-      let blockLength = Js.Array.length(blocks);
-      switch (blockLength, totals) {
-        | (1, Some(total)) => {
-          let realBlock = Utils.convertBlock(~block=blocks[0], ~total=total, ());
+      switch (blocks, totals) {
+        | (Some(block), Some(total)) => {
+          let realBlock = Utils.convertBlock(~block=block, ~total=total, ());
           resolve(("Valid", None, Some(realBlock)));
         }
-        | (1, None) => {
-          let realBlock = Utils.convertBlock(~block=blocks[0], ());
+        | (Some(block), None) => {
+          let realBlock = Utils.convertBlock(~block=block, ());
           resolve(("Valid", None, Some(realBlock)));
         }
         | _ => resolve(("Error", Some(Utils.invalidId), None))
@@ -93,19 +99,26 @@ let getOperationThunk = (id: string, config: Type.config) => {
   );
 };
 
+let getAccountFromApi = (conseilServerInfo: Type.conseilServerInfo, network: string, id: string) => { 
+  Js.Promise.(
+    ConseiljsRe.TezosConseilClient.getAccount(conseilServerInfo, network, id)
+      |> then_(account => resolve(Some(account)))
+      |> catch(_err => resolve(None))
+  );
+};
+
 let getAccountThunk = (id: string, config: Type.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
-    all2((ConseiljsRe.TezosConseilClient.getAccount(conseilServerInfo, network, id), getAccountBakerThunk(id, config)))
+    all2((getAccountFromApi(conseilServerInfo, network, id), getAccountBakerThunk(id, config)))
     |> then_(((accounts, bakers)) => {
-      let accountLength = Js.Array.length(accounts);
-      switch (accountLength, bakers) {
-        | (1, Some(baker)) => {
-          let realAcc = Utils.convertAccount(~account=accounts[0], ~baker=baker, ());
+      switch (accounts, bakers) {
+        | (Some(account), Some(baker)) => {
+          let realAcc = Utils.convertAccount(~account=account, ~baker=baker, ());
           resolve(("Valid", None, Some(realAcc)));
         }
-        | (1, None) => {
-          let realAcc = Utils.convertAccount(~account=accounts[0], ());
+        | (Some(account), None) => {
+          let realAcc = Utils.convertAccount(~account=account, ());
           resolve(("Valid", None, Some(realAcc)));
         }
         | _ => {
