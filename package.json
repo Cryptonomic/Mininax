@@ -24,10 +24,10 @@
     "ReasonML"
   ],
   "dependencies": {
-    "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#51ac88cda86f0668758a22dd0252778b898d9b3a",
+    "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#fc9e5a6819abdb8455c23f306356d0871cd3108a",
     "bs-css": "9.0.1",
     "bs-react-intl": "1.0.0",
-    "conseiljs": "0.3.1",
+    "conseiljs": "0.4.0-alpha.2",
     "react": "16.8.1",
     "react-dom": "16.8.1",
     "react-intl": "3.0.0-beta-8",
