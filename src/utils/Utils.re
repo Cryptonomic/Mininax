@@ -178,7 +178,7 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "baker_priority", displayName: "Baker Priority", isLink: false},
         /* {name: "meta_cycle", displayName: "Cycle", isLink: false}, */
         {name: "meta_cycle_position", displayName: "Cycle Position", isLink: false},
-        /* {name: "period_kind", displayName: "Governance Period", isLink: false}, */
+        {name: "period_kind", displayName: "Governance Period", isLink: false},
         {name: "active_proposal", displayName: "Active Proposal", isLink: false},
         {name: "signature", displayName: "Signature", isLink: false}
       |]
@@ -206,6 +206,7 @@ let convertBlock = (~block, ~total=?, ()) => {
   Js.Dict.set(newBlock, "hash", formatString(assBlock##hash, false));
   Js.Dict.set(newBlock, "predecessor", formatString(assBlock##predecessor, false));
   Js.Dict.set(newBlock, "level", assBlock##level |> string_of_int);
+  Js.Dict.set(newBlock, "meta_voting_period", assBlock##meta_voting_period |> string_of_int);
   Js.Dict.set(newBlock, "timestamp", assBlock##timestamp |> string_of_int);
   Js.Dict.set(newBlock, "chain_id", formatString(assBlock##chain_id, true));
   Js.Dict.set(newBlock, "protocol", formatString(assBlock##protocol, false));

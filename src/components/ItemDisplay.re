@@ -127,11 +127,11 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 | None => ""
                 | Some(value) => value
               };
-              let periodKind = switch (Js.Dict.get(items, "period_kind")) {
+              let period = switch (Js.Dict.get(items, "meta_voting_period")) {
                 | None => ""
                 | Some(value) => value
               };
-              let levelVal = periodKind ++ " / " ++ metaCycle ++ " / " ++ fieldVal;
+              let levelVal = period ++ " / " ++ metaCycle ++ " / " ++ fieldVal;
               (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.levelLabelContainer>
