@@ -176,9 +176,9 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "fee", displayName: "Total Fees", isLink: false},
         {name: "baker", displayName: "Baker", isLink: true},
         {name: "baker_priority", displayName: "Baker Priority", isLink: false},
-        {name: "meta_cycle", displayName: "Cycle", isLink: false},
+        /* {name: "meta_cycle", displayName: "Cycle", isLink: false}, */
         {name: "meta_cycle_position", displayName: "Cycle Position", isLink: false},
-        {name: "period_kind", displayName: "Governance Period", isLink: false},
+        /* {name: "period_kind", displayName: "Governance Period", isLink: false}, */
         {name: "active_proposal", displayName: "Active Proposal", isLink: false},
         {name: "signature", displayName: "Signature", isLink: false}
       |]

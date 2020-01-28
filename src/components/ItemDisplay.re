@@ -122,16 +122,26 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
             | (_, _, "") => {
               ReasonReact.null;
             }
-            | ("level", _, _) => (
+            | ("level", _, _) => {
+              let metaCycle = switch (Js.Dict.get(items, "meta_cycle")) {
+                | None => ""
+                | Some(value) => value
+              };
+              let periodKind = switch (Js.Dict.get(items, "period_kind")) {
+                | None => ""
+                | Some(value) => value
+              };
+              let levelVal = periodKind ++ " / " ++ metaCycle ++ " / " ++ fieldVal;
+              (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.levelLabelContainer>
                   <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(int_of_string(fieldVal) - 1)}>(ReasonReact.string("<"))</button>
                   <div className=Styles.levelLabel(theme)>(ReasonReact.string("Level"))</div>
                   <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(int_of_string(fieldVal) + 1)}>(ReasonReact.string(">"))</button>
                 </div>
-                <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))</div>
+                <div className=Styles.fieldContent(theme)>(ReasonReact.string(levelVal))</div>
               </div>
-            )
+            )}
             | ("script", _, _) | ("storage", _, _) | ("parameters", _, _) => (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
