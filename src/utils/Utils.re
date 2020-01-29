@@ -63,138 +63,138 @@ let makeUrl = (network: string, entity: string, id: string) => "/" ++ network ++
 let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
   switch (entity, kind) {
     | ("operation", Some("Transaction")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "From", isLink: true},
-        {name: "destination", displayName: "To", isLink: true},
-        {name: "amount", displayName: "Amount", isLink: false},
-        {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "parameters", displayName: "Parameters", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "From", isLink: true, isAddress: true},
+        {name: "destination", displayName: "To", isLink: true, isAddress: true},
+        {name: "amount", displayName: "Amount", isLink: false, isAddress: false},
+        {name: "fee", displayName: "Fee", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "parameters", displayName: "Parameters", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Activate Account")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "pkh", displayName: "Account ID", isLink: true},
-        {name: "secret", displayName: "Secret", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "pkh", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "secret", displayName: "Secret", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Reveal")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "Account ID", isLink: true},
-        {name: "public_key", displayName: "Public Key", isLink: false},
-        {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "public_key", displayName: "Public Key", isLink: false, isAddress: false},
+        {name: "fee", displayName: "Fee", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Delegation")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "Account ID", isLink: true},
-        {name: "delegate", displayName: "Delegate", isLink: false},
-        {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "delegate", displayName: "Delegate", isLink: false, isAddress: false},
+        {name: "fee", displayName: "Fee", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Origination")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "Account ID", isLink: true},
-        {name: "delegate", displayName: "Delegate", isLink: false},
-        {name: "balance", displayName: "Balance", isLink: false},
-        {name: "fee", displayName: "Fee", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "originated_contracts", displayName: "Originated Contracts", isLink: true},
-        {name: "script", displayName: "Script", isLink: false},
-        {name: "storage", displayName: "Storage", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "delegate", displayName: "Delegate", isLink: false, isAddress: false},
+        {name: "balance", displayName: "Balance", isLink: false, isAddress: false},
+        {name: "fee", displayName: "Fee", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "originated_contracts", displayName: "Originated Contracts", isLink: true, isAddress: false},
+        {name: "script", displayName: "Script", isLink: false, isAddress: false},
+        {name: "storage", displayName: "Storage", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Ballot")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "Account ID", isLink: true},
-        {name: "proposal", displayName: "Proposal", isLink: false},
-        {name: "ballot", displayName: "Vote", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "proposal", displayName: "Proposal", isLink: false, isAddress: false},
+        {name: "ballot", displayName: "Vote", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Seed Nonce Revelation")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "Account ID", isLink: true},
-        {name: "nonce", displayName: "Nonce", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "nonce", displayName: "Nonce", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Proposals")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "source", displayName: "Account ID", isLink: true},
-        {name: "proposal", displayName: "Proposal", isLink: false},
-        {name: "consumed_gas", displayName: "Gas", isLink: false},
-        {name: "status", displayName: "Status", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "source", displayName: "Account ID", isLink: true, isAddress: true},
+        {name: "proposal", displayName: "Proposal", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Gas", isLink: false, isAddress: false},
+        {name: "status", displayName: "Status", isLink: false, isAddress: false}
       |]
     | ("operation", Some("Endorsement")) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "delegate", displayName: "Delegate", isLink: true},
-        {name: "slots", displayName: "Slots", isLink: false}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "delegate", displayName: "Delegate", isLink: true, isAddress: true},
+        {name: "slots", displayName: "Slots", isLink: false, isAddress: false}
       |]
     | ("operation", _) => [|
-        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false},
-        {name: "kind", displayName: "Kind", isLink: false},
-        {name: "block_hash", displayName: "Block Hash", isLink: true}
+        {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, isAddress: false},
+        {name: "kind", displayName: "Kind", isLink: false, isAddress: false},
+        {name: "block_hash", displayName: "Block Hash", isLink: true, isAddress: false}
       |]
     | ("block", None) => [|
-        {name: "hash", displayName: "Hash", isLink: false},
-        {name: "predecessor", displayName: "Predecessor", isLink: true},
-        {name: "level", displayName: "Level", isLink: false},
-        {name: "timestamp", displayName: "Timestamp", isLink: false},
-        {name: "chain_id", displayName: "Chain ID", isLink: false},
-        {name: "protocol", displayName: "Protocol", isLink: false},
-        {name: "consumed_gas", displayName: "Consumed Gas", isLink: false},
-        {name: "total_amount", displayName: "Total Transacted", isLink: false},
-        {name: "fee", displayName: "Total Fees", isLink: false},
-        {name: "baker", displayName: "Baker", isLink: true},
-        {name: "baker_priority", displayName: "Baker Priority", isLink: false},
-        /* {name: "meta_cycle", displayName: "Cycle", isLink: false}, */
-        {name: "meta_cycle_position", displayName: "Cycle Position", isLink: false},
-        {name: "period_kind", displayName: "Governance Period", isLink: false},
-        {name: "active_proposal", displayName: "Active Proposal", isLink: false},
-        {name: "signature", displayName: "Signature", isLink: false}
+        {name: "hash", displayName: "Hash", isLink: false, isAddress: false},
+        {name: "predecessor", displayName: "Predecessor", isLink: true, isAddress: false},
+        {name: "level", displayName: "Level", isLink: false, isAddress: false},
+        {name: "timestamp", displayName: "Timestamp", isLink: false, isAddress: false},
+        {name: "chain_id", displayName: "Chain ID", isLink: false, isAddress: false},
+        {name: "protocol", displayName: "Protocol", isLink: false, isAddress: false},
+        {name: "consumed_gas", displayName: "Consumed Gas", isLink: false, isAddress: false},
+        {name: "total_amount", displayName: "Total Transacted", isLink: false, isAddress: false},
+        {name: "fee", displayName: "Total Fees", isLink: false, isAddress: false},
+        {name: "baker", displayName: "Baker", isLink: true, isAddress: true},
+        {name: "baker_priority", displayName: "Baker Priority", isLink: false, isAddress: false},
+        /* {name: "meta_cycle", displayName: "Cycle", isLink: false, isAddress: false}, */
+        {name: "meta_cycle_position", displayName: "Cycle Position", isLink: false, isAddress: false},
+        {name: "period_kind", displayName: "Governance Period", isLink: false, isAddress: false},
+        {name: "active_proposal", displayName: "Active Proposal", isLink: false, isAddress: false},
+        {name: "signature", displayName: "Signature", isLink: false, isAddress: false}
       |]
     | ("account", None) => [|
-        {name: "account_id", displayName: "Address", isLink: false},
-        {name: "block_id", displayName: "Last Updated", isLink: true},
-        {name: "balance", displayName: "Balance", isLink: false},
-        {name: "manager", displayName: "Manager", isLink: true},
-        {name: "delegate_value", displayName: "Delegate", isLink: true},
-        {name: "script", displayName: "Script", isLink: false},
-        {name: "storage", displayName: "Storage", isLink: false},
-        {name: "baker_deactivated", displayName: "Active Baker", isLink: false},
-        {name: "baker_balance", displayName: "Snapshot Balance", isLink: false},
-        {name: "baker_delegated_balance", displayName: "Delegated Balance", isLink: false},
-        {name: "baker_frozen_balance", displayName: "Frozen Balance", isLink: false},
-        {name: "baker_staking_balance", displayName: "Staking Balance", isLink: false},
+        {name: "account_id", displayName: "Address", isLink: false, isAddress: false},
+        {name: "block_id", displayName: "Last Updated", isLink: true, isAddress: false},
+        {name: "balance", displayName: "Balance", isLink: false, isAddress: false},
+        {name: "manager", displayName: "Manager", isLink: true, isAddress: true},
+        {name: "delegate_value", displayName: "Delegate", isLink: true, isAddress: false},
+        {name: "script", displayName: "Script", isLink: false, isAddress: false},
+        {name: "storage", displayName: "Storage", isLink: false, isAddress: false},
+        {name: "baker_deactivated", displayName: "Active Baker", isLink: false, isAddress: false},
+        {name: "baker_balance", displayName: "Snapshot Balance", isLink: false, isAddress: false},
+        {name: "baker_delegated_balance", displayName: "Delegated Balance", isLink: false, isAddress: false},
+        {name: "baker_frozen_balance", displayName: "Frozen Balance", isLink: false, isAddress: false},
+        {name: "baker_staking_balance", displayName: "Staking Balance", isLink: false, isAddress: false},
       |]
     | _ => [||]
   };

@@ -9,7 +9,8 @@ type config = {
 type field = {
   name: string,
   displayName: string,
-  isLink: bool
+  isLink: bool,
+  isAddress: bool
 };
 
 type conseilServerInfo = Js.t({

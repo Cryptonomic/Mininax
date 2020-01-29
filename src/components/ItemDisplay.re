@@ -109,6 +109,12 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
     | _ => Utils.getFields(~entity=entity, ())
   };
   let fieldsLength = ref(fields |> Js.Array.length);
+
+  let openTelegramBot = (address: string) => {
+    let newUrl = "https://t.me/TezosNotifierBot?start=" ++ address;
+    Utils.open_(newUrl, "_blank");
+  };
+  
   <div className=Styles.mainContainer>
     (
       fields
@@ -118,11 +124,11 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
             | Some(value) => value
           };
 
-          switch (field.name, field.isLink, fieldVal) {
-            | (_, _, "") => {
+          switch (field.name, field.isLink, fieldVal, field.isAddress) {
+            | (_, _, "", _) => {
               ReasonReact.null;
             }
-            | ("level", _, _) => {
+            | ("level", _, _, _) => {
               let metaCycle = switch (Js.Dict.get(items, "meta_cycle")) {
                 | None => ""
                 | Some(value) => value
@@ -142,7 +148,7 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 <div className=Styles.fieldContent(theme)>(ReasonReact.string(levelVal))</div>
               </div>
             )}
-            | ("script", _, _) | ("storage", _, _) | ("parameters", _, _) => (
+            | ("script", _, _, _) | ("storage", _, _, _) | ("parameters", _, _, _) => (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
@@ -151,7 +157,7 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))</div>
               </div>
             )
-            | ("timestamp", _, _) => (
+            | ("timestamp", _, _, _) => (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
@@ -161,7 +167,20 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 </div>
               </div>
             )
-            | (_, true, _) => (
+            | (_, true, _, true) => (
+              <div className=Styles.rowContainer key=field.name>
+                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
+                  (ReasonReact.string(field.displayName))
+                </div>
+                <div className=Styles.linkContent(theme) onClick={_ => goToDetail(fieldVal)}>
+                  (ReasonReact.string(fieldVal))
+                </div>
+                <div onClick={_ => openTelegramBot(fieldVal)}>
+                  <BellSvg />
+                </div>
+              </div>
+            )
+            | (_, true, _, false) => (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
