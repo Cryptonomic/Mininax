@@ -10,7 +10,7 @@ type field = {
   name: string,
   displayName: string,
   isLink: bool,
-  isAddress: bool
+  showNotifierLink: bool
 };
 
 type conseilServerInfo = Js.t({

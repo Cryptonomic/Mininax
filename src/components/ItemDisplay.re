@@ -124,7 +124,7 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
             | Some(value) => value
           };
 
-          switch (field.name, field.isLink, fieldVal, field.isAddress) {
+          switch (field.name, field.isLink, fieldVal, field.showNotifierLink) {
             | (_, _, "", _) => {
               ReasonReact.null;
             }
