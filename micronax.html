@@ -1,0 +1,332 @@
+
+<!-- saved from url=(0092)https://cryptonomic.tech/_matrix/media/r0/download/cryptonomic.tech/iMTLWSuCVJbIoqrjaBHKRXdl -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
+            integrity="sha384-iNPbmJNqinKOA78xS4jxZvclwAFqpYWbk67dxWicxoflfW74pljknXh0Dg3lXeHz"
+            crossorigin="anonymous"></script>
+
+    </script>
+
+    <script>
+     const conseilServer = { url: 'https://conseil-dev.cryptonomic-infra.tech:443', apiKey: 'hooman' };
+     const platform = "tezos"
+     const network = "babylonnet"
+
+     async function updateBlock(blockid) {
+         const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+         const fees = await getTotalFeesForBlock(blockid)
+         document.getElementById("block_hash").innerHTML = block.hash
+         document.getElementById("block_predecessor").innerHTML = block.predecessor
+         document.getElementById("block_level").innerHTML = block.level
+         document.getElementById("block_timestamp").innerHTML = block.timestamp
+         document.getElementById("block_chainid").innerHTML = block.chain_id
+         document.getElementById("block_protocol").innerHTML = block.protocol
+         document.getElementById("block_consumedgas").innerHTML = convertFromUtezToTez(block.consumed_gas)
+         document.getElementById("block_totalfees").innerHTML = convertFromUtezToTez(fees[0].sum_fee)
+         document.getElementById("block_baker").innerHTML = block.baker
+         document.getElementById("block_priority").innerHTML = "Coming soon"
+         document.getElementById("block_cycle").innerHTML = block.meta_cycle
+         document.getElementById("block_cycleposition").innerHTML = block.meta_cycle_position
+         document.getElementById("block_governance_period").innerHTML = block.period_kind
+         document.getElementById("block_active_proposal").innerHTML = block.active_proposal
+         document.getElementById("block_signature").innerHTML = block.signature
+     }
+
+     async function updateBlockByLevel(level) {
+         const block = await conseiljs.TezosConseilClient.getBlockByLevel(conseilServer, network, level)
+         const blockHash = block[0].hash
+         updateBlock(blockHash)
+     }
+
+     async function initializeBlock() {
+         const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
+         const headHash = block.hash
+         updateBlock(headHash)
+     }
+
+     async function getTotalFeesForBlock(blockid) {
+         let query = conseiljs.ConseilQueryBuilder.blankQuery();
+         query = conseiljs.ConseilQueryBuilder.addFields(query, 'block_hash', 'fee');
+         query = conseiljs.ConseilQueryBuilder.addPredicate(query, 'block_hash', conseiljs.ConseilOperator.EQ, [blockid], false);
+         query = conseiljs.ConseilQueryBuilder.addAggregationFunction(query, 'fee', 'sum')
+         const result = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', query);
+         return result
+     }
+
+     async function updateAccount(accountid) {
+         let account = await conseiljs.TezosConseilClient.getAccount(conseilServer, network, accountid)
+         document.getElementById("account_address").innerHTML = account.account_id
+         document.getElementById("account_last_updated").innerHTML = account.block_id
+         document.getElementById("account_balance").innerHTML = convertFromUtezToTez(account.balance)
+         document.getElementById("account_manager").innerHTML = account.manager
+         document.getElementById("account_script").innerHTML = account.script
+         document.getElementById("account_storage").innerHTML = account.storage
+     }
+
+     async function updateTransactions(operationid) {
+         let query = conseiljs.ConseilQueryBuilder.blankQuery();
+         query = conseiljs.ConseilQueryBuilder.addPredicate(query, 'operation_group_hash', conseiljs.ConseilOperator.EQ, [operationid], false);
+         query = conseiljs.ConseilQueryBuilder.addPredicate(query, 'kind', conseiljs.ConseilOperator.EQ, ['transaction'], false);
+         let transactions = await conseiljs.TezosConseilClient.getOperations(conseilServer, network, query)
+         // Here I am only showing one transaction but there can be multiple transactions and they should all be shown to the user.
+         let firstTransaction = transactions[0]
+         document.getElementById("transaction_opid").innerHTML = firstTransaction.operation_group_hash
+         document.getElementById("transaction_block").innerHTML = firstTransaction.block_hash
+         document.getElementById("transaction_from").innerHTML = firstTransaction.source
+         document.getElementById("transaction_to").innerHTML = firstTransaction.destination
+         document.getElementById("transaction_amount").innerHTML = convertFromUtezToTez(firstTransaction.amount)
+         document.getElementById("transaction_fee").innerHTML = convertFromUtezToTez(firstTransaction.fee)
+         document.getElementById("transaction_gas_consumed").innerHTML = convertFromUtezToTez(firstTransaction.consumed_gas)
+         document.getElementById("transaction_parameter").innerHTML = firstTransaction.parameters
+         document.getElementById("transaction_status").innerHTML = firstTransaction.status
+     }
+
+     function convertFromUtezToTez(amountInUtez) {
+         const tezAmount = amountInUtez / 1000000
+         return tezAmount + " XTZ"
+     }
+
+     async function initializeNetworkStats(){
+	 let query = conseiljs.ConseilQueryBuilder.blankQuery();
+	 query = conseiljs.ConseilQueryBuilder.addFields(query, 'cycle');
+	 query = conseiljs.ConseilQueryBuilder.addOrdering(query, 'cycle', conseiljs.ConseilSortDirection.DESC);
+	 query = conseiljs.ConseilQueryBuilder.setLimit(query, 1);
+	 let response = await conseiljs.TezosConseilClient.getOperations(conseilServer, network, query);
+
+	 let blockQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 blockQuery = conseiljs.ConseilQueryBuilder.addFields(blockQuery, 'hash');
+	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [response[0].cycle], false);
+	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
+	 let numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
+	 let percentBaked = Math.round((numBlocks[0].count_hash/4096) * 100);
+
+	 let latestBlock = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network);
+	 latestBlockHash = latestBlock.hash;
+	 latestBlockBaker = latestBlock.baker;
+	 latestBlockTimestamp = new Date(latestBlock.timestamp);
+
+	 latestBlockDate = latestBlockTimestamp.getMonth()+1 + "-" + latestBlockTimestamp.getDate() + "-" + latestBlockTimestamp.getFullYear();
+	 latestBlockTime = latestBlockTimestamp.getHours() +
+			   ":" + ((latestBlockTimestamp.getMinutes() < 10) ? "0" + latestBlockTimestamp.getMinutes() : latestBlockTimestamp.getMinutes()) +
+			   ":" + latestBlockTimestamp.getSeconds();
+
+	 document.getElementById("network").innerHTML = network;
+	 document.getElementById("cycle").innerHTML = response[0].cycle;
+	 document.getElementById("blocks_baked").innerHTML = numBlocks[0].count_hash;
+	 document.getElementById("percent_blocks_baked").innerHTML = percentBaked;
+	 document.getElementById("latest_block_hash").innerHTML = latestBlockHash;
+	 document.getElementById("latest_block_baker").innerHTML = latestBlockBaker;
+	 document.getElementById("latest_block_time").innerHTML = latestBlockTime;
+	 document.getElementById("latest_block_date").innerHTML = latestBlockDate;
+     }
+     
+     async function getTotalFundraisersActivated(){
+	 let fundraiserQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
+	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
+
+	 return fundraiserAccounts[0].count_kind;
+     }
+
+     async function initializeOperationStats(){
+	 let oneDayMillis = 8.64*10000000
+	 let timeNow = new Date().getTime();
+	 let timeYesterday = timeNow - oneDayMillis;
+
+	 let transactionQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addFields(transactionQuery, 'amount', 'originated_contracts');
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'kind', conseiljs.ConseilOperator.IN, ['transaction', 'origination'], false);
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'originated_contracts', 'count');
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'amount', 'count');
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'amount', 'sum');
+	 let transactions = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', transactionQuery);
+
+	 let fundraiserQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
+	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
+
+	 let feesQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 feesQuery = conseiljs.ConseilQueryBuilder.addFields(feesQuery, 'fee', 'consumed_gas' );
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
+	 feesQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(feesQuery, 'fee', 'sum');
+	 feesQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(feesQuery, 'consumed_gas', 'sum');
+	 let feesAndGas = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', feesQuery);
+
+	 totalFundraiserAccounts =  await getTotalFundraisersActivated();
+	 
+	 document.getElementById("transactions_num").innerHTML = transactions[0].count_amount
+	 document.getElementById("transactions_total_xtz").innerHTML = convertFromUtezToTez(transactions[0].sum_amount)
+	 document.getElementById("accounts_activated_num").innerHTML = transactions[0].count_originated_contracts
+	 document.getElementById("fundraisers_activated").innerHTML = fundraiserAccounts[0].count_kind;
+	 document.getElementById("fees_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_fee);
+	 document.getElementById("consumed_gas_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_consumed_gas);
+	 document.getElementById("fundraisers_total_activated").innerHTML = totalFundraiserAccounts;
+	 document.getElementById("fundraisers_total_activated_percent").innerHTML = Math.round((totalFundraiserAccounts / 30317) * 100);
+     }
+     
+     async function initialize() {
+	 initializeBlock()
+	 initializeNetworkStats();
+	 initializeOperationStats();
+     }
+
+    </script>
+
+
+</head><body onload="initialize()">
+    <p>Block ID:</p>
+    <input type="text" id="blockid"><br>
+    <button onclick="updateBlock(document.getElementById(&#39;blockid&#39;).value)">Update by hash</button><br>
+    <input type="text" id="blocklevel"><br>
+    <button onclick="updateBlockByLevel(document.getElementById(&#39;blocklevel&#39;).value)">Update by level</button><br>
+    <table id="block" border="1px">
+        <tbody><tr>
+            <td>Hash</td>
+            <td id="block_hash"></td>
+        </tr>
+        <tr><td>Predecessor</td>
+            <td id="block_predecessor"></td>
+        </tr>
+        <tr><td>Level</td>
+            <td id="block_level"></td>
+        </tr>
+        <tr><td>Timestamp</td>
+            <td id="block_timestamp"></td>
+        </tr>
+        <tr><td>Chain ID</td>
+            <td id="block_chainid"></td>
+        </tr>
+        <tr><td>Protocol</td>
+            <td id="block_protocol"></td>
+        </tr>
+        <tr><td>Consumed Gas</td>
+            <td id="block_consumedgas"></td>
+        </tr>
+        <tr><td>Total Fees</td>
+            <td id="block_totalfees"></td>
+        </tr>
+        <tr><td>Baker</td>
+            <td id="block_baker"></td>
+        </tr>
+        <tr><td>Baker Priority</td>
+            <td id="block_priority"></td>
+        </tr>
+        <tr><td>Cycle</td>
+            <td id="block_cycle"></td>
+        </tr>
+        <tr><td>Cycle Position</td>
+            <td id="block_cycleposition"></td>
+        </tr>
+        <tr><td>Governance Period</td>
+            <td id="block_governance_period"></td>
+        </tr>
+        <tr><td>Active Proposal</td>
+            <td id="block_active_proposal"></td>
+        </tr>
+        <tr><td>Signature</td>
+            <td id="block_signature"></td>
+        </tr>
+	</tbody></table>
+
+    <p>Account ID: </p>
+    <input type="text" id="accountid" value="KT1Xu2DdPhdjFJr2R6eN2hknSsuVdya27JBL"><br>
+    <button onclick="updateAccount(document.getElementById(&#39;accountid&#39;).value)">Update</button><br>
+    <table id="block" border="1px">
+        <tbody><tr>
+            <td>Address</td>
+            <td id="account_address"></td>
+        </tr>
+        <tr>
+            <td>Block Last Updated</td>
+            <td id="account_last_updated"></td>
+        </tr>
+        <tr>
+            <td>Balance</td>
+            <td id="account_balance"></td>
+        </tr>
+        <tr>
+            <td>Manager</td>
+            <td id="account_manager"></td>
+        </tr>
+        <tr>
+            <td>Script</td>
+            <td id="account_script"></td>
+        </tr>
+        <tr>
+            <td>Storage</td>
+            <td id="account_storage"></td>
+        </tr>
+	</tbody></table>
+
+    <p>Transaction ID: </p>
+    <input type="text" id="operationid" value="opWp6MD6My1r64Hn9XcGnbPbjchPLM24HhXwGetRoND9yUSCAFa"><br>
+    <button onclick="updateTransactions(document.getElementById(&#39;operationid&#39;).value)">Update</button><br>
+    <table id="block" border="1px">
+        <tbody><tr>
+            <td>Operation ID</td>
+            <td id="transaction_opid"></td>
+        </tr>
+        <tr>
+            <td>Block</td>
+            <td id="transaction_block"></td>
+        </tr>
+        <tr>
+            <td>From</td>
+            <td id="transaction_from"></td>
+        </tr>
+        <tr>
+            <td>To</td>
+            <td id="transaction_to"></td>
+        </tr>
+        <tr>
+            <td>Amount</td>
+            <td id="transaction_amount"></td>
+        </tr>
+        <tr>
+            <td>Fee</td>
+            <td id="transaction_fee"></td>
+        </tr>
+        <tr>
+            <td>Gas Consumed</td>
+            <td id="transaction_gas_consumed"></td>
+        </tr>
+        <tr>
+            <td>Parameter</td>
+            <td id="transaction_parameter"></td>
+        </tr>
+        <tr>
+            <td>Status</td>
+            <td id="transaction_status"></td>
+        </tr>
+	</tbody></table>
+    
+    <br>
+    <hr>
+    <br>
+
+    <h3> Interesting Info </h3>
+
+    <p>
+	Greetings! The tezos <strong id="network"> </strong> is now in cycle <strong id="cycle"> </strong>.
+	Within this cycle <strong id="blocks_baked"> </strong>  of 4096  , i.e. <strong id="percent_blocks_baked"> </strong> % <br>
+	of blocks have been baked. The latest block <strong id="latest_block_hash"> </strong>
+	was baked by  <strong id="latest_block_baker"> </strong> at <strong id="latest_block_time"> </strong> on  <strong id="latest_block_date"> </strong>.
+    </p>
+
+    <h3> Transaction Info </h3>
+    
+    <p>
+	In the past day there have been  <strong id="transactions_num">____</strong> transactions for a total of  <strong id="transactions_total_xtz">____</strong> <br>
+	while <strong id="accounts_activated_num">____</strong>  accounts were originated and <strong id="fundraisers_activated">____</strong> fundraiser <br> accounts were activated. A total of <strong id="fees_sum">____</strong> in fees <br> have been paid out while a total of <strong id="consumed_gas_sum">____</strong> <br> in gas has been consumed. <br> <br>
+	<strong id="fundraisers_total_activated">____</strong> of 30,317, i.e. <strong id="fundraisers_total_activated_percent">____</strong> % of fundraiser accounts have been activated so far.
+
+	
+
+
+</body></html>
