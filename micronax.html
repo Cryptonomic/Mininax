@@ -2,7 +2,7 @@
 <!-- saved from url=(0092)https://cryptonomic.tech/_matrix/media/r0/download/cryptonomic.tech/iMTLWSuCVJbIoqrjaBHKRXdl -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
     <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
-            integrity="sha384-iNPbmJNqinKOA78xS4jxZvclwAFqpYWbk67dxWicxoflfW74pljknXh0Dg3lXeHz"
+            integrity="sha384-1Lpjkva0cskGzGmrvU+WIbzNk24LwcaEFgsukzbI5wTl7T6kom1UA4DKS/oxtaqr"
             crossorigin="anonymous"></script>
 
     </script>
@@ -86,6 +86,17 @@
          return tezAmount + " XTZ"
      }
 
+     async function getTotalFundraisersActivated(){
+	 let fundraiserQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
+	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
+
+	 return fundraiserAccounts[0].count_kind;
+     }
+     
+     
      async function initializeNetworkStats(){
 	 let query = conseiljs.ConseilQueryBuilder.blankQuery();
 	 query = conseiljs.ConseilQueryBuilder.addFields(query, 'cycle');
@@ -118,16 +129,6 @@
 	 document.getElementById("latest_block_baker").innerHTML = latestBlockBaker;
 	 document.getElementById("latest_block_time").innerHTML = latestBlockTime;
 	 document.getElementById("latest_block_date").innerHTML = latestBlockDate;
-     }
-     
-     async function getTotalFundraisersActivated(){
-	 let fundraiserQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
-	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
-	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
-	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
-
-	 return fundraiserAccounts[0].count_kind;
      }
 
      async function initializeOperationStats(){
@@ -169,11 +170,39 @@
 	 document.getElementById("fundraisers_total_activated").innerHTML = totalFundraiserAccounts;
 	 document.getElementById("fundraisers_total_activated_percent").innerHTML = Math.round((totalFundraiserAccounts / 30317) * 100);
      }
+
+     async function intializeGovernanceStats() {
+	 let latestBlock = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network);
+	 let periodKind = latestBlock.period_kind;
+	 let governanceInfo = "";
+	 document.getElementById("phase").innerHTML = periodKind;
+	 document.getElementById("active_proposal").innerHTML = latestBlock.active_proposal;
+	 if (periodKind == "proposal") {
+	     governanceInfo = getProposalInfo();
+	 }
+	 else if (periodKind == "testing vote") {
+	     governanceInfo = getVoteInfo();
+	 }
+	 else if (periodKind == "promotion vote") {
+	     governanceInfo = getVoteInfo();
+	     governanceInfo += "If this proposal passes, it will take effect when the next cycle begins.";
+	 }
+	 
+     }
+
+     async function getProposalInfo() {
+	 return "";
+     }
+
+     async function getVoteInfo() {
+	 return "";
+     }
      
-     async function initialize() {
+     function  initialize() {
 	 initializeBlock()
 	 initializeNetworkStats();
 	 initializeOperationStats();
+	 intializeGovernanceStats();
      }
 
     </script>
@@ -325,8 +354,15 @@
 	In the past day there have been  <strong id="transactions_num">____</strong> transactions for a total of  <strong id="transactions_total_xtz">____</strong> <br>
 	while <strong id="accounts_activated_num">____</strong>  accounts were originated and <strong id="fundraisers_activated">____</strong> fundraiser <br> accounts were activated. A total of <strong id="fees_sum">____</strong> in fees <br> have been paid out while a total of <strong id="consumed_gas_sum">____</strong> <br> in gas has been consumed. <br> <br>
 	<strong id="fundraisers_total_activated">____</strong> of 30,317, i.e. <strong id="fundraisers_total_activated_percent">____</strong> % of fundraiser accounts have been activated so far.
+    </p>
 
+    <h3> Governance Info </h3>
+    <p>
+	We are currently in the <strong id="phase">____</strong> phase of the governance process. The active proposal is: <br>
+	<strong id="active_proposal">____</strong>.  <br>
 	
+	<p id="governance_info>___ </p>
+	   </p>
 
 
 </body></html>
