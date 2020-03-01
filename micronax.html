@@ -190,7 +190,27 @@
 	 
      }
 
+     async function initializeBakerStats() {
+	 let bakerQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 bakerQuery = conseiljs.ConseilQueryBuilder.addFields(bakerQuery, 'pkh', 'staking_balance');
+	 bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'deactivated', conseiljs.ConseilOperator.EQ, ['false'], false);
+	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'pkh', 'count');
+	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'staking_balance', 'sum');
+	 let numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', bakerQuery);
+	 
+	 let balanceQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 balanceQuery = conseiljs.ConseilQueryBuilder.addFields(balanceQuery, 'balance');
+	 balanceQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(balanceQuery, 'balance', 'sum');
+	 let totalTez = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'accounts', balanceQuery);
+
+	 document.getElementById("num_bakers").innerHTML = numBakers[0].count_pkh;
+	 document.getElementById("tez_staked").innerHTML = convertFromUtezToTez(numBakers[0].sum_staking_balance);
+	 document.getElementById("total_tez").innerHTML = convertFromUtezToTez(totalTez[0].sum_balance);
+	 document.getElementById("percent_staked").innerHTML = Math.round((numBakers[0].sum_staking_balance/totalTez[0].sum_balance)*100);
+     }
+
      async function getProposalInfo() {
+	 
 	 return "";
      }
 
@@ -198,11 +218,11 @@
 	 return "";
      }
      
-     function  initialize() {
+     function initialize() {
 	 initializeBlock()
 	 initializeNetworkStats();
 	 initializeOperationStats();
-	 intializeGovernanceStats();
+	 initializeBakerStats();
      }
 
     </script>
@@ -360,9 +380,13 @@
     <p>
 	We are currently in the <strong id="phase">____</strong> phase of the governance process. The active proposal is: <br>
 	<strong id="active_proposal">____</strong>.  <br>
+    </p>
 	
-	<p id="governance_info>___ </p>
-	   </p>
-
-
-</body></html>
+    <p id="governance_info">___ </p>
+    
+    <h3> Baker Info </h3>
+    There are <strong id="num_bakers">____</strong> active bakers. A total of <strong id="tez_staked">____</strong> out of <strong id="total_tez"></strong> <br>
+    i.e <strong id="percent_staked"> </strong> % is being staked right now.
+    
+</body>
+</html>
