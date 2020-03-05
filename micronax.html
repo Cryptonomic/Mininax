@@ -8,9 +8,9 @@
     </script>
 
     <script>
-     const conseilServer = { url: 'https://conseil-dev.cryptonomic-infra.tech:443', apiKey: 'hooman' };
+     const conseilServer = { url: 'https://conseil-staging.cryptonomic-infra.tech:443', apiKey: 'hooman' };
      const platform = "tezos"
-     const network = "babylonnet"
+     const network = "mainnet"
 
      async function updateBlock(blockid) {
          const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
@@ -209,20 +209,45 @@
 	 document.getElementById("percent_staked").innerHTML = Math.round((numBakers[0].sum_staking_balance/totalTez[0].sum_balance)*100);
      }
 
-     async function getProposalInfo() {
-	 
-	 return "";
+     async function getProposalInfo(cycle) {
+	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 proposalQuery = conseiljs.ConseilQueryBuilder.addFields(proposalQuery, 'proposal', 'operation_group_hash');
+	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
+	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'proposal', conseiljs.ConseilOperator.ISNULL, [''], true);
+	 proposalQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(proposalQuery, 'operation_group_hash', 'count');
+	 let proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', proposalQuery);
+	 let output = "The active proposal is: <br>";
+
+	 if (proposalStats.length == 0) {
+	     document.getElementById("governance_info").innerHTML = "There are no active proposals";
+	 }
+	 else { 
+	     for (proposal of proposalStats) {
+		 output += proposal.proposal + " " + proposal.count_operation_group_hash;
+	     }
+	     document.getElementById("governance_info").innerHTML = output;
+	 }
      }
 
      async function getVoteInfo() {
 	 return "";
      }
      
-     function initialize() {
+     async function initialize() {
 	 initializeBlock()
 	 initializeNetworkStats();
 	 initializeOperationStats();
 	 initializeBakerStats();
+
+	 const current_block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network);
+	 const current_cycle = current_block.cycle;
+
+	 if (current_block.period_kind == "proposal") {
+	     document.getElementById("phase").innerHTML = "proposal"; 
+	     getProposalInfo(current_block.meta_cycle);
+	 }
+
+
      }
 
     </script>
@@ -378,11 +403,10 @@
 
     <h3> Governance Info </h3>
     <p>
-	We are currently in the <strong id="phase">____</strong> phase of the governance process. The active proposal is: <br>
-	<strong id="active_proposal">____</strong>.  <br>
+	We are currently in the <strong id="phase">____</strong> phase of the governance process.
+	<p id="governance_info">___ </p>
     </p>
-	
-    <p id="governance_info">___ </p>
+    
     
     <h3> Baker Info </h3>
     There are <strong id="num_bakers">____</strong> active bakers. A total of <strong id="tez_staked">____</strong> out of <strong id="total_tez"></strong> <br>
