@@ -97,19 +97,7 @@
      }
      
      
-     async function initializeNetworkStats(){
-	 let query = conseiljs.ConseilQueryBuilder.blankQuery();
-	 query = conseiljs.ConseilQueryBuilder.addFields(query, 'cycle');
-	 query = conseiljs.ConseilQueryBuilder.addOrdering(query, 'cycle', conseiljs.ConseilSortDirection.DESC);
-	 query = conseiljs.ConseilQueryBuilder.setLimit(query, 1);
-	 let response = await conseiljs.TezosConseilClient.getOperations(conseilServer, network, query);
-
-	 let blockQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-	 blockQuery = conseiljs.ConseilQueryBuilder.addFields(blockQuery, 'hash');
-	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [response[0].cycle], false);
-	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
-	 let numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
-	 let percentBaked = Math.round((numBlocks[0].count_hash/4096) * 100);
+async function initializeNetworkStats() {
 
 	 let latestBlock = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network);
 	 latestBlockHash = latestBlock.hash;
@@ -121,8 +109,15 @@
 			   ":" + ((latestBlockTimestamp.getMinutes() < 10) ? "0" + latestBlockTimestamp.getMinutes() : latestBlockTimestamp.getMinutes()) +
 			   ":" + latestBlockTimestamp.getSeconds();
 
+         let blockQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 blockQuery = conseiljs.ConseilQueryBuilder.addFields(blockQuery, 'hash');
+	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [latestBlock.meta_cycle], false);
+	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
+	 let numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
+	 let percentBaked = Math.round((numBlocks[0].count_hash/4096) * 100);
+
 	 document.getElementById("network").innerHTML = network;
-	 document.getElementById("cycle").innerHTML = response[0].cycle;
+	 document.getElementById("cycle").innerHTML = latestBlock.meta_cycle;
 	 document.getElementById("blocks_baked").innerHTML = numBlocks[0].count_hash;
 	 document.getElementById("percent_blocks_baked").innerHTML = percentBaked;
 	 document.getElementById("latest_block_hash").innerHTML = latestBlockHash;
