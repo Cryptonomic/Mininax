@@ -51,7 +51,7 @@ let make = () => {
   let footerRef = ref(None);
   let (state, dispatch) = React.useReducer(reducer, initState);
 
-  let getBlock = (id: string, isRoute: bool, isMain: bool) => {
+  let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
     dispatch(SetLoading);
     Js.Promise.(
       ApiCall.getBlockThunk(id, configs[selectedConfig^])
@@ -59,13 +59,19 @@ let make = () => {
           switch result {
           | ("Error", Some(error), _) => resolve(dispatch(SetError(error)))
           | ("Valid", _, Some(block)) => {
-            switch (isRoute, isMain) {
-              | (true, false) => {
+            switch (isRoute, isMain, level) {
+              | (true, false, 0) => {
                 let url = Utils.makeUrl(configs[selectedConfig^].network, "blocks", id);
                 ReasonReactRouter.push(url);
                 resolve(dispatch(SetBlock(block, id)));
               }
-              | (false, false) => resolve(dispatch(SetBlock(block, id)))
+              | (true, false, _) => {
+                let strLevel = string_of_int(level);
+                let url = Utils.makeUrl(configs[selectedConfig^].network, "blocks", strLevel);
+                ReasonReactRouter.push(url);
+                resolve(dispatch(SetBlock(block, strLevel)));
+              }
+              | (false, false, _) => resolve(dispatch(SetBlock(block, id)))
               | _ => resolve(dispatch(SetBlock(block, "")))
             };
           }
@@ -133,7 +139,7 @@ let make = () => {
       ApiCall.getBlockHashThunk(level, configs[selectedConfig^])
       |> then_(result =>
         switch (result) {
-          | Some(head) => resolve(getBlock(head##hash, true, false))
+          | Some(head) => resolve(getBlock(head##hash, true, false, level))
           | None => resolve(dispatch(SetError(Utils.noAvailable)))
         }
       )
@@ -148,7 +154,7 @@ let make = () => {
       ApiCall.getBlockHeadThunk(configs[selectedConfig^])
       |> then_(result =>
         switch (result) {
-          | Some(head) => resolve(getBlock(head##hash, false, true))
+          | Some(head) => resolve(getBlock(head##hash, false, true, 0))
           | None => resolve(dispatch(SetError(Utils.noAvailable)))
         }
       )
@@ -175,15 +181,17 @@ let make = () => {
 
   let goToPage = (network: string, entity: string, id: string) => {
     let selectedIndex = configs |> Js.Array.findIndex(conf => conf.network === network);
+    let isNumber = id |> Utils.isNumber;
     switch (selectedIndex) {
       | -1 => goToMainPage()
       | _ => {
         dispatch(ChangeNetwork(selectedIndex));
         selectedConfig := selectedIndex;
-        switch entity {
-          | "blocks" => getBlock(id, false, false);
-          | "accounts" => getAccount(id, false)
-          | "operations" => getOperation(id, false)
+        switch (entity, isNumber) {
+          | ("blocks", false) => getBlock(id, false, false, 0);
+          | ("blocks", true) => getHashByLevel(id |> int_of_string)
+          | ("accounts", false) => getAccount(id, false)
+          | ("operations", false) => getOperation(id, false)
           | _ => goToMainPage()
         };
       }
@@ -216,7 +224,7 @@ let make = () => {
     let twoChars = id |> Js.String.slice(~from=0, ~to_=2) |> Js.String.toLowerCase;
     let isNumber = id |> Utils.isNumber;
     switch (firstChar, twoChars, isNumber) {
-      | ("b", _, _) => getBlock(id, true, false)
+      | ("b", _, _) => getBlock(id, true, false, 0)
       | ("o", _, _) => getOperation(id, true)
       | (_, "tz", _) | (_, "kt", _) => getAccount(id, true)
       | (_, _, true) => getHashByLevel(id |> int_of_string)
