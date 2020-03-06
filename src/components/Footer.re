@@ -45,7 +45,8 @@ module Styles = {
   let changeBtn = index => style([
     textTransform(uppercase),
     marginLeft(auto),
-    width(px(185)),
+    padding4(~top=px(0), ~bottom=px(0), ~left=px(10), ~right=px(10)),
+    lineHeight(px(23)),
     height(px(31)),
     fontSize(px(18)),
     color(hex(themes[index].mainBgColor)),
