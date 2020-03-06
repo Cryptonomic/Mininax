@@ -12,6 +12,10 @@
      const platform = "tezos"
      const network = "mainnet"
 
+     async function updateStats(blockid) {
+	 updateBlock(blockid)
+	 updateNetworkStats(blockid)
+     }
      async function updateBlock(blockid) {
          const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
          const fees = await getTotalFeesForBlock(blockid)
@@ -30,6 +34,34 @@
          document.getElementById("block_governance_period").innerHTML = block.period_kind
          document.getElementById("block_active_proposal").innerHTML = block.active_proposal
          document.getElementById("block_signature").innerHTML = block.signature
+
+	 blockTimestamp = new Date(block.timestamp);
+	 blockDate = blockTimestamp.getMonth()+1 + "-" + blockTimestamp.getDate() + "-" + blockTimestamp.getFullYear();
+	 blockTime = blockTimestamp.getHours() +
+		     ":" + ((blockTimestamp.getMinutes() < 10) ? "0" + blockTimestamp.getMinutes() : blockTimestamp.getMinutes()) +
+		     ":" + blockTimestamp.getSeconds();
+
+	 document.getElementById("network").innerHTML = network;
+	 document.getElementById("cycle").innerHTML = block.meta_cycle;
+	 document.getElementById("latest_block_hash").innerHTML = block.hash
+	 document.getElementById("latest_block_baker").innerHTML = block.baker
+	 document.getElementById("latest_block_time").innerHTML = blockDate
+	 document.getElementById("latest_block_date").innerHTML = blockTime
+     }
+
+     async function updateNetworkStats(blockid) {
+         const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+
+	 let blockQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 blockQuery = conseiljs.ConseilQueryBuilder.addFields(blockQuery, 'hash');
+	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [block.meta_cycle], false);
+	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
+	 let numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
+	 let percentBaked = Math.round((numBlocks[0].count_hash/4096) * 100);
+
+	 document.getElementById("blocks_baked").innerHTML = numBlocks[0].count_hash;
+	 document.getElementById("percent_blocks_baked").innerHTML = percentBaked;
+
      }
 
      async function updateBlockByLevel(level) {
@@ -97,7 +129,7 @@
      }
      
      
-async function initializeNetworkStats() {
+     async function initializeNetworkStats() {
 
 	 let latestBlock = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network);
 	 latestBlockHash = latestBlock.hash;
@@ -251,7 +283,7 @@ async function initializeNetworkStats() {
 </head><body onload="initialize()">
     <p>Block ID:</p>
     <input type="text" id="blockid"><br>
-    <button onclick="updateBlock(document.getElementById(&#39;blockid&#39;).value)">Update by hash</button><br>
+    <button onclick="updateStats(document.getElementById(&#39;blockid&#39;).value)">Update by hash</button><br>
     <input type="text" id="blocklevel"><br>
     <button onclick="updateBlockByLevel(document.getElementById(&#39;blocklevel&#39;).value)">Update by level</button><br>
     <table id="block" border="1px">
