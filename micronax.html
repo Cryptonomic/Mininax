@@ -1,4 +1,3 @@
-
 <!-- saved from url=(0092)https://cryptonomic.tech/_matrix/media/r0/download/cryptonomic.tech/iMTLWSuCVJbIoqrjaBHKRXdl -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
@@ -8,9 +7,13 @@
     </script>
 
     <script>
-     const conseilServer = { url: 'https://conseil-dev2.cryptonomic-infra.tech:443', apiKey: 'hooman' };
+     const conseilServer = { url: 'https://conseil-staging.cryptonomic-infra.tech:443', apiKey: 'hooman' };
      const platform = "tezos"
-     const network = "babylonnet"
+     const network = "mainnet"
+     const blocksPerCycle = {"mainnet" : 4096,
+			     "babylonnet" : 2048,
+			     "carthagenet" : 2048,
+			     "zeronet" : 128}
 
      async function updateBlock(blockid) {
          const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
@@ -35,22 +38,21 @@
 
      async function updateOperationStats(blockid){
          const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
-	 document.getElementById("output").innerHTML = block.timestamp;
  	 initializeOperationStats(block.timestamp);
      }
 
      async function updateStatsByLevel(level) {
 	 const block = await conseiljs.TezosConseilClient.getBlockByLevel(conseilServer, network, level)
 	 const blockHash = block[0].hash
-	 updateBlock(blockHash)
-	 updateNetworkStats(blockHash)
-	 updateOperationStats(blockHash)
+	 updateStats(blockHash)
      }
 
      async function updateStats(blockid) {
 	 updateBlock(blockid)
 	 initializeNetworkStats(blockid)
+	 initializeGovernanceStats(blockid)
 	 updateOperationStats(blockid)
+	 
      }
 
      async function initializeBlock() {
@@ -98,7 +100,7 @@
 
      function convertFromUtezToTez(amountInUtez) {
 	 const tezAmount = amountInUtez / 1000000
-	 return tezAmount + " XTZ"
+	 return tezAmount
      }
 
      async function getTotalFundraisersActivated(){
@@ -112,13 +114,14 @@
      }
      
      
-     async function initializeNetworkStats() {
-
-	 let latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid);
+     async function initializeNetworkStats(blockid="head") {
+	 latestBlock = (blockid=="head") ?
+		       await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network) :
+		       await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+	 
 	 latestBlockHash = latestBlock.hash;
 	 latestBlockBaker = latestBlock.baker;
 	 latestBlockTimestamp = new Date(latestBlock.timestamp);
-
 	 latestBlockDate = latestBlockTimestamp.getMonth()+1 + "-" + latestBlockTimestamp.getDate() + "-" + latestBlockTimestamp.getFullYear();
 	 latestBlockTime = latestBlockTimestamp.getHours() +
 			   ":" + ((latestBlockTimestamp.getMinutes() < 10) ? "0" + latestBlockTimestamp.getMinutes() : latestBlockTimestamp.getMinutes()) +
@@ -127,13 +130,16 @@
 	 let blockQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 blockQuery = conseiljs.ConseilQueryBuilder.addFields(blockQuery, 'hash');
 	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [latestBlock.meta_cycle], false);
+	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [latestBlock.timestamp], false);
 	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
 	 let numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
-	 let percentBaked = Math.round((numBlocks[0].count_hash/4096) * 100);
+
+	 let percentBaked = Math.round((numBlocks[0].count_hash/blocksPerCycle[network]) * 100);
 
 	 document.getElementById("network").innerHTML = network;
 	 document.getElementById("cycle").innerHTML = latestBlock.meta_cycle;
 	 document.getElementById("blocks_baked").innerHTML = numBlocks[0].count_hash;
+	 document.getElementById("blocks_per_cycle").innerHTML = blocksPerCycle[network];
 	 document.getElementById("percent_blocks_baked").innerHTML = percentBaked;
 	 document.getElementById("latest_block_hash").innerHTML = latestBlockHash;
 	 document.getElementById("latest_block_baker").innerHTML = latestBlockBaker;
@@ -146,9 +152,11 @@
 	 let timeYesterday = timeNow - oneDayMillis;
 	 let transactionQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 
+	 //I could theoretically do the following all in one monster query but I seperated it for clarity
+
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addFields(transactionQuery, 'amount', 'originated_contracts');
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'kind', conseiljs.ConseilOperator.IN, ['transaction', 'origination'], false);
-	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
+ 	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timeNow], false);
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'originated_contracts', 'count');
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'amount', 'count');
@@ -159,12 +167,14 @@
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timeNow], false);
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
 	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
 
 	 let feesQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 feesQuery = conseiljs.ConseilQueryBuilder.addFields(feesQuery, 'fee', 'consumed_gas' );
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
+	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timeNow], false);
 	 feesQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(feesQuery, 'fee', 'sum');
 	 feesQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(feesQuery, 'consumed_gas', 'sum');
 	 let feesAndGas = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', feesQuery);
@@ -175,33 +185,14 @@
 	 document.getElementById("transactions_total_xtz").innerHTML = convertFromUtezToTez(transactions[0].sum_amount)
 	 document.getElementById("accounts_activated_num").innerHTML = transactions[0].count_originated_contracts
 	 document.getElementById("fundraisers_activated").innerHTML = fundraiserAccounts[0].count_kind;
-	 document.getElementById("fees_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_fee);
-	 document.getElementById("consumed_gas_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_consumed_gas);
+	 document.getElementById("fees_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_fee).toFixed(2)
+	 document.getElementById("consumed_gas_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_consumed_gas).toFixed(2)
 	 document.getElementById("fundraisers_total_activated").innerHTML = totalFundraiserAccounts;
 	 document.getElementById("fundraisers_total_activated_percent").innerHTML = Math.round((totalFundraiserAccounts / 30317) * 100);
      }
 
-     async function intializeGovernanceStats(blockid="head") {
-	 let latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid);
-	 let periodKind = latestBlock.period_kind;
-	 let governanceInfo = "";
-	 document.getElementById("phase").innerHTML = periodKind;
-	 document.getElementById("active_proposal").innerHTML = latestBlock.active_proposal;
+     async function initializeBakerStats(timeNow= new Date().getTime()) {
 	 
-	 if (periodKind == "proposal") {
-	     governanceInfo = getProposalInfo();
-	 }
-	 else if (periodKind == "testing vote") {
-	     governanceInfo = getVoteInfo();
-	 }
-	 else if (periodKind == "promotion vote") {
-	     governanceInfo = getVoteInfo();
-	     governanceInfo += "If this proposal passes, it will take effect when the next cycle begins.";
-	 }
-	 
-     }
-
-     async function initializeBakerStats() {
 	 let bakerQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addFields(bakerQuery, 'pkh', 'staking_balance');
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'deactivated', conseiljs.ConseilOperator.EQ, ['false'], false);
@@ -215,50 +206,128 @@
 	 let totalTez = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'accounts', balanceQuery);
 
 	 document.getElementById("num_bakers").innerHTML = numBakers[0].count_pkh;
-	 document.getElementById("tez_staked").innerHTML = convertFromUtezToTez(numBakers[0].sum_staking_balance);
-	 document.getElementById("total_tez").innerHTML = convertFromUtezToTez(totalTez[0].sum_balance);
+	 document.getElementById("tez_staked").innerHTML = convertFromUtezToTez(numBakers[0].sum_staking_balance).toFixed(2);
+	 document.getElementById("total_tez").innerHTML = convertFromUtezToTez(totalTez[0].sum_balance).toFixed(2);
 	 document.getElementById("percent_staked").innerHTML = Math.round((numBakers[0].sum_staking_balance/totalTez[0].sum_balance)*100);
      }
 
-     async function getProposalInfo(cycle) {
+     async function initializeGovernanceStats(blockid="head") {
+	 let latestBlock = blockid == "head" ? 
+			   await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network) :
+			   await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid);
+	 
+	 let periodKind = latestBlock.period_kind;
+
+	 
+	 if (periodKind == "proposal") {
+	     setProposalInfo(latestBlock.meta_cycle);
+	 }
+	 else if (periodKind == "testing") {
+	     setTestingInfo(latestBlock.meta_cycle);
+	 }
+	 else if (periodKind == "testing_vote") {
+	     setTestingVoteInfo(latestBlock.meta_cycle);
+	 }
+	 else if (periodKind == "promotion_vote") {
+	     setPromotionVoteInfo(latestBlock.meta_cycle);
+	 }
+     }
+
+     async function setProposalInfo(cycle) {
+
 	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addFields(proposalQuery, 'proposal', 'operation_group_hash');
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'proposal', conseiljs.ConseilOperator.ISNULL, [''], true);
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(proposalQuery, 'operation_group_hash', 'count');
 	 let proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', proposalQuery);
-	 let output = "The active proposal is: <br>";
+
+	 document.getElementById('phase').innerHTML = 'proposal';
+	 let output = 'The active proposal is: <br>';
 
 	 if (proposalStats.length == 0) {
-	     document.getElementById("governance_info").innerHTML = "There are no active proposals";
+	     document.getElementById('governance_info').innerHTML = 'There are no active proposals';
 	 }
 	 else { 
 	     for (proposal of proposalStats) {
-		 output += proposal.proposal + " " + proposal.count_operation_group_hash;
+		 output += proposal.proposal + ' ' + proposal.count_operation_group_hash;
 	     }
-	     document.getElementById("governance_info").innerHTML = output;
+	     document.getElementById('governance_info').innerHTML = output;
 	 }
      }
 
-     async function getVoteInfo() {
-	 return "";
+     async function getVoteInfo(cycle) {
+	 let quorumQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 quorumQuery = conseiljs.ConseilQueryBuilder.addFields(quorumQuery, 'current_expected_quorum');
+	 quorumQuery = conseiljs.ConseilQueryBuilder.addPredicate(quorumQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
+	 let quorumStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', quorumQuery);
+	 let expectedQuorum = quorumStats[0].current_expected_quorum;
+
+	 let votingQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 votingQuery = conseiljs.ConseilQueryBuilder.addFields(votingQuery, 'yay_count', 'nay_count', 'pass_count', 'proposal_hash');
+	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
+	 let votingStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', votingQuery);
+	 
+	 let voteInfo = votingStats[0]
+	 voteInfo['expected_quorum'] = expectedQuorum
+	 return voteInfo
+     }
+
+     async function setTestingVoteInfo(cycle) {
+	 document.getElementById('phase').innerHTML = 'testing vote';
+	 let output = 'The active proposal is: <br>';
+
+	 let voteInfo = await getVoteInfo(cycle);
+	 let sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
+	 let proposal = voteInfo.proposal_hash
+
+	 output += emphasize(proposal) + "<br> <br>"
+	 output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
+		   emphasize(voteInfo.yay_count) + ' ballots have been cast for, ' + emphasize(voteInfo.nay_count) + ' against and ' +
+		   emphasize(voteInfo.pass_count) + ' have passed.'
+
+	 document.getElementById('governance_info').innerHTML = output;
      }
      
+     async function setPromotionVoteInfo(cycle) {
+	 document.getElementById('phase').innerHTML = 'promotion vote';
+	 let output = 'The active proposal is: <br>';
+
+	 let voteInfo = await getVoteInfo(cycle);
+	 let sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
+	 let proposal = voteInfo.proposal_hash
+
+	 output += emphasize(proposal) + "<br> <br>"
+	 output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
+		   emphasize(voteInfo.yay_count) + ' ballots have been cast for, ' + emphasize(voteInfo.nay_count) + ' against and ' +
+		   emphasize(voteInfo.pass_count) + ' have passed.'
+
+	 output += "<br> If this proposal passes, it will take effect when the next cycle begins.";
+	 document.getElementById('governance_info').innerHTML = output;
+     }
+
+     async function setTestingInfo(cycle) {
+	 document.getElementById('phase').innerHTML = 'testing';
+	 let output = 'The active proposal: <br>'
+
+	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	 proposalQuery = conseiljs.ConseilQueryBuilder.addFields(proposalQuery, 'proposal_hash');
+	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'cycle',  conseiljs.ConseilOperator.EQ, [cycle], false);
+	 let proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', proposalQuery);
+	 output += proposalStats[0].proposal_hash
+	 document.getElementById('governance_info').innerHTML = output;
+     }
+
+     function emphasize(toEmphasize) {
+	 return "<strong>" + toEmphasize + "</strong>"
+     }
+
      async function initialize() {
 	 initializeBlock()
 	 initializeNetworkStats();
 	 initializeOperationStats();
 	 initializeBakerStats();
-
-	 const current_block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network);
-	 const current_cycle = current_block.cycle;
-
-	 if (current_block.period_kind == "proposal") {
-	     document.getElementById("phase").innerHTML = "proposal"; 
-	     getProposalInfo(current_block.meta_cycle);
-	 }
-
-
+	 initializeGovernanceStats();
      }
 
     </script>
@@ -399,7 +468,7 @@
 
     <p>
 	Greetings! The tezos <strong id="network"> </strong> is now in cycle <strong id="cycle"> </strong>.
-	Within this cycle <strong id="blocks_baked"> </strong>  of 4096  , i.e. <strong id="percent_blocks_baked"> </strong> % <br>
+	Within this cycle <strong id="blocks_baked"> </strong>  of <strong id="blocks_per_cycle"> </strong>, i.e. <strong id="percent_blocks_baked"> </strong> % <br>
 	of blocks have been baked. The latest block <strong id="latest_block_hash"> </strong>
 	was baked by  <strong id="latest_block_baker"> </strong> at <strong id="latest_block_time"> </strong> on  <strong id="latest_block_date"> </strong>.
     </p>
@@ -422,6 +491,5 @@
     <h3> Baker Info </h3>
     There are <strong id="num_bakers">____</strong> active bakers. A total of <strong id="tez_staked">____</strong> out of <strong id="total_tez"></strong> <br>
     i.e <strong id="percent_staked"> </strong> % is being staked right now.
-    <strong id="output">____</strong> 
 </body>
 </html>
