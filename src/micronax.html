@@ -29,7 +29,7 @@
 	 let balanceQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 balanceQuery = conseiljs.ConseilQueryBuilder.addFields(balanceQuery, 'balance');
 	 balanceQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(balanceQuery, 'balance', 'sum');
-	 let totalTez = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'accounts', balanceQuery);
+	 const totalTez = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'accounts', balanceQuery);
 	 return totalTez[0].sum_balance
      }
 
@@ -47,7 +47,7 @@
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
-	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
+	 const fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
 
 	 return fundraiserAccounts[0].count_kind;
      }
@@ -56,13 +56,13 @@
 	 let quorumQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 quorumQuery = conseiljs.ConseilQueryBuilder.addFields(quorumQuery, 'current_expected_quorum');
 	 quorumQuery = conseiljs.ConseilQueryBuilder.addPredicate(quorumQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
-	 let quorumStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', quorumQuery);
-	 let expectedQuorum = quorumStats[0].current_expected_quorum;
+	 const quorumStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', quorumQuery);
+	 const expectedQuorum = quorumStats[0].current_expected_quorum;
 
 	 let votingQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 votingQuery = conseiljs.ConseilQueryBuilder.addFields(votingQuery, 'yay_count', 'nay_count', 'pass_count', 'proposal_hash');
 	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
-	 let votingStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', votingQuery);
+	 const votingStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', votingQuery);
 	 
 	 let voteInfo = votingStats[0]
 	 voteInfo['expected_quorum'] = expectedQuorum
@@ -120,7 +120,7 @@
      }
 
      async function updateAccount(accountid) {
-	 let account = await conseiljs.TezosConseilClient.getAccount(conseilServer, network, accountid)
+	 const account = await conseiljs.TezosConseilClient.getAccount(conseilServer, network, accountid)
 	 document.getElementById("account_address").innerHTML = account.account_id
 	 document.getElementById("account_last_updated").innerHTML = account.block_id
 	 document.getElementById("account_balance").innerHTML = convertFromUtezToTez(account.balance)
@@ -140,9 +140,9 @@
 	 let query = conseiljs.ConseilQueryBuilder.blankQuery();
 	 query = conseiljs.ConseilQueryBuilder.addPredicate(query, 'operation_group_hash', conseiljs.ConseilOperator.EQ, [operationid], false);
 	 query = conseiljs.ConseilQueryBuilder.addPredicate(query, 'kind', conseiljs.ConseilOperator.EQ, ['transaction'], false);
-	 let transactions = await conseiljs.TezosConseilClient.getOperations(conseilServer, network, query)
+	 const transactions = await conseiljs.TezosConseilClient.getOperations(conseilServer, network, query)
 	 // Here I am only showing one transaction but there can be multiple transactions and they should all be shown to the user.
-	 let firstTransaction = transactions[0]
+	 const firstTransaction = transactions[0]
 	 document.getElementById("transaction_opid").innerHTML = firstTransaction.operation_group_hash
 	 document.getElementById("transaction_block").innerHTML = firstTransaction.block_hash
 	 document.getElementById("transaction_from").innerHTML = firstTransaction.source
@@ -155,12 +155,12 @@
      }
      
      async function updateNetworkStats(blockid) {
-	 let latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
-	 let latestBlockHash = latestBlock.hash;
-	 let latestBlockBaker = latestBlock.baker;
-	 let latestBlockTimestamp = new Date(latestBlock.timestamp);
-	 let latestBlockDate = latestBlockTimestamp.getMonth()+1 + "-" + latestBlockTimestamp.getDate() + "-" + latestBlockTimestamp.getFullYear();
-	 let latestBlockTime = latestBlockTimestamp.getHours() +
+	 const latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+	 const latestBlockHash = latestBlock.hash;
+	 const latestBlockBaker = latestBlock.baker;
+	 const latestBlockTimestamp = new Date(latestBlock.timestamp);
+	 const latestBlockDate = latestBlockTimestamp.getMonth()+1 + "-" + latestBlockTimestamp.getDate() + "-" + latestBlockTimestamp.getFullYear();
+	 const latestBlockTime = latestBlockTimestamp.getHours() +
 			       ":" + ((latestBlockTimestamp.getMinutes() < 10) ? "0" + latestBlockTimestamp.getMinutes() : latestBlockTimestamp.getMinutes()) +
 			       ":" + latestBlockTimestamp.getSeconds();
 
@@ -169,9 +169,9 @@
 	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [latestBlock.meta_cycle], false);
 	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [latestBlock.timestamp], false);
 	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
-	 let numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
+	 const numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
 
-	 let percentBaked = Math.round((numBlocks[0].count_hash/blocksPerCycle[network]) * 100);
+	 const percentBaked = Math.round((numBlocks[0].count_hash/blocksPerCycle[network]) * 100);
 
 	 document.getElementById("network").innerHTML = network;
 	 document.getElementById("cycle").innerHTML = latestBlock.meta_cycle;
@@ -185,10 +185,10 @@
      }
 
      async function updateTransactionStats(blockid) {
-	 let block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
-	 let timeNow = block.timestamp
-	 let oneDayMillis = 8.64*10000000
-	 let timeYesterday = timeNow - oneDayMillis;
+	 const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+	 const timeNow = block.timestamp
+	 const oneDayMillis = 8.64*10000000
+	 const timeYesterday = timeNow - oneDayMillis;
 
 	 let transactionQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addFields(transactionQuery, 'amount', 'originated_contracts');
@@ -198,7 +198,7 @@
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'originated_contracts', 'count');
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'amount', 'count');
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'amount', 'sum');
-	 let transactions = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', transactionQuery);
+	 const transactions = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', transactionQuery);
 
 	 document.getElementById("transactions_num").innerHTML = transactions[0].count_amount
 	 document.getElementById("transactions_total_xtz").innerHTML = convertFromUtezToTez(transactions[0].sum_amount).toFixed(2)
@@ -207,10 +207,10 @@
      }
 
      async function updateFundraiserStats(blockid) {
-	 let block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
-	 let timeNow = block.timestamp
-	 let oneDayMillis = 8.64*10000000
-	 let timeYesterday = timeNow - oneDayMillis;
+	 const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+	 const timeNow = block.timestamp
+	 const oneDayMillis = 8.64*10000000
+	 const timeYesterday = timeNow - oneDayMillis;
 
 	 totalFundraiserAccounts =  await getTotalFundraisersActivated();
 
@@ -220,7 +220,7 @@
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timeNow], false);
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
-	 let fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
+	 const fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
 
 	 document.getElementById("fundraisers_activated").innerHTML = fundraiserAccounts[0].count_kind;
 	 document.getElementById("fundraisers_total_activated").innerHTML = totalFundraiserAccounts;
@@ -228,10 +228,10 @@
      }
 
      async function updateFeesStats(blockid) {
-	 let block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
-	 let timeNow = block.timestamp
-	 let oneDayMillis = 8.64*10000000
-	 let timeYesterday = timeNow - oneDayMillis;
+	 const block = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+	 const timeNow = block.timestamp
+	 const oneDayMillis = 8.64*10000000
+	 const timeYesterday = timeNow - oneDayMillis;
 
 	 let feesQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 feesQuery = conseiljs.ConseilQueryBuilder.addFields(feesQuery, 'fee', 'consumed_gas' );
@@ -239,15 +239,15 @@
 	 feesQuery = conseiljs.ConseilQueryBuilder.addPredicate(feesQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timeNow], false);
 	 feesQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(feesQuery, 'fee', 'sum');
 	 feesQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(feesQuery, 'consumed_gas', 'sum');
-	 let feesAndGas = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', feesQuery);
+	 const feesAndGas = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', feesQuery);
 
 	 document.getElementById("fees_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_fee).toFixed(2)
 	 document.getElementById("consumed_gas_sum").innerHTML = convertFromUtezToTez(feesAndGas[0].sum_consumed_gas).toFixed(2)
      }
 
      async function updateGovernanceStats(blockid) {
-	 let latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
-	 let periodKind = latestBlock.period_kind;
+	 const latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
+	 const periodKind = latestBlock.period_kind;
 	 
 	 if (periodKind == "proposal") {
 	     setProposalInfo(latestBlock.meta_cycle);
@@ -275,7 +275,7 @@
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'proposal', conseiljs.ConseilOperator.ISNULL, [''], true);
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(proposalQuery, 'operation_group_hash', 'count');
-	 let proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', proposalQuery);
+	 const proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', proposalQuery);
 
 	 document.getElementById('phase').innerHTML = 'proposal';
 	 let output = 'The active proposal is: <br>';
@@ -295,9 +295,9 @@
 	 document.getElementById('phase').innerHTML = 'testing vote';
 	 let output = 'The active proposal is: <br>';
 
-	 let voteInfo = await getVoteInfo(cycle);
-	 let sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
-	 let proposal = voteInfo.proposal_hash
+	 const voteInfo = await getVoteInfo(cycle);
+	 const sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
+	 const proposal = voteInfo.proposal_hash
 
 	 output += emphasize(proposal) + "<br> <br>"
 	 output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
@@ -311,9 +311,9 @@
 	 document.getElementById('phase').innerHTML = 'promotion vote';
 	 let output = 'The active proposal is: <br>';
 
-	 let voteInfo = await getVoteInfo(cycle);
-	 let sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
-	 let proposal = voteInfo.proposal_hash
+	 const voteInfo = await getVoteInfo(cycle);
+	 const sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
+	 const proposal = voteInfo.proposal_hash
 
 	 output += emphasize(proposal) + "<br> <br>"
 	 output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
@@ -331,7 +331,7 @@
 	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addFields(proposalQuery, 'proposal_hash');
 	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'cycle',  conseiljs.ConseilOperator.EQ, [cycle], false);
-	 let proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', proposalQuery);
+	 const proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', proposalQuery);
 	 output += proposalStats[0].proposal_hash
 	 document.getElementById('governance_info').innerHTML = output;
      }
@@ -383,9 +383,9 @@
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'deactivated', conseiljs.ConseilOperator.EQ, ['false'], false);
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'pkh', 'count');
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'staking_balance', 'sum');
-	 let numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', bakerQuery);
+	 const numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', bakerQuery);
 
-	 let totalTez = await getMarketCap();
+	 const totalTez = await getMarketCap();
 
 	 document.getElementById("num_bakers").innerHTML = numBakers[0].count_pkh;
 	 document.getElementById("tez_staked").innerHTML = convertFromUtezToTez(numBakers[0].sum_staking_balance).toFixed(2);
