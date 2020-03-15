@@ -80,7 +80,7 @@
 
 
      /* ==========================================================
-                             Update Functions
+        Update Functions
 	========================================================== */
 
      async function updateStatsByLevel(level) {
@@ -161,8 +161,8 @@
 	 const latestBlockTimestamp = new Date(latestBlock.timestamp);
 	 const latestBlockDate = latestBlockTimestamp.getMonth()+1 + "-" + latestBlockTimestamp.getDate() + "-" + latestBlockTimestamp.getFullYear();
 	 const latestBlockTime = latestBlockTimestamp.getHours() +
-			       ":" + ((latestBlockTimestamp.getMinutes() < 10) ? "0" + latestBlockTimestamp.getMinutes() : latestBlockTimestamp.getMinutes()) +
-			       ":" + latestBlockTimestamp.getSeconds();
+				 ":" + ((latestBlockTimestamp.getMinutes() < 10) ? "0" + latestBlockTimestamp.getMinutes() : latestBlockTimestamp.getMinutes()) +
+				 ":" + latestBlockTimestamp.getSeconds();
 
 	 let blockQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 blockQuery = conseiljs.ConseilQueryBuilder.addFields(blockQuery, 'hash');
@@ -193,6 +193,7 @@
 	 let transactionQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addFields(transactionQuery, 'amount', 'originated_contracts');
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'kind', conseiljs.ConseilOperator.IN, ['transaction', 'origination'], false);
+	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'status', conseiljs.ConseilOperator.EQ, ['applied'], false);
  	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'timestamp', conseiljs.ConseilOperator.AFTER, [timeYesterday], false);
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addPredicate(transactionQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timeNow], false);
 	 transactionQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(transactionQuery, 'originated_contracts', 'count');
