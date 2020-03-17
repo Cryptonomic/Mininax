@@ -295,7 +295,7 @@
      }
 
      async function setTestingVoteInfo(cycle) {
-	 document.getElementById('phase').innerHTML = 'testing vote';
+	 document.getElementById('phase').innerHTML = 'exploration';
 	 let output = 'The active proposal is: <br>';
 
 	 const voteInfo = await getVoteInfo(cycle);
@@ -328,7 +328,7 @@
      }
 
      async function setTestingInfo(cycle) {
-	 document.getElementById('phase').innerHTML = 'exploration';
+	 document.getElementById('phase').innerHTML = 'testing';
 	 let output = 'The active proposal: <br>'
 
 	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
