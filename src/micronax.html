@@ -157,6 +157,7 @@
      async function updateNetworkStats(blockid) {
 	 const latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
 	 const latestBlockHash = latestBlock.hash;
+	 const latestBlockLevel = latestBlock.level;
 	 const latestBlockBaker = latestBlock.baker;
 	 const latestBlockTimestamp = new Date(latestBlock.timestamp);
 	 const latestBlockDate = latestBlockTimestamp.getMonth()+1 + "-" + latestBlockTimestamp.getDate() + "-" + latestBlockTimestamp.getFullYear();
@@ -179,6 +180,7 @@
 	 document.getElementById("blocks_per_cycle").innerHTML = blocksPerCycle[network];
 	 document.getElementById("percent_blocks_baked").innerHTML = percentBaked;
 	 document.getElementById("latest_block_hash").innerHTML = latestBlockHash;
+	 document.getElementById("latest_level").innerHTML = latestBlockLevel;
 	 document.getElementById("latest_block_baker").innerHTML = latestBlockBaker;
 	 document.getElementById("latest_block_time").innerHTML = latestBlockTime;
 	 document.getElementById("latest_block_date").innerHTML = latestBlockDate;
@@ -326,7 +328,7 @@
      }
 
      async function setTestingInfo(cycle) {
-	 document.getElementById('phase').innerHTML = 'testing';
+	 document.getElementById('phase').innerHTML = 'exploration';
 	 let output = 'The active proposal: <br>'
 
 	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
@@ -547,7 +549,7 @@
     <p>
 	Greetings! The tezos <strong id="network"> </strong> is now in cycle <strong id="cycle"> </strong>.
 	Within this cycle <strong id="blocks_baked"> </strong>  of <strong id="blocks_per_cycle"> </strong>, i.e. <strong id="percent_blocks_baked"> </strong> % <br>
-	of blocks have been baked. The latest block <strong id="latest_block_hash"> </strong>
+	of blocks have been baked. The latest block <strong id="latest_block_hash"> </strong> at level <strong id="latest_level"> </strong> <br>
 	was baked by  <strong id="latest_block_baker"> </strong> at <strong id="latest_block_time"> </strong> on  <strong id="latest_block_date"> </strong>.
     </p>
 
