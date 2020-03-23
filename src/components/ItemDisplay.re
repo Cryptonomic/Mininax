@@ -180,6 +180,18 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
                 </div>
               </div>
             )
+            | (_, false, _, true) => (
+              <div className=Styles.rowContainer key=field.name>
+                <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
+                  (ReasonReact.string(field.displayName))
+                </div>
+                <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))
+                    <span onClick={_ => openTelegramBot(fieldVal)}>
+                        <BellSvg />
+                    </span>
+                </div>
+              </div>
+            )
             | (_, true, _, false) => (
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>

@@ -183,10 +183,10 @@ let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
         {name: "signature", displayName: "Signature", isLink: false, showNotifierLink: false}
       |]
     | ("account", None) => [|
-        {name: "account_id", displayName: "Address", isLink: false, showNotifierLink: false},
+        {name: "account_id", displayName: "Address", isLink: false, showNotifierLink: true},
         {name: "block_id", displayName: "Last Updated", isLink: true, showNotifierLink: false},
         {name: "balance", displayName: "Balance", isLink: false, showNotifierLink: false},
-        {name: "manager", displayName: "Manager", isLink: true, showNotifierLink: true},
+        {name: "manager", displayName: "Manager", isLink: true, showNotifierLink: false},
         {name: "delegate_value", displayName: "Delegate", isLink: true, showNotifierLink: false},
         {name: "script", displayName: "Script", isLink: false, showNotifierLink: false},
         {name: "storage", displayName: "Storage", isLink: false, showNotifierLink: false},
