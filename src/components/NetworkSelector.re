@@ -1,6 +1,6 @@
 open Themes;
 open Configs;
-open Type;
+open MainType;
 module Styles = {
   open Css;
   let container = style([
@@ -21,9 +21,9 @@ module Styles = {
     padding(px(15)),
     backgroundColor(hex("c22c2c")),
     boxShadows([
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
-      boxShadow(~x=px(20), ~y=px(20), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+      Shadow.box(~x=px(20), ~y=px(20), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
     ]),
     textAlign(center)
   ]);
@@ -57,13 +57,13 @@ module Styles = {
     minWidth(px(100)),
     backgroundColor(hex("EEFF00")),
     boxShadows([
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
-      boxShadow(~x=px(12), ~y=px(10), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+      Shadow.box(~x=px(12), ~y=px(10), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
     ]),
     textAlign(center),
     letterSpacing(px(1)),
-    fontFamily("'Perfect DOS VGA 437 Win', sans-serif"),
+    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")),
     outline(px(0), none, transparent)
   ]);
 
@@ -82,8 +82,8 @@ module Styles = {
     marginRight(px(40)),
     width(px(20)),
     height(px(20)),
-    fontFamily("'Perfect DOS VGA 437 Win', sans-serif"),
-    boxShadow(~x=px(3), ~y=px(3), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
+    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")),
+    boxShadow(Shadow.box(~x=px(3), ~y=px(3), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor))),
     border(px(0), none, transparent),
     outline(px(0), none, transparent),
     fontSize(px(18))

@@ -1,6 +1,6 @@
-let getBlockTotalsThunk = (id: string, config: Type.config) => {
+let getBlockTotalsThunk = (id: string, config: MainType.config) => {
   let (conseilServerInfo, platform, network) = Utils.getInfo(config);
-  let query = Utils.getQueryForBlockTotals(id);
+  let query = Queries.getQueryForBlockTotals(id);
   Js.Promise.(
     ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
     |> then_(totals =>
@@ -14,7 +14,7 @@ let getBlockTotalsThunk = (id: string, config: Type.config) => {
   );
 };
 
-let getBlockHeadThunk = (config: Type.config) => {
+let getBlockHeadThunk = (config: MainType.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
     ConseiljsRe.TezosConseilClient.getBlockHead(conseilServerInfo, network)
@@ -23,14 +23,14 @@ let getBlockHeadThunk = (config: Type.config) => {
   );
 };
 
-let getBlockFromApi = (conseilServerInfo: Type.conseilServerInfo, network: string, id: string) => {  Js.Promise.(
+let getBlockFromApi = (conseilServerInfo: MainType.conseilServerInfo, network: string, id: string) => {  Js.Promise.(
   ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id)
     |> then_(block => resolve(Some(block)))
     |> catch(_err => resolve(None))
   );
 };
 
-let getBlockThunk = (id: string, config: Type.config) => {
+let getBlockThunk = (id: string, config: MainType.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
     all2((getBlockFromApi(conseilServerInfo, network, id), getBlockTotalsThunk(id, config)))
@@ -38,20 +38,20 @@ let getBlockThunk = (id: string, config: Type.config) => {
       switch (blocks, totals) {
         | (Some(block), Some(total)) => {
           let realBlock = Utils.convertBlock(~block=block, ~total=total, ());
-          resolve(("Valid", None, Some(realBlock)));
+          resolve(("Valid", None, Some(realBlock), Some(block)));
         }
         | (Some(block), None) => {
           let realBlock = Utils.convertBlock(~block=block, ());
-          resolve(("Valid", None, Some(realBlock)));
+          resolve(("Valid", None, Some(realBlock), Some(block)));
         }
-        | _ => resolve(("Error", Some(Utils.invalidId), None))
+        | _ => resolve(("Error", Some(Utils.invalidId), None, None))
       };
     })
-    |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None)))
+    |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None, None)))
   );
 };
 
-let getBlockHashThunk = (level: int, config: Type.config) => {
+let getBlockHashThunk = (level: int, config: MainType.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
     ConseiljsRe.TezosConseilClient.getBlockByLevel(conseilServerInfo, network, level)
@@ -66,9 +66,9 @@ let getBlockHashThunk = (level: int, config: Type.config) => {
   );
 };
 
-let getAccountBakerThunk = (id: string, config: Type.config) => {
+let getAccountBakerThunk = (id: string, config: MainType.config) => {
   let (conseilServerInfo, platform, network) = Utils.getInfo(config);
-  let query = Utils.getQueryForBakerInfo(id);
+  let query = Queries.getQueryForBakerInfo(id);
   Js.Promise.(
     ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "delegates", query)
     |> then_(delegates =>
@@ -82,9 +82,9 @@ let getAccountBakerThunk = (id: string, config: Type.config) => {
   );
 };
 
-let getOperationThunk = (id: string, config: Type.config) => {
+let getOperationThunk = (id: string, config: MainType.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
-  let query = Utils.getQueryForOperations(id);
+  let query = Queries.getQueryForOperations(id);
   Js.Promise.(
     ConseiljsRe.TezosConseilClient.getOperations(conseilServerInfo, network, query)
     |> then_(operations => {
@@ -99,7 +99,7 @@ let getOperationThunk = (id: string, config: Type.config) => {
   );
 };
 
-let getAccountFromApi = (conseilServerInfo: Type.conseilServerInfo, network: string, id: string) => { 
+let getAccountFromApi = (conseilServerInfo: MainType.conseilServerInfo, network: string, id: string) => { 
   Js.Promise.(
     ConseiljsRe.TezosConseilClient.getAccount(conseilServerInfo, network, id)
       |> then_(account => resolve(Some(account)))
@@ -107,7 +107,7 @@ let getAccountFromApi = (conseilServerInfo: Type.conseilServerInfo, network: str
   );
 };
 
-let getAccountThunk = (id: string, config: Type.config) => {
+let getAccountThunk = (id: string, config: MainType.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);
   Js.Promise.(
     all2((getAccountFromApi(conseilServerInfo, network, id), getAccountBakerThunk(id, config)))
@@ -136,3 +136,178 @@ let getAccountThunk = (id: string, config: Type.config) => {
     |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None)))
   );
 };
+
+let getNumBlocksApi = (metaCycle: int, timeStamp: float, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForNumBlocks(metaCycle, timeStamp);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "blocks", query)
+    |> then_(numBlocks =>
+        if (numBlocks |> Js.Array.length > 0) {
+          resolve(Some(numBlocks[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getTransactionsApi = (timeStamp: float, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForTransactionStats(timeStamp);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
+    |> then_(transactions =>
+        if (transactions |> Js.Array.length > 0) {
+          resolve(Some(transactions[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getFundraiserApi = (timeStamp: float, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForFundraiserStats(timeStamp);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
+    |> then_(fundraisers =>
+        if (fundraisers |> Js.Array.length > 0) {
+          resolve(Some(fundraisers[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getTotalFundraiserApi = (config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForTotalFundraiserActivated();
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
+    |> then_(fundraisers =>
+        if (fundraisers |> Js.Array.length > 0) {
+          resolve(Some(fundraisers[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getFeesStatsApi = (timeStamp: float, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForFeesStats(timeStamp);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
+    |> then_(fees =>
+        if (fees |> Js.Array.length > 0) {
+          resolve(Some(fees[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getBakersStatsApi = (config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForBakerStats();
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "delegates", query)
+    |> then_(bakers =>
+        if (bakers |> Js.Array.length > 0) {
+          resolve(Some(bakers[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getMarketCapApi = (config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForMarketCap();
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "accounts", query)
+    |> then_(totalTez =>
+        if (totalTez |> Js.Array.length > 0) {
+          resolve(Some(totalTez[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getProposalInfoApi = (metaCycle: int, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForProposalInfo(metaCycle);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
+    |> then_(fees =>
+        if (fees |> Js.Array.length > 0) {
+          resolve(Some(fees[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getBlockInfoThunk = (metaCycle: int, timeStamp: float, config: MainType.config) => {
+  let apis = [|
+    getNumBlocksApi(metaCycle, timeStamp, config),
+    getTransactionsApi(timeStamp, config),
+    getFundraiserApi(timeStamp, config),
+    getTotalFundraiserApi(config), 
+    getFeesStatsApi(timeStamp, config), 
+    getBakersStatsApi(config), 
+    getMarketCapApi(config)
+  |];
+  Js.Promise.(
+    all(apis)
+    |> then_(result => {
+      if (result |> Js.Array.length > 0) {
+        Js.log2("bbbbbb------", result);
+        let newTransInfoObj = result[1] |> Obj.magic;
+        let newTranInfo: MainType.transInfo = {
+          countOriginatedContracts: newTransInfoObj##count_originated_contracts,
+          countAmount: newTransInfoObj##count_amount,
+          sumAmount: newTransInfoObj##sum_amount
+        };
+        let newFundraiser = result[2] |> Obj.magic;
+        let newTotalFundraiser = result[3] |> Obj.magic;
+        let feesObj = result[4] |> Obj.magic;
+        let bakersObj = result[5] |> Obj.magic;
+        let marketObj = result[6] |> Obj.magic;
+
+        let newBlockInfo: MainType.blockInfo = {
+          blockCount: (result[0] |> Obj.magic)##count_hash,
+          fundraiserCount: newFundraiser##count_kind,
+          totalFundraiserCount: newTotalFundraiser##count_kind,
+          sum_fee: feesObj##sum_fee,
+          sum_consumed_gas: feesObj##sum_consumed_gas,
+          num_bakers: bakersObj##count_pkh,
+          bakers_sum_staking_balance: bakersObj##sum_staking_balance,
+          totalTez: marketObj##sum_balance
+        };
+        resolve((Some(newBlockInfo), Some(newTranInfo)));
+      } else {
+        resolve((None, None));
+      }
+    })
+    |> catch(_err => resolve((None, None)))
+  );
+};
+

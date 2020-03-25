@@ -1,19 +1,27 @@
-open Type;
+open MainType;
 open Configs;
-open Themes;
 
 module Styles = {
   open Css;
   let container= index => style([
     width(pct(100.)),
+    height(pct(100.)),
     minHeight(vh(100.)),
-    display(flexBox),
-    flexDirection(column),
-    backgroundColor(hex(themes[index].mainBgColor))
+    padding4(~top=px(45), ~bottom=px(45), ~left=px(35), ~right=px(35)),
+    backgroundColor(hex(Themes.themes[index].mainBgColor))
   ]);
-  let header = style([padding4(~top=px(45), ~bottom=px(30), ~left=px(45), ~right=px(45))]);
+  let container1= style([
+    width(pct(100.)),
+    height(pct(100.)),
+    marginLeft(`auto),
+    marginRight(`auto),
+    maxWidth(px(1510)),
+    display(flexBox),
+    flexDirection(column)
+  ]);
+  let header = style([padding4(~top=px(0), ~bottom=px(30), ~left=px(10), ~right=px(10))]);
   let headerTitle = style([
-    fontFamily("'Arcade', sans-serif"),
+    fontFamily(`custom("'Arcade', sans-serif")),
     fontSize(px(60)),
     color(white),
     lineHeight(px(35)),
@@ -22,9 +30,8 @@ module Styles = {
     display(inlineBlock)
   ]);
   let mainContainer = style([
-    padding4(~top=px(0), ~bottom=px(0), ~left=px(35), ~right=px(35)),
     flex(`num(1.)),
-    marginBottom(px(40))
+    marginBottom(px(57))
   ]);
 };
 
@@ -36,10 +43,12 @@ let reducer = (state, action) =>
     | SetParams(entity, id) => {...state, entity, id}
     | SetError(error) => {...state, error, isError: true, isLoading: false}
     | RemoveError => {...state, error: "", isError: false, isLoading: false}
-    | SetBlock(block, id) => {...state, block, entity: "blocks", id, isLoading: false}
+    | SetBlock(block, id, isLoading) => {...state, block, entity: "blocks", id, isLoading}
     | SetAccount(account, id) => {...state, account, entity: "accounts", id, isLoading: false}
     | SetOperations(operation, id) => {...state, operation, entity: "operations", id, isLoading: false}
     | OpenNetwork(status) => {...state, isOpenNetworkSelector: status}
+    | SetLastBlock(lastBlock, blockinfo, transinfo) => 
+      {...state, lastBlock, transinfo, blockinfo, isLoading: false}
   };
 
 let isFirstLoad = ref(false);
@@ -51,28 +60,48 @@ let make = () => {
   let footerRef = ref(None);
   let (state, dispatch) = React.useReducer(reducer, initState);
 
+
+  let getBlockInfo = (block: ConseiljsType.tezosBlock) => {
+    Js.Promise.(
+      ApiCall.getBlockInfoThunk(block##meta_cycle, block##timestamp, configs[selectedConfig^])
+      |> then_(result =>
+        switch (result) {
+          | (Some(blockinfo), Some(transinfo)) => {
+            resolve(dispatch(SetLastBlock(block, blockinfo, transinfo)));
+          }
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
+        }
+      )
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
+      |> ignore
+    );
+  };
+
   let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
     dispatch(SetLoading);
     Js.Promise.(
       ApiCall.getBlockThunk(id, configs[selectedConfig^])
       |> then_(result => {
           switch result {
-          | ("Error", Some(error), _) => resolve(dispatch(SetError(error)))
-          | ("Valid", _, Some(block)) => {
+          | ("Error", Some(error), _, _) => resolve(dispatch(SetError(error)))
+          | ("Valid", _, Some(block), Some(lastBlock)) => {
             switch (isRoute, isMain, level) {
               | (true, false, 0) => {
                 let url = Utils.makeUrl(configs[selectedConfig^].network, "blocks", id);
                 ReasonReactRouter.push(url);
-                resolve(dispatch(SetBlock(block, id)));
+                resolve(dispatch(SetBlock(block, id, false)));
               }
               | (true, false, _) => {
                 let strLevel = string_of_int(level);
                 let url = Utils.makeUrl(configs[selectedConfig^].network, "blocks", strLevel);
                 ReasonReactRouter.push(url);
-                resolve(dispatch(SetBlock(block, strLevel)));
+                resolve(dispatch(SetBlock(block, strLevel, false)));
               }
-              | (false, false, _) => resolve(dispatch(SetBlock(block, id)))
-              | _ => resolve(dispatch(SetBlock(block, "")))
+              | (false, false, _) => resolve(dispatch(SetBlock(block, id, false)))
+              | _ => {
+                dispatch(SetBlock(block, "", true));
+                resolve(getBlockInfo(lastBlock));
+              }
             };
           }
           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
@@ -266,34 +295,37 @@ let make = () => {
             };
         }
       >
-        <div className=Styles.header>
-          <div className=Styles.headerTitle onClick={_ => goToMainPage()}>{ReasonReact.string("MININAX")}</div>
+        <div className=Styles.container1>
+          <div className=Styles.header>
+            <div className=Styles.headerTitle onClick={_ => goToMainPage()}>{ReasonReact.string("MININAX")}</div>
+          </div>
+          <div className=Styles.mainContainer>
+            {switch (url.path) {
+              | [_, "accounts", _] => <Account items=state.account goToDetail={onSearchById} />
+              | [_, "operations", _] => <Operation items=state.operation goToDetail={onSearchById} />
+              | [_, "blocks", _] => <Block items=state.block goToDetail={onSearchById} changeLevel={getHashByLevel} />
+              | _ =>  <Dashboard items=state.lastBlock blockinfo=state.blockinfo transinfo=state.transinfo />
+            }}
+          </div>
+          <Footer
+            searchVal={state.id}
+            network={configs[state.selectedConfig].displayName}
+            setRef={setFooterRef}
+            changeId={onChangeId}
+            onSearch={_ => onSearchById(state.id)}
+            onOpenNetworkSelector={_ => dispatch(OpenNetwork(true))}
+          />
+          {state.isLoading ? <Loader /> : ReasonReact.null}
+          {state.isError ? <Error error={state.error} onTry={_ => dispatch(RemoveError)} /> : ReasonReact.null}
+          {state.isOpenNetworkSelector ?
+              <NetworkSelector
+                selectedIndex={state.selectedConfig}
+                onChange={onChangeNetwork}
+                onCancel={_ => dispatch(OpenNetwork(false))}
+              />
+            :ReasonReact.null
+          }
         </div>
-        <div className=Styles.mainContainer>
-          {switch (url.path) {
-            | [_, "accounts", _] => <Account items=state.account goToDetail={onSearchById} />
-            | [_, "operations", _] => <Operation items=state.operation goToDetail={onSearchById} />
-            | _ => <Block items=state.block goToDetail={onSearchById} changeLevel={getHashByLevel} />
-          }}
-        </div>
-        <Footer
-          searchVal={state.id}
-          network={configs[state.selectedConfig].displayName}
-          setRef={setFooterRef}
-          changeId={onChangeId}
-          onSearch={_ => onSearchById(state.id)}
-          onOpenNetworkSelector={_ => dispatch(OpenNetwork(true))}
-        />
-        {state.isLoading ? <Loader /> : ReasonReact.null}
-        {state.isError ? <Error error={state.error} onTry={_ => dispatch(RemoveError)} /> : ReasonReact.null}
-        {state.isOpenNetworkSelector ?
-            <NetworkSelector
-              selectedIndex={state.selectedConfig}
-              onChange={onChangeNetwork}
-              onCancel={_ => dispatch(OpenNetwork(false))}
-            />
-          :ReasonReact.null
-        }
       </div>
     </ContextProvider>
   </ReactIntl.IntlProvider>

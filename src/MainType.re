@@ -27,6 +27,24 @@ type theme = {
   valueColor: string
 };
 
+type transInfo = {
+  countOriginatedContracts: string,
+  countAmount: string,
+  sumAmount: int
+}
+
+type blockInfo = {
+  blockCount: int,
+  fundraiserCount: string,
+  totalFundraiserCount: string,
+  sum_fee: int,
+  sum_consumed_gas: int, 
+  num_bakers: string,
+  bakers_sum_staking_balance: float,
+  totalTez: float
+
+}
+
 type state = {
   entity: string,
   id: string,
@@ -37,7 +55,10 @@ type state = {
   error: string,
   block: Js.Dict.t(string),
   account: Js.Dict.t(string),
-  operation: array(Js.Dict.t(string))
+  operation: array(Js.Dict.t(string)), 
+  lastBlock: ConseiljsType.tezosBlock,
+  transinfo: transInfo,
+  blockinfo: blockInfo,
 };
 
 let initState = {
@@ -50,7 +71,23 @@ let initState = {
   error: "",
   block: Js.Dict.empty(),
   account: Js.Dict.empty(),
-  operation: [||]
+  operation: [||],
+  lastBlock: Js.Obj.empty(), 
+  transinfo: {
+    countOriginatedContracts: "0",
+    countAmount: "0",
+    sumAmount: 0
+  }, 
+  blockinfo: {
+    blockCount: 0,
+    fundraiserCount: "0",
+    totalFundraiserCount: "0",
+    sum_fee: 0,
+    sum_consumed_gas: 0, 
+    num_bakers: "0", 
+    bakers_sum_staking_balance: 0.0, 
+    totalTez: 0.0
+  }
 };
 
 type action =
@@ -60,7 +97,8 @@ type action =
   | SetParams(string, string)
   | SetError(string)
   | RemoveError
-  | SetBlock(Js.Dict.t(string), string)
+  | SetBlock(Js.Dict.t(string), string, bool)
   | SetAccount(Js.Dict.t(string), string)
   | SetOperations(array(Js.Dict.t(string)), string)
-  | OpenNetwork(bool);
+  | OpenNetwork(bool)
+  | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo);

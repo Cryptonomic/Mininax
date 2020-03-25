@@ -18,7 +18,9 @@
     "bs-conseiljs",
     "reason-react",
     "bs-css",
-    "bs-react-intl"
+    "bs-css-emotion",
+    "bs-react-intl",
+    "bs-moment"
   ],
   "refmt": 3
 }

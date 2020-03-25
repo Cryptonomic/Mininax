@@ -6,7 +6,7 @@ let container = index => style([
   paddingLeft(px(11)),
   position(relative),
   before([
-    contentRule(""),
+    contentRule(`none),
     position(absolute),
     width(px(2)),
     height(Calc.(-)(pct(100.), px(29))),
@@ -23,12 +23,12 @@ let titleLinkCss = index => [
   color(black),
   backgroundColor(white),
   boxShadows([
-    boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
-    boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
-    boxShadow(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
+    Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+    Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+    Shadow.box(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
   ]),
   before([
-    contentRule(""),
+    contentRule(`none),
     position(absolute),
     width(px(8)),
     height(px(2)),
@@ -75,9 +75,9 @@ let transactionBtn = (index, disabled) => style([
   color(black),
   backgroundColor(hex("EEFF00")),
   boxShadows([
-    boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
-    boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
-    boxShadow(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
+    Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+    Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+    Shadow.box(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
   ]),
   marginRight(px(7)),
   opacity(disabled?0.7:1.)
