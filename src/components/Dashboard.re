@@ -29,6 +29,7 @@ module Styles = {
     fontSize(px(19)), 
     lineHeight(px(20)), 
     boxShadow(Shadow.box(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(Themes.themes[index].fieldBgColor))),
+    cursor(`pointer)
   ]);
 
   let divider = index => style([
@@ -143,31 +144,51 @@ module Styles = {
 };
 
 [@react.component]
-let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo) => {
+let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo, ~voteinfo: MainType.voteInfo, ~proposals: array(MainType.proposalInfo), ~test_hash: string) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let network = configs[theme].network;
   let blocksPerCycle = Utils.getBlocksPerCycle(network);
   let percentBaked = Js.Math.round((float_of_int(blockinfo.blockCount) /. float_of_int(blocksPerCycle)) *. 100.0);
-  Js.log2("---items----", items);
   let secTimestamp = Utils.getSecondTimeFromMilli(items##timestamp);
-  let latestBlockDate = momentWithUnix(secTimestamp) |> Moment.format("MMM DD, YYYY.");
+  let latestBlockDate = momentWithUnix(secTimestamp) |> Moment.format("MMM DD, YYYY");
   let latestBlockTime = momentWithUnix(secTimestamp) |> Moment.format("HH:mm");
-  let transactions_total_xtz = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(transinfo.sumAmount), 2);
+  let transactions_total_xtz = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(transinfo.sumAmount), ~digits=2);
   let fundraiserPercent = Js.Math.round((float_of_string(blockinfo.totalFundraiserCount) /. 30317.0) *. 100.0);
-  let sumFee = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(blockinfo.sum_fee), 2);
-  let consumedGas = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(blockinfo.sum_consumed_gas), 2);
+  let sumFee = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(blockinfo.sum_fee), ~digits=2);
+  let consumedGas = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(blockinfo.sum_consumed_gas), ~digits=2);
 
-  let tez_staked = Js.Float.toFixedWithPrecision(Utils.convertFromUtezfToTez(blockinfo.bakers_sum_staking_balance), 2);
-  let total_tez = Js.Float.toFixedWithPrecision(Utils.convertFromUtezfToTez(blockinfo.totalTez), 2);
+  let tez_staked = Js.Float.toFixedWithPrecision(Utils.convertFromUtezfToTez(blockinfo.bakers_sum_staking_balance), ~digits=2);
+  let total_tez = Js.Float.toFixedWithPrecision(Utils.convertFromUtezfToTez(blockinfo.totalTez), ~digits=2);
   let percent_staked = Js.Math.round((blockinfo.bakers_sum_staking_balance /. blockinfo.totalTez) *. 100.0);
   let periodKind = items##period_kind;
 
-  let rightTitle = switch periodKind {
-  | "proposal" => "PROPOSAL"
-  | "testing"=> "TESTING"
-  | "testing_vote" => "EXPLORATION"
-  | "promotion_vote" => "PROMOTION VOTE"
-  | _ => ""
+  let sumVotes = string_of_int(voteinfo.yay_count + voteinfo.nay_count + voteinfo.pass_count);
+
+  let (rightTitle, proposalsTitle) = switch (periodKind, proposals |> Js.Array.length) {
+    | ("proposal", 0) => ("PROPOSAL", "There are no active proposals.")
+    | ("proposal", 1) => ("PROPOSAL", "The active proposal is:")
+    | ("proposal", _) => ("PROPOSAL", "The active proposals are:")
+    | ("testing", _) => ("TESTING", "The active proposal is:")
+    | ("testing_vote", _) => ("EXPLORATION", "The active proposal is:")
+    | ("promotion_vote", _) => ("PROMOTION VOTE", "The active proposal is:")
+    | _ => ("", "")
+  };
+
+  let gotoLastBlock = () => {
+    let url = Utils.makeUrl(network, "blocks", items##hash);
+    ReasonReactRouter.push(url);
+  };
+
+  let gotoLastOperations = () => {
+    let query = Queries.getQueryForBlockLink(items##hash);
+    let displayName = Utils.getDisplayName(configs[theme]);
+    Utils.openSharedUrl(query, displayName, "operations");
+  };
+
+  let gotoBlocksArronax = () => {
+    let query = Queries.getQueryForBlocksTab();
+    let displayName = Utils.getDisplayName(configs[theme]);
+    Utils.openSharedUrl(query, displayName, "blocks");
   };
 
   <div className=Styles.container>
@@ -188,19 +209,20 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
           {ReasonReact.string("The latest block ")}
           <div className=Styles.content1(theme)>
             {ReasonReact.string(items##hash)}
-            <CopyContent isReverse={true} />
+            <CopyContent isReverse=true hash=items##hash />
           </div>
           {ReasonReact.string(" at level ")}
           <div className=Styles.content1(theme)>{ReasonReact.string(string_of_int(items##level))}</div>
           {ReasonReact.string(" was baked by ")}
           <div className=Styles.content1(theme)>
             {ReasonReact.string(items##baker)}
-            <CopyContent isReverse={true} />
+            <CopyContent isReverse=true hash=items##baker />
           </div>
           {ReasonReact.string(" at ")}
           <div className=Styles.content1(theme)>{ReasonReact.string(latestBlockTime)}</div>
           {ReasonReact.string(" on ")}
           <div className=Styles.content1(theme)>{ReasonReact.string(latestBlockDate)}</div>
+          {ReasonReact.string(".")}
         </div>
         <div className=Styles.leftBottomContainer(theme)>
           {ReasonReact.string("In the past day there have been ")}
@@ -229,70 +251,55 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
           {ReasonReact.string(" phase of the governance process.")}
         </div>
         <div className=Styles.rightMdContainer(theme)>
-          <div>{ReasonReact.string("The active proposals are:")}</div>
+          <div>{ReasonReact.string(proposalsTitle)}</div>
           {switch (periodKind) {
             | "proposal" =>
               <div className=Styles.rightMdMainContainer>
-                <div className=Styles.content2(theme)>
-                  {ReasonReact.string(items##hash)}
-                  <CopyContent isReverse={false} />
-                </div>
-                <br /> 
-                {ReasonReact.string("with ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("7674")}</div>
-                {ReasonReact.string(" votes and ")}
-                <div className=Styles.content2(theme)>
-                  {ReasonReact.string(items##hash)}
-                  <CopyContent isReverse={false} />
-                </div>
-                <br /> 
-                {ReasonReact.string("with ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("7674")}</div>
-                {ReasonReact.string(" votes.")}
+                (proposals
+                  |> Array.mapi((index, pr: MainType.proposalInfo) => {
+                      let lastTxt = if (index === (Js.Array.length(proposals) - 1)) {
+                        " votes."
+                      } else {
+                        " votes and "
+                      };
+                      <div key=string_of_int(index)>
+                        <div className=Styles.content2(theme)>
+                          {ReasonReact.string(pr.proposal)}
+                          <CopyContent isReverse=false hash=pr.proposal />
+                        </div>
+                        <br /> 
+                        {ReasonReact.string("with ")}
+                        <div className=Styles.content3(theme)>{ReasonReact.string(pr.count_operation_group_hash)}</div>
+                        {ReasonReact.string(lastTxt)}
+                      </div>
+                  })
+                  |> ReasonReact.array
+                )
               </div>
             | "testing" =>
               <div className=Styles.rightMdMainContainer>
                 <div className=Styles.content2(theme)>
-                  {ReasonReact.string(items##hash)}
-                  <CopyContent isReverse={false} />
+                  {ReasonReact.string(test_hash)}
+                  <CopyContent isReverse=false hash=test_hash />
                 </div>
               </div>
-            | "testing_vote" =>
+            | "testing_vote" | "promotion_vote" =>
               <div className=Styles.rightMdMainContainer>
                 <div className=Styles.content2(theme)>
-                  {ReasonReact.string(items##hash)}
-                  <CopyContent isReverse={false} />
+                  {ReasonReact.string(voteinfo.proposal_hash)}
+                  <CopyContent isReverse=false hash=voteinfo.proposal_hash />
                 </div>
                 <br /> 
-                <div className=Styles.content3(theme)>{ReasonReact.string("46,390")}</div>
+                <div className=Styles.content3(theme)>{ReasonReact.string(sumVotes)}</div>
                 {ReasonReact.string(" of the required quorum of ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("8,000")}</div>
+                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.current_expected_quorum))}</div>
                 {ReasonReact.string(" ballots have been cast.")}
                 <br /> 
-                <div className=Styles.content3(theme)>{ReasonReact.string("26,841")}</div>
+                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.yay_count))}</div>
                 {ReasonReact.string(" ballots have been cast for, ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("11")}</div>
+                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.nay_count))}</div>
                 {ReasonReact.string(" against and ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("19,538")}</div>
-                {ReasonReact.string(" have passed.")}
-              </div>
-            | "promotion_vote" =>
-              <div className=Styles.rightMdMainContainer>
-                <div className=Styles.content2(theme)>
-                  {ReasonReact.string(items##hash)}
-                  <CopyContent isReverse={false} />
-                </div>
-                <br /> 
-                <div className=Styles.content3(theme)>{ReasonReact.string("46,390")}</div>
-                {ReasonReact.string(" of the required quorum of ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("8,000")}</div>
-                {ReasonReact.string(" ballots have been cast.")}
-                <br /> 
-                <div className=Styles.content3(theme)>{ReasonReact.string("26,841")}</div>
-                {ReasonReact.string(" ballots have been cast for, ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("11")}</div>
-                {ReasonReact.string(" against and ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string("19,538")}</div>
+                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.pass_count))}</div>
                 {ReasonReact.string(" have passed.")}
               </div>
             | _ => ReasonReact.null
@@ -304,23 +311,23 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
           {ReasonReact.string(" active bakers. A total of ")}
           <div className=Styles.networkContent(theme)>{ReasonReact.string(tez_staked ++ " XTZ")}</div>
           {ReasonReact.string(" out of ")}
-          <div className=Styles.networkContent(theme)>{ReasonReact.string(total_tez ++ " XTZ,")}</div>
-          {ReasonReact.string(" ")}
+          <div className=Styles.networkContent(theme)>{ReasonReact.string(total_tez ++ " XTZ")}</div>
+          {ReasonReact.string(" or ")}
           <div className=Styles.networkContent(theme)>{ReasonReact.string("(" ++ Js.Float.toString(percent_staked) ++ "%)")}</div>
           {ReasonReact.string(" of TEZ, is being staked right now.")}
         </div>
       </div>
     </div>
     <div className=Styles.footContainer>
-      <div className=Styles.itemContainer(theme)>
+      <div className=Styles.itemContainer(theme) onClick={_ => gotoLastBlock()}>
         {ReasonReact.string("Block Head")}
       </div>
       <div className=Styles.divider(theme)></div>
-      <div className=Styles.itemContainer(theme)>
+      <div className=Styles.itemContainer(theme) onClick={_ => gotoBlocksArronax()}>
         {ReasonReact.string("Latest Blocks")}
       </div>
       <div className=Styles.divider(theme)></div>
-      <div className=Styles.itemContainer(theme)>
+      <div className=Styles.itemContainer(theme) onClick={_ => gotoLastOperations()}>
         {ReasonReact.string("Latest Operations")}
       </div>
     </div>

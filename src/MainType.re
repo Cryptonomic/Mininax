@@ -33,6 +33,14 @@ type transInfo = {
   sumAmount: int
 }
 
+type voteInfo = {
+  yay_count: int,
+  nay_count: int,
+  pass_count: int,
+  proposal_hash: string, 
+  current_expected_quorum: int
+}
+
 type blockInfo = {
   blockCount: int,
   fundraiserCount: string,
@@ -42,8 +50,12 @@ type blockInfo = {
   num_bakers: string,
   bakers_sum_staking_balance: float,
   totalTez: float
-
 }
+
+type proposalInfo = {
+  count_operation_group_hash: string,
+  proposal: string
+};
 
 type state = {
   entity: string,
@@ -59,6 +71,9 @@ type state = {
   lastBlock: ConseiljsType.tezosBlock,
   transinfo: transInfo,
   blockinfo: blockInfo,
+  voteinfo: voteInfo,
+  proposals: array(proposalInfo), 
+  testing_proposal_hash: string
 };
 
 let initState = {
@@ -87,7 +102,16 @@ let initState = {
     num_bakers: "0", 
     bakers_sum_staking_balance: 0.0, 
     totalTez: 0.0
-  }
+  }, 
+  voteinfo: {
+    yay_count: 0,
+    nay_count: 0,
+    pass_count: 0,
+    proposal_hash: "", 
+    current_expected_quorum: 0
+  }, 
+  proposals: [||], 
+  testing_proposal_hash: ""
 };
 
 type action =
@@ -101,4 +125,7 @@ type action =
   | SetAccount(Js.Dict.t(string), string)
   | SetOperations(array(Js.Dict.t(string)), string)
   | OpenNetwork(bool)
-  | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo);
+  | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
+  | SetProposals(array(proposalInfo))
+  | SetVoteInfo(voteInfo)
+  | SetTestHash(string);

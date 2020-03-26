@@ -6,7 +6,8 @@ module Styles = {
     position(`relative),
     verticalAlign(`middle),
     marginLeft(px(12)),
-    display(`inlineBlock)
+    display(`inlineBlock),
+    cursor(`pointer)
   ]);
   
   let container1 = col => style([
@@ -30,13 +31,13 @@ module Styles = {
   ]);
 }
 [@react.component]
-let make = (~isReverse) => {
+let make = (~isReverse, ~hash) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let (fieldColor, fieldBgColor) = switch isReverse {
   | true => (Themes.themes[theme].fieldColor, Themes.themes[theme].fieldBgColor)
   | _ => (Themes.themes[theme].fieldBgColor, Themes.themes[theme].fieldColor)
   };
-  <div className=Styles.mainContainer>
+  <div className=Styles.mainContainer onClick={_=> Utils.copyContent(hash)}>
     <div className=Styles.container1(fieldBgColor)></div>
     <div className=Styles.container2(fieldColor, fieldBgColor)></div>
   </div>

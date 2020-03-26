@@ -49,6 +49,9 @@ let reducer = (state, action) =>
     | OpenNetwork(status) => {...state, isOpenNetworkSelector: status}
     | SetLastBlock(lastBlock, blockinfo, transinfo) => 
       {...state, lastBlock, transinfo, blockinfo, isLoading: false}
+    | SetProposals(proposals) => { ...state, proposals}
+    | SetVoteInfo(voteinfo) => { ...state, voteinfo}
+    | SetTestHash(hash) => { ...state, testing_proposal_hash: hash}
   };
 
 let isFirstLoad = ref(false);
@@ -60,6 +63,53 @@ let make = () => {
   let footerRef = ref(None);
   let (state, dispatch) = React.useReducer(reducer, initState);
 
+  let getProposalsInfo = (meta_cycle: int) => {
+    Js.Promise.(
+      ApiCall.getProposalInfoThunk(meta_cycle, configs[selectedConfig^])
+      |> then_(result =>
+        switch (result) {
+          | Some(proposals) => {
+            resolve(dispatch(SetProposals(proposals)));
+          }
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
+        }
+      )
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
+      |> ignore
+    );
+  };
+
+  let getVoteInfo = (meta_cycle: int) => {
+    Js.Promise.(
+      ApiCall.getVoteInfoThunk(meta_cycle, configs[selectedConfig^])
+      |> then_(result =>
+        switch (result) {
+          | Some(voteinfo) => {
+            resolve(dispatch(SetVoteInfo(voteinfo)));
+          }
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
+        }
+      )
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
+      |> ignore
+    );
+  };
+
+  let getTestInfo = (meta_cycle: int) => {
+    Js.Promise.(
+      ApiCall.getTestingStatsThunk(meta_cycle, configs[selectedConfig^])
+      |> then_(result =>
+        switch (result) {
+          | Some(hash) => {
+            resolve(dispatch(SetTestHash(hash)));
+          }
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
+        }
+      )
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
+      |> ignore
+    );
+  };
 
   let getBlockInfo = (block: ConseiljsType.tezosBlock) => {
     Js.Promise.(
@@ -100,6 +150,11 @@ let make = () => {
               | (false, false, _) => resolve(dispatch(SetBlock(block, id, false)))
               | _ => {
                 dispatch(SetBlock(block, "", true));
+                switch lastBlock##period_kind {
+                  | "proposal" => getProposalsInfo(lastBlock##meta_cycle)
+                  | "testing" => getTestInfo(lastBlock##meta_cycle)
+                  | _ => getVoteInfo(lastBlock##meta_cycle)
+                };
                 resolve(getBlockInfo(lastBlock));
               }
             };
@@ -161,6 +216,26 @@ let make = () => {
       |> ignore
     );
   };
+
+  /* let getHashByLevel = (level: int) => {
+    dispatch(SetLoading);
+    Js.Promise.(
+      ApiCall.getBlockHashThunk(level, configs[selectedConfig^])
+      |> then_(result =>
+        switch (result) {
+          | Some(head) => resolve(getBlock(head##hash, false, true, level))
+          | None => resolve(dispatch(SetError(Utils.noAvailable)))
+        }
+      )
+      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
+      |> ignore
+    );
+  };
+
+  let getMainPage = () => {
+    dispatch(SetLoading);
+    getHashByLevel(819199);
+  }; */
 
   let getHashByLevel = (level: int) => {
     dispatch(SetLoading);
@@ -304,7 +379,14 @@ let make = () => {
               | [_, "accounts", _] => <Account items=state.account goToDetail={onSearchById} />
               | [_, "operations", _] => <Operation items=state.operation goToDetail={onSearchById} />
               | [_, "blocks", _] => <Block items=state.block goToDetail={onSearchById} changeLevel={getHashByLevel} />
-              | _ =>  <Dashboard items=state.lastBlock blockinfo=state.blockinfo transinfo=state.transinfo />
+              | _ =>  <Dashboard
+                        items=state.lastBlock
+                        blockinfo=state.blockinfo
+                        transinfo=state.transinfo
+                        voteinfo=state.voteinfo
+                        proposals=state.proposals
+                        test_hash=state.testing_proposal_hash
+                      />
             }}
           </div>
           <Footer

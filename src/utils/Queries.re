@@ -160,7 +160,7 @@ let getQueryForProposalInfo = (cycle: int) => {
   let attributes = ["proposal", "operation_group_hash"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "proposal", ConseiljsType.ISNULL, `Str([|""|]), false);
+  let query = ConseilQueryBuilder.addPredicate(query, "proposal", ConseiljsType.ISNULL, `Str([|""|]), true);
   ConseilQueryBuilder.addAggregationFunction(query, "operation_group_hash", ConseiljsType.COUNT);
 };
 
@@ -169,4 +169,25 @@ let getQueryForTestingInfo = (cycle: int) => {
   let attributes = ["proposal_hash"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
   ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
+};
+
+let getQueryForQuorum = (cycle: int) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let attributes = ["current_expected_quorum"];
+  let query = ConseilQueryBuilder.addFields(query, attributes);
+  ConseilQueryBuilder.addPredicate(query, "meta_cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
+};
+
+let getQueryForVotingStats = (cycle: int) => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let attributes = ["yay_count", "nay_count", "pass_count", "proposal_hash"];
+  let query = ConseilQueryBuilder.addFields(query, attributes);
+  ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
+};
+
+let getQueryForBlocksTab = () => {
+  let query = ConseilQueryBuilder.blankQuery();
+  let entities = ["meta_voting_period", "meta_cycle", "level", "timestamp", "hash", "priority"];
+  let query = ConseilQueryBuilder.addFields(query, entities);
+  ConseilQueryBuilder.setLimit(query, 1000);
 };

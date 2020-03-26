@@ -7,7 +7,7 @@
     "clean": "bsb -clean-world",
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "webpack -w",
-    "webpack:production": "NODE_ENV=production webpack",
+    "webpack:production": "cross-env NODE_ENV=production webpack",
     "server": "webpack-dev-server"
   },
   "description": "Block explorer for the Tezos chain made for quick and fun lookups of chain entities for wallets.",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "bs-platform": "^7.0.1",
     "copy-webpack-plugin": "^5.1.0",
+    "cross-env": "^7.0.2",
     "css-loader": "3.2.0",
     "html-webpack-plugin": "3.2.0",
     "style-loader": "1.0.0",

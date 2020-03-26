@@ -249,16 +249,98 @@ let getMarketCapApi = (config: MainType.config) => {
   );
 };
 
-let getProposalInfoApi = (metaCycle: int, config: MainType.config) => {
+let getQuorumInfoApi = (metaCycle: int, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForQuorum(metaCycle);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "blocks", query)
+    |> then_(quorumStats =>
+        if (quorumStats |> Js.Array.length > 0) {
+          resolve(Some(quorumStats[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getVotingStatsApi = (metaCycle: int, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForVotingStats(metaCycle);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "governance", query)
+    |> then_(votingStats =>
+        if (votingStats |> Js.Array.length > 0) {
+          resolve(Some(votingStats[0]));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getVoteInfoThunk = (metaCycle: int, config: MainType.config) => {
+  Js.Promise.(
+    all2((getQuorumInfoApi(metaCycle, config), getVotingStatsApi(metaCycle, config)))
+    |> then_(result => {
+      switch (result) {
+        | (Some(quorumStat), Some(votingStat)) => {
+          let quorumObj = quorumStat |> Obj.magic;
+          let votingObj = votingStat |> Obj.magic;
+          let votinfo: MainType.voteInfo = {
+            yay_count: votingObj##yay_count,
+            nay_count: votingObj##nay_count,
+            pass_count: votingObj##pass_count,
+            proposal_hash: votingObj##proposal_hash, 
+            current_expected_quorum: quorumObj##current_expected_quorum
+          }
+          resolve(Some(votinfo))
+        }
+        | _ => resolve(None)
+      };
+    })
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getTestingStatsThunk = (metaCycle: int, config: MainType.config) => {
+  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
+  let query = Queries.getQueryForTestingInfo(metaCycle);
+  Js.Promise.(
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "governance", query)
+    |> then_(testingStats =>
+        if (testingStats |> Js.Array.length > 0) {
+          let testingStatObj = testingStats[0] |> Obj.magic;
+          resolve(Some(testingStatObj##proposal_hash));
+        } else {
+          resolve(None);
+        }
+      )
+    |> catch(_err => resolve(None))
+  );
+};
+
+let getProposalInfoThunk = (metaCycle: int, config: MainType.config) => {
   let (conseilServerInfo, platform, network) = Utils.getInfo(config);
   let query = Queries.getQueryForProposalInfo(metaCycle);
   Js.Promise.(
     ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "operations", query)
-    |> then_(fees =>
-        if (fees |> Js.Array.length > 0) {
-          resolve(Some(fees[0]));
+    |> then_(proposalStats =>
+        if (proposalStats |> Js.Array.length > 0) {
+          let newProposals =  proposalStats
+            |> Array.map((proposal) => {
+              let proposalObj = proposal |> Obj.magic;
+              let newProposal: MainType.proposalInfo = {
+                count_operation_group_hash: proposalObj##count_operation_group_hash,
+                proposal: proposalObj##proposal
+              };
+              newProposal;
+            });
+          resolve(Some(newProposals));
         } else {
-          resolve(None);
+          resolve(Some([||]));
         }
       )
     |> catch(_err => resolve(None))
@@ -275,11 +357,12 @@ let getBlockInfoThunk = (metaCycle: int, timeStamp: float, config: MainType.conf
     getBakersStatsApi(config), 
     getMarketCapApi(config)
   |];
+
+  getTestingStatsThunk(metaCycle, config);
   Js.Promise.(
     all(apis)
     |> then_(result => {
       if (result |> Js.Array.length > 0) {
-        Js.log2("bbbbbb------", result);
         let newTransInfoObj = result[1] |> Obj.magic;
         let newTranInfo: MainType.transInfo = {
           countOriginatedContracts: newTransInfoObj##count_originated_contracts,
@@ -302,6 +385,7 @@ let getBlockInfoThunk = (metaCycle: int, timeStamp: float, config: MainType.conf
           bakers_sum_staking_balance: bakersObj##sum_staking_balance,
           totalTez: marketObj##sum_balance
         };
+        
         resolve((Some(newBlockInfo), Some(newTranInfo)));
       } else {
         resolve((None, None));
