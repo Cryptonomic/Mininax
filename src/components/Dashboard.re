@@ -1,5 +1,6 @@
 open Configs;
 open MomentRe;
+open ReactIntl;
 [@bs.module] external searchSvg : string = "../assets/images/search.svg";
 
 module Styles = {
@@ -209,9 +210,12 @@ module Styles = {
   ]);
 };
 
+let numFormatOptions = numberFormatOptions( ~maximumFractionDigits=2, ());
+
 [@react.component]
 let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo, ~voteinfo: MainType.voteInfo, ~proposals: array(MainType.proposalInfo), ~test_hash: string, ~onSearch, ~changeLevel) => {
   let theme = React.useContext(ContextProvider.themeContext);
+  let intl = ReactIntl.useIntl();
   let (searchVal, setSearchVal) = React.useState(() => "");
   let network = configs[theme].network;
   let blocksPerCycle = Utils.getBlocksPerCycle(network);
@@ -219,17 +223,17 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
   let secTimestamp = Utils.getSecondTimeFromMilli(items##timestamp);
   let latestBlockDate = momentWithUnix(secTimestamp) |> Moment.format("MMM DD, YYYY");
   let latestBlockTime = momentWithUnix(secTimestamp) |> Moment.format("HH:mm");
-  let transactions_total_xtz = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(transinfo.sumAmount), ~digits=2);
+  let transactions_total_xtz = intl->Intl.formatNumberWithOptions(Utils.convertFromUtezToTez(transinfo.sumAmount), numFormatOptions);
   let fundraiserPercent = Js.Math.round((float_of_string(blockinfo.totalFundraiserCount) /. 30317.0) *. 100.0);
-  let sumFee = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(blockinfo.sum_fee), ~digits=2);
-  let consumedGas = Js.Float.toFixedWithPrecision(Utils.convertFromUtezToTez(blockinfo.sum_consumed_gas), ~digits=2);
+  let sumFee = intl->Intl.formatNumberWithOptions(Utils.convertFromUtezToTez(blockinfo.sum_fee), numFormatOptions);
+  let consumedGas = intl->Intl.formatNumberWithOptions(Utils.convertFromUtezToTez(blockinfo.sum_consumed_gas), numFormatOptions);
+  let tez_staked = intl->Intl.formatNumberWithOptions(Utils.convertFromUtezfToTez(blockinfo.bakers_sum_staking_balance), numFormatOptions);
+  let total_tez = intl->Intl.formatNumberWithOptions(Utils.convertFromUtezfToTez(blockinfo.totalTez), numFormatOptions);
 
-  let tez_staked = Js.Float.toFixedWithPrecision(Utils.convertFromUtezfToTez(blockinfo.bakers_sum_staking_balance), ~digits=2);
-  let total_tez = Js.Float.toFixedWithPrecision(Utils.convertFromUtezfToTez(blockinfo.totalTez), ~digits=2);
   let percent_staked = Js.Math.round((blockinfo.bakers_sum_staking_balance /. blockinfo.totalTez) *. 100.0);
   let periodKind = items##period_kind;
 
-  let sumVotes = string_of_int(voteinfo.yay_count + voteinfo.nay_count + voteinfo.pass_count);
+  let sumVotes = intl->Intl.formatNumber(float_of_int(voteinfo.yay_count + voteinfo.nay_count + voteinfo.pass_count));
 
   let (rightTitle, proposalsTitle) = switch (periodKind, proposals |> Js.Array.length) {
     | ("proposal", 0) => ("PROPOSAL", "There are no active proposals.")
@@ -271,10 +275,14 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
           {ReasonReact.string("Greetings! The Tezos ")}
           <div className=Styles.networkContent(theme)>{ReasonReact.string(network)}</div>
           {ReasonReact.string(" is now in cycle ")}
-          <div className=Styles.content1(theme)>{ReasonReact.string(string_of_int(items##meta_cycle))}</div>
+          <div className=Styles.content1(theme)>
+            {intl->Intl.formatNumber(float_of_int(items##meta_cycle))->React.string}
+          </div>
           <br />
           {ReasonReact.string("Within this cycle, ")}
-          <div className=Styles.content1(theme)>{ReasonReact.string(string_of_int(blockinfo.blockCount) ++ " of " ++ string_of_int(blocksPerCycle))}</div>
+          <div className=Styles.content1(theme)>
+            {ReasonReact.string(intl->Intl.formatNumber(float_of_int(blockinfo.blockCount)) ++ " of " ++ intl->Intl.formatNumber(float_of_int(blocksPerCycle)))}
+          </div>
           {ReasonReact.string(" blocks ")}
           <div className=Styles.content1(theme)>{ReasonReact.string("(" ++ Js.Float.toString(percentBaked) ++ "%)")}</div>
           {ReasonReact.string(" have been baked.")}
@@ -285,7 +293,9 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
             <CopyContent isReverse=true hash=items##hash />
           </div>
           {ReasonReact.string(" at level ")}
-          <div className=Styles.content1(theme)>{ReasonReact.string(string_of_int(items##level))}</div>
+          <div className=Styles.content1(theme)>
+            {intl->Intl.formatNumber(float_of_int(items##level))->React.string}
+          </div>
           {ReasonReact.string(" was baked by ")}
           <div className=Styles.content1(theme)>
             {ReasonReact.string(items##baker)}
@@ -299,19 +309,27 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
         </div>
         <div className=Styles.leftBottomContainer(theme)>
           {ReasonReact.string("In the past day there have been ")}
-          <div className=Styles.content3(theme)>{ReasonReact.string(transinfo.countAmount)}</div>
+          <div className=Styles.content3(theme)>
+            {intl->Intl.formatNumber(float_of_string(transinfo.countAmount))->React.string}
+          </div>
           {ReasonReact.string(" transactions for a total of ")}
           <div className=Styles.content3(theme)>{ReasonReact.string(transactions_total_xtz ++ " XTZ")}</div>
           {ReasonReact.string(" while ")}
-          <div className=Styles.content3(theme)>{ReasonReact.string(transinfo.countOriginatedContracts)}</div>
+          <div className=Styles.content3(theme)>
+            {intl->Intl.formatNumber(float_of_string(transinfo.countOriginatedContracts))->React.string}
+          </div>
           {ReasonReact.string(" accounts were originated and ")}
-          <div className=Styles.content3(theme)>{ReasonReact.string(blockinfo.fundraiserCount)}</div>
+          <div className=Styles.content3(theme)>
+            {intl->Intl.formatNumber(float_of_string(blockinfo.fundraiserCount))->React.string}
+          </div>
           {ReasonReact.string(" fundraiser accounts were activated. A total of ")}
           <div className=Styles.content3(theme)>{ReasonReact.string(sumFee ++ " XTZ")}</div>
           {ReasonReact.string(" in fees have been paid out and ")}
           <div className=Styles.content3(theme)>{ReasonReact.string(consumedGas)}</div>
           {ReasonReact.string(" gas has been consumed. There have been ")}
-          <div className=Styles.content3(theme)>{ReasonReact.string( blockinfo.totalFundraiserCount ++ " of 30,317")}</div>
+          <div className=Styles.content3(theme)>
+            {ReasonReact.string(intl->Intl.formatNumber(float_of_string(blockinfo.totalFundraiserCount)) ++ " of 30,317")}
+          </div>
           {ReasonReact.string(" fundraiser accounts ")}
           <div className=Styles.content2(theme)>{ReasonReact.string("(" ++ Js.Float.toString(fundraiserPercent) ++ "%)")}</div>
           {ReasonReact.string("  activated so far.")}
@@ -342,7 +360,9 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
                         </div>
                         <br /> 
                         {ReasonReact.string("with ")}
-                        <div className=Styles.content3(theme)>{ReasonReact.string(pr.count_operation_group_hash)}</div>
+                        <div className=Styles.content3(theme)>
+                          {intl->Intl.formatNumber(float_of_string(pr.count_operation_group_hash))->React.string}
+                        </div>
                         {ReasonReact.string(lastTxt)}
                       </div>
                   })
@@ -365,14 +385,22 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
                 <br /> 
                 <div className=Styles.content3(theme)>{ReasonReact.string(sumVotes)}</div>
                 {ReasonReact.string(" of the required quorum of ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.current_expected_quorum))}</div>
+                <div className=Styles.content3(theme)>
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.current_expected_quorum))->React.string}
+                </div>
                 {ReasonReact.string(" ballots have been cast.")}
                 <br /> 
-                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.yay_count))}</div>
+                <div className=Styles.content3(theme)>
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.yay_count))->React.string}
+                </div>
                 {ReasonReact.string(" ballots have been cast for, ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.nay_count))}</div>
+                <div className=Styles.content3(theme)>
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.nay_count))->React.string}
+                </div>
                 {ReasonReact.string(" against and ")}
-                <div className=Styles.content3(theme)>{ReasonReact.string(string_of_int(voteinfo.pass_count))}</div>
+                <div className=Styles.content3(theme)>
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.pass_count))->React.string}
+                </div>
                 {ReasonReact.string(" have passed.")}
               </div>
             | _ => ReasonReact.null
@@ -380,7 +408,9 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
         </div>
         <div className=Styles.rightBottomContainer(theme)>
           {ReasonReact.string("There are ")}
-          <div className=Styles.networkContent(theme)>{ReasonReact.string(blockinfo.num_bakers)}</div>
+          <div className=Styles.networkContent(theme)>
+            {intl->Intl.formatNumber(float_of_string(blockinfo.num_bakers))->React.string}
+          </div>
           {ReasonReact.string(" active bakers. A total of ")}
           <div className=Styles.networkContent(theme)>{ReasonReact.string(tez_staked ++ " XTZ")}</div>
           {ReasonReact.string(" out of ")}
@@ -393,7 +423,9 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
         <div className=Styles.rightSearchConainer>
           <div className=Styles.levelLabelContainer>
             <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(items##level - 1)}>(ReasonReact.string("<"))</button>
-            <div className=Styles.levelLabel(theme)>(ReasonReact.string(string_of_int(items##level)))</div>
+            <div className=Styles.levelLabel(theme)>
+              {intl->Intl.formatNumber(float_of_int(items##level))->React.string}
+            </div>
             <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(items##level - 1)}>(ReasonReact.string(">"))</button>
           </div>
           <input
@@ -409,7 +441,7 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
                 };
             }
             className=Styles.input(theme)
-            placeholder="Search a Block ID Or Level"
+            placeholder="Show stats for block ID or level"
           />
           <button className=Styles.searhBtn(theme) onClick={_=>onSearchBlock()}>
             <img src=searchSvg />
