@@ -1,5 +1,6 @@
 open Configs;
 open MomentRe;
+[@bs.module] external searchSvg : string = "../assets/images/search.svg";
 
 module Styles = {
   open Css;
@@ -141,11 +142,77 @@ module Styles = {
     lineHeight(px(16)),
     borderRadius(px(1))
   ]);
+
+  let levelLabelContainer = style([
+    display(flexBox),
+    width(px(215)),
+    height(px(31)),
+    justifyContent(spaceBetween)
+  ]);
+
+  let levelBtn = index => style([
+    width(px(31)),
+    height(px(31)),
+    fontSize(px(20)),
+    border(px(0), none, black),
+    outline(px(0), none, transparent),
+    color(hex(Themes.themes[index].fieldColor)),
+    backgroundColor(hex(Themes.themes[index].fieldBgColor))
+  ]);
+
+  let rightSearchConainer = style([
+    marginTop(px(23)), 
+    display(flexBox)
+  ]);
+
+  let levelLabel = index => style([
+    height(px(31)),
+    width(px(125)),
+    marginRight(px(12)), 
+    marginLeft(px(12)),
+    fontSize(px(16)),
+    color(hex(Themes.themes[index].fieldColor)),
+    backgroundColor(hex(Themes.themes[index].fieldBgColor)), 
+    display(flexBox), 
+    justifyContent(`center), 
+    alignItems(`center)
+  ]);
+
+  let input = index => style([
+    height(px(31)),
+    minWidth(px(200)),
+    borderRadius(px(10)),
+    padding4(~top=px(7), ~bottom=px(5), ~left=px(31), ~right=px(20)),
+    color(black),
+    fontSize(px(18)),
+    outline(px(0), none, transparent),
+    boxShadows([
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+      Shadow.box(~x=px(7), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.12)),
+    ]),
+    border(px(1), solid, rgba(0, 0, 0, 0.12)),
+    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")),
+    backgroundColor(hex(Themes.themes[index].searchBgColor)), 
+    flex(`num(1.0)),
+    marginLeft(px(30))
+  ]);
+
+  let searhBtn = index => style([
+    height(px(31)),
+    width(px(44)),
+    marginLeft(px(16)),
+    borderRadius(px(10)),
+    outline(px(0), none, transparent),
+    backgroundColor(hex(Themes.themes[index].searchBgColor)), 
+    borderWidth(px(0))
+  ]);
 };
 
 [@react.component]
-let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo, ~voteinfo: MainType.voteInfo, ~proposals: array(MainType.proposalInfo), ~test_hash: string) => {
+let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo, ~voteinfo: MainType.voteInfo, ~proposals: array(MainType.proposalInfo), ~test_hash: string, ~onSearch, ~changeLevel) => {
   let theme = React.useContext(ContextProvider.themeContext);
+  let (searchVal, setSearchVal) = React.useState(() => "");
   let network = configs[theme].network;
   let blocksPerCycle = Utils.getBlocksPerCycle(network);
   let percentBaked = Js.Math.round((float_of_int(blockinfo.blockCount) /. float_of_int(blocksPerCycle)) *. 100.0);
@@ -189,6 +256,12 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
     let query = Queries.getQueryForBlocksTab();
     let displayName = Utils.getDisplayName(configs[theme]);
     Utils.openSharedUrl(query, displayName, "blocks");
+  };
+
+  let onSearchBlock = () => {
+    if(searchVal != "") {
+      onSearch(searchVal);
+    }
   };
 
   <div className=Styles.container>
@@ -315,6 +388,32 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
           {ReasonReact.string(" or ")}
           <div className=Styles.networkContent(theme)>{ReasonReact.string("(" ++ Js.Float.toString(percent_staked) ++ "%)")}</div>
           {ReasonReact.string(" of TEZ, is being staked right now.")}
+        </div>
+
+        <div className=Styles.rightSearchConainer>
+          <div className=Styles.levelLabelContainer>
+            <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(items##level - 1)}>(ReasonReact.string("<"))</button>
+            <div className=Styles.levelLabel(theme)>(ReasonReact.string(string_of_int(items##level)))</div>
+            <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(items##level - 1)}>(ReasonReact.string(">"))</button>
+          </div>
+          <input
+            value={searchVal}
+            onChange={
+              event => setSearchVal(ReactEvent.Form.target(event)##value)
+            }
+            onKeyDown={
+              event =>
+                switch (event |> ReactEvent.Keyboard.which ) {
+                | 13 => onSearchBlock()
+                | _ => ignore()
+                };
+            }
+            className=Styles.input(theme)
+            placeholder="Search a Block ID Or Level"
+          />
+          <button className=Styles.searhBtn(theme) onClick={_=>onSearchBlock()}>
+            <img src=searchSvg />
+          </button>
         </div>
       </div>
     </div>

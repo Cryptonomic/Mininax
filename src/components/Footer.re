@@ -35,7 +35,8 @@ module Styles = {
     marginLeft(px(15)),
     borderRadius(px(10)),
     outline(px(0), none, transparent),
-    backgroundColor(hex(themes[index].searchBgColor))
+    backgroundColor(hex(themes[index].searchBgColor)), 
+    borderWidth(px(0))
   ]);
   let cryptoImg = style([
     marginLeft(px(35)),

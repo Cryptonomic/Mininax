@@ -217,34 +217,15 @@ let make = () => {
     );
   };
 
-  /* let getHashByLevel = (level: int) => {
+  let getHashByLevel = (level: int, isMain: bool) => {
     dispatch(SetLoading);
     Js.Promise.(
       ApiCall.getBlockHashThunk(level, configs[selectedConfig^])
       |> then_(result =>
-        switch (result) {
-          | Some(head) => resolve(getBlock(head##hash, false, true, level))
-          | None => resolve(dispatch(SetError(Utils.noAvailable)))
-        }
-      )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
-    );
-  };
-
-  let getMainPage = () => {
-    dispatch(SetLoading);
-    getHashByLevel(819199);
-  }; */
-
-  let getHashByLevel = (level: int) => {
-    dispatch(SetLoading);
-    Js.Promise.(
-      ApiCall.getBlockHashThunk(level, configs[selectedConfig^])
-      |> then_(result =>
-        switch (result) {
-          | Some(head) => resolve(getBlock(head##hash, true, false, level))
-          | None => resolve(dispatch(SetError(Utils.noAvailable)))
+        switch (result, isMain,) {
+          | (Some(head), true) => resolve(getBlock(head##hash, false, true, level))
+          | (Some(head), false) => resolve(getBlock(head##hash, true, false, level))
+          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
         }
       )
       |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
@@ -293,7 +274,7 @@ let make = () => {
         selectedConfig := selectedIndex;
         switch (entity, isNumber) {
           | ("blocks", false) => getBlock(id, false, false, 0);
-          | ("blocks", true) => getHashByLevel(id |> int_of_string)
+          | ("blocks", true) => getHashByLevel(id |> int_of_string, false)
           | ("accounts", false) => getAccount(id, false)
           | ("operations", false) => getOperation(id, false)
           | _ => goToMainPage()
@@ -331,7 +312,17 @@ let make = () => {
       | ("b", _, _) => getBlock(id, true, false, 0)
       | ("o", _, _) => getOperation(id, true)
       | (_, "tz", _) | (_, "kt", _) => getAccount(id, true)
-      | (_, _, true) => getHashByLevel(id |> int_of_string)
+      | (_, _, true) => getHashByLevel(id |> int_of_string, false)
+      | _ => dispatch(SetError(Utils.invalidId))
+    };
+  };
+
+  let onSearchMain = (id: string) => {
+    let firstChar = id |> Js.String.slice(~from=0, ~to_=1) |> Js.String.toLowerCase;
+    let isNumber = id |> Utils.isNumber;
+    switch (firstChar, isNumber) {
+      | ("b", _) => getBlock(id, true, true, 0)
+      | (_, true) => getHashByLevel(id |> int_of_string, true)
       | _ => dispatch(SetError(Utils.invalidId))
     };
   };
@@ -378,7 +369,7 @@ let make = () => {
             {switch (url.path) {
               | [_, "accounts", _] => <Account items=state.account goToDetail={onSearchById} />
               | [_, "operations", _] => <Operation items=state.operation goToDetail={onSearchById} />
-              | [_, "blocks", _] => <Block items=state.block goToDetail={onSearchById} changeLevel={getHashByLevel} />
+              | [_, "blocks", _] => <Block items=state.block goToDetail={onSearchById} changeLevel={(level) => getHashByLevel(level, false)} />
               | _ =>  <Dashboard
                         items=state.lastBlock
                         blockinfo=state.blockinfo
@@ -386,6 +377,8 @@ let make = () => {
                         voteinfo=state.voteinfo
                         proposals=state.proposals
                         test_hash=state.testing_proposal_hash
+                        onSearch={val_ => onSearchMain(val_)}
+                        changeLevel={(level) => getHashByLevel(level, true)}
                       />
             }}
           </div>
