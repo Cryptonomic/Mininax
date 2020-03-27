@@ -357,8 +357,6 @@ let getBlockInfoThunk = (metaCycle: int, timeStamp: float, config: MainType.conf
     getBakersStatsApi(config), 
     getMarketCapApi(config)
   |];
-
-  getTestingStatsThunk(metaCycle, config);
   Js.Promise.(
     all(apis)
     |> then_(result => {
