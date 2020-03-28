@@ -1,5 +1,5 @@
 open Themes;
-open Type;
+open MainType;
 open ReactIntl;
 [@bs.module] external copyYellow : string = "../assets/images/copy-yellow.svg";
 module Styles = {
@@ -40,7 +40,7 @@ module Styles = {
     justifyContent(spaceBetween),
     width(px(215)),
     isBar?before([
-      contentRule(""),
+      contentRule(`none),
       position(absolute),
       width(px(8)),
       height(px(2)),

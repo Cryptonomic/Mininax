@@ -10,32 +10,32 @@ let make = (~items, ~goToDetail) => {
   let id = Utils.getValueFromDict(items, "account_id");
   let displayName = Utils.getDisplayName(configs[theme]);
   let onOpenAccountSends = (_ev) => {
-    let query = Utils.getQueryForAccountSends(id);
+    let query = Queries.getQueryForAccountSends(id);
     Utils.openSharedUrl(query, displayName, "operations");
   };
 
   let onOpenAccountReceipts = (_ev) => {
-    let query = Utils.getQueryForAccountReceipts(id);
+    let query = Queries.getQueryForAccountReceipts(id);
     Utils.openSharedUrl(query, displayName, "operations");
   };
 
   let onOpenAccountOtherOperations = (_ev) => {
-    let query = Utils.getQueryForOtherOperations(id);
+    let query = Queries.getQueryForOtherOperations(id);
     Utils.openSharedUrl(query, displayName, "operations");
   };
 
   let onOpenAccountEndorsements = (_ev) => {
-    let query = Utils.getQueryForEndorsements(id);
+    let query = Queries.getQueryForEndorsements(id);
     Utils.openSharedUrl(query, displayName, "operations");
   };
 
   let onOpenAccountBakedBlocks = (_ev) => {
-    let query = Utils.getQueryForBakedBlocks(id);
+    let query = Queries.getQueryForBakedBlocks(id);
     Utils.openSharedUrl(query, displayName, "blocks");
   };
 
   let onOpenAccountDeposits = (_ev) => {
-    let query = Utils.getQueryForDepositsAndRewards(id);
+    let query = Queries.getQueryForDepositsAndRewards(id);
     Utils.openSharedUrl(query, displayName, "balance_updates");
   };
 

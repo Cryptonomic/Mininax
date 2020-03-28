@@ -1,5 +1,4 @@
-open ConseiljsRe;
-open Type;
+open MainType;
 
 [@bs.val] external btoa : string => string = "window.btoa";
 [@bs.val] external encodeURIComponent : string => string = "encodeURIComponent";
@@ -14,12 +13,12 @@ let operationNotFound = "Operation not found or not yet recorded. Check back in 
 let noBlock = "There is no block at this level.";
 let noAvailable = "Not available";
 
-let getInfo = (config: Type.config) => {
-  let conseilServerInfo: Type.conseilServerInfo = [%bs.obj {url: config.url, apiKey: config.apiKey, network: config.network}];
+let getInfo = (config: MainType.config) => {
+  let conseilServerInfo: MainType.conseilServerInfo = [%bs.obj {url: config.url, apiKey: config.apiKey, network: config.network}];
   (conseilServerInfo, config.platform, config.network);
 };
 
-let getDisplayName = (config: Type.config) => config.displayName;
+let getDisplayName = (config: MainType.config) => config.displayName;
 
 let convertNumberByIntl: (bool, int, int, float ) => string = [%bs.raw {|
     function (useGrouping, minimumFractionDigits, maximumFractionDigits, value) {
@@ -27,11 +26,14 @@ let convertNumberByIntl: (bool, int, int, float ) => string = [%bs.raw {|
     }
   |}];
 
+let convertFromUtezToTez = (utez: int) => float_of_int(utez) /. 1000000.;
+let convertFromUtezfToTez = (utez: float) => utez /. 1000000.;
+
 let formatNumber = (value, isScale) => {
   let realVal = Js.Nullable.toOption(value);
   switch (realVal, isScale) {
   | (Some(val_), true) => {
-    let d = float_of_int(val_) /. 1000000.;
+    let d = convertFromUtezToTez(val_);
     let (minimumFractionDigits, maximumFractionDigits) =
       if (val_ < 10000) {
         (6, 6);
@@ -60,7 +62,7 @@ let formatString = (value, isConvert) => {
 
 let makeUrl = (network: string, entity: string, id: string) => "/" ++ network ++ "/" ++ entity ++ "/" ++ id;
 
-let getFields = (~entity, ~kind=?, ()): array(Type.field) => {
+let getFields = (~entity, ~kind=?, ()): array(MainType.field) => {
   switch (entity, kind) {
     | ("operation", Some("Transaction")) => [|
         {name: "operation_group_hash", displayName: "Operation Hash", isLink: false, showNotifierLink: false},
@@ -336,91 +338,7 @@ let convertAccount = (~account, ~baker=?, ()) => {
   }}
 };
 
-
-let getQueryForBlockTotals = (blockid: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["block_hash", "amount", "fee"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "block_hash", ConseiljsType.EQ, [|blockid|], false);
-  let query = ConseilQueryBuilder.addAggregationFunction(query, "fee", ConseiljsType.SUM);
-  ConseilQueryBuilder.addAggregationFunction(query, "amount", ConseiljsType.SUM);
-};
-
-let getQueryForOperations = (operationid: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let query = ConseilQueryBuilder.addPredicate(query, "operation_group_hash", ConseiljsType.EQ, [|operationid|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForBakerInfo = (accountid: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["deactivated", "balance", "delegated_balance", "staking_balance", "frozen_balance"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "pkh", ConseiljsType.EQ, [|accountid|], false);
-  let query = ConseilQueryBuilder.addOrdering(query, "block_level", ConseiljsType.DESC);
-  ConseilQueryBuilder.setLimit(query, 1);
-};
-
-let getQueryForBlockLink = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "slots"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "block_hash", ConseiljsType.EQ, [|id|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForAccountSends = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "status"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"transaction"|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForAccountReceipts = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "status"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "destination", ConseiljsType.EQ, [|id|], false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"transaction"|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForOtherOperations = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "source", "kind", "status", "originated_contracts"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|id|], false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.IN, [|"reveal", "delegation", "origination"|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForEndorsements = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "kind", "delegate", "slots"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, [|id|], false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, [|"endorsement"|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForBakedBlocks = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "hash", "level", "baker"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "baker", ConseiljsType.EQ, [|id|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
-
-let getQueryForDepositsAndRewards = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["source_hash", "delegate", "category", "change"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, [|id|], false);
-  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, [|"block"|], false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getSecondTimeFromMilli = (nowTime: float) => int_of_float(nowTime /. 1000.);
 
 let isNumber = (id: string) => {
   switch (int_of_string(id)) {
@@ -459,3 +377,12 @@ let openSharedUrl = (query: ConseiljsType.conseilQuery, displayName: string, ent
   let shareLink = arronaxURL ++ "?e=" ++ encodeURIComponent(displayName) ++ "/" ++ encodeURIComponent(entity) ++ "&q=" ++ encodedUrl;
   open_(shareLink, "_blank");
 };
+
+let getBlocksPerCycle = (network: string) => 
+  switch network {
+  | "mainnet" => 4096
+  | "babylonnet" => 2048
+  | "carthagenet" => 2048
+  | "zeronet" => 128
+  | _ => 0
+  };

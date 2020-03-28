@@ -1,4 +1,4 @@
-let themes: array(Type.theme) = [|
+let themes: array(MainType.theme) = [|
   {
     mainBgColor: "2B2BFF",
     fieldBgColor: "000000",

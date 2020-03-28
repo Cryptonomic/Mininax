@@ -4,7 +4,7 @@ let make = (~items, ~changeLevel, ~goToDetail) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let onOpenUrl = (_ev) => {
     let hash = Utils.getValueFromDict(items, "hash");
-    let query = Utils.getQueryForBlockLink(hash);
+    let query = Queries.getQueryForBlockLink(hash);
     let displayName = Utils.getDisplayName(configs[theme]);
     Utils.openSharedUrl(query, displayName, "operations");
   };

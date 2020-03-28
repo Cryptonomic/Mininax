@@ -172,7 +172,7 @@
 	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [latestBlock.timestamp], false);
 	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
 	 const numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
-
+		console.log("numBlocks-------", numBlocks);
 	 const percentBaked = Math.round((numBlocks[0].count_hash/blocksPerCycle[network]) * 100);
 
 	 document.getElementById("network").innerHTML = network;
@@ -369,7 +369,7 @@
 
      async function initializeNetworkStats() {
 	 const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
-	 const headHash = block.hash
+	 const headHash = block.hash;
 	 updateNetworkStats(headHash)
      }
 
@@ -415,7 +415,8 @@
 
      async function initialize() {
 	 const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
-	 const headHash = block.hash
+	 const headHash = block.hash;
+	 console.log("head-hash----", headHash);
 	 updateBlock(headHash)
 	 updateNetworkStats(headHash)
 	 updateTransactionStats(headHash)

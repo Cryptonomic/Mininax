@@ -7,7 +7,7 @@
     "clean": "bsb -clean-world",
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "webpack -w",
-    "webpack:production": "NODE_ENV=production webpack",
+    "webpack:production": "cross-env NODE_ENV=production webpack",
     "server": "webpack-dev-server"
   },
   "description": "Block explorer for the Tezos chain made for quick and fun lookups of chain entities for wallets.",
@@ -24,18 +24,21 @@
     "ReasonML"
   ],
   "dependencies": {
-    "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#fc9e5a6819abdb8455c23f306356d0871cd3108a",
-    "bs-css": "9.0.1",
+    "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#272b594ec0f8ea47d784aec86a1e4a6bd3d2ec5d",
+    "bs-css-emotion": "^1.1.0",
+    "bs-moment": "^0.4.5",
     "bs-react-intl": "1.0.0",
     "conseiljs": "0.4.0-alpha.2",
+    "moment": "^2.24.0",
     "react": "16.8.1",
     "react-dom": "16.8.1",
     "react-intl": "3.0.0-beta-8",
     "reason-react": "0.7.0"
   },
   "devDependencies": {
-    "bs-platform": "5.2.1",
+    "bs-platform": "^7.0.1",
     "copy-webpack-plugin": "^5.1.0",
+    "cross-env": "^7.0.2",
     "css-loader": "3.2.0",
     "html-webpack-plugin": "3.2.0",
     "style-loader": "1.0.0",

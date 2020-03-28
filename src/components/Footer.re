@@ -2,11 +2,12 @@ open Themes;
 [@bs.module] external searchSvg : string = "../assets/images/search.svg";
 [@bs.module] external cryptoLogo : string = "../assets/images/cryptonomic.svg";
 [@bs.val] external scrollTo : (float, float) => unit = "scrollTo";
+
 module Styles = {
   open Css;
   let container = style([
     display(flexBox),
-    padding4(~top=px(0), ~bottom=px(45), ~left=px(45), ~right=px(55)),
+    padding4(~top=px(0), ~bottom=px(0), ~left=px(10), ~right=px(10)),
     alignItems(center)
   ]);
 
@@ -19,12 +20,12 @@ module Styles = {
     fontSize(px(18)),
     outline(px(0), none, transparent),
     boxShadows([
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
-      boxShadow(~x=px(7), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.12)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+      Shadow.box(~x=px(7), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.12)),
     ]),
     border(px(1), solid, rgba(0, 0, 0, 0.12)),
-    fontFamily("'Perfect DOS VGA 437 Win', sans-serif"),
+    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")),
     backgroundColor(hex(themes[index].searchBgColor))
   ]);
 
@@ -34,7 +35,8 @@ module Styles = {
     marginLeft(px(15)),
     borderRadius(px(10)),
     outline(px(0), none, transparent),
-    backgroundColor(hex(themes[index].searchBgColor))
+    backgroundColor(hex(themes[index].searchBgColor)), 
+    borderWidth(px(0))
   ]);
   let cryptoImg = style([
     marginLeft(px(35)),
@@ -52,17 +54,18 @@ module Styles = {
     color(hex(themes[index].mainBgColor)),
     backgroundColor(white),
     boxShadows([
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
-      boxShadow(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
-      boxShadow(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
+      Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
+      Shadow.box(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
     ]),
-    fontFamily("'Perfect DOS VGA 437 Win', sans-serif")
+    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif"))
   ]);
 
   let upDown = style([
     fontSize(px(20))
   ]);
 };
+
 [@react.component]
 let make = (~searchVal, ~network, ~setRef, ~changeId, ~onSearch, ~onOpenNetworkSelector) => {
   let theme = React.useContext(ContextProvider.themeContext);
