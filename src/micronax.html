@@ -7,7 +7,7 @@
     </script>
 
     <script>
-     const conseilServer = { url: 'https://conseil-staging.cryptonomic-infra.tech:443', apiKey: 'hooman' };
+     const conseilServer = { url: 'https://conseil-prod.cryptonomic-infra.tech:443', apiKey: 'galleon' };
      const platform = "tezos"
      const network = "mainnet"
      const blocksPerCycle = {"mainnet" : 4096,
@@ -52,16 +52,17 @@
 	 return fundraiserAccounts[0].count_kind;
      }
 
-     async function getVoteInfo(cycle) {
+     async function getVoteInfo(hash, proposal) {
 	 let quorumQuery = conseiljs.ConseilQueryBuilder.blankQuery();
 	 quorumQuery = conseiljs.ConseilQueryBuilder.addFields(quorumQuery, 'current_expected_quorum');
-	 quorumQuery = conseiljs.ConseilQueryBuilder.addPredicate(quorumQuery, 'meta_cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
+	 quorumQuery = conseiljs.ConseilQueryBuilder.addPredicate(quorumQuery, 'hash', conseiljs.ConseilOperator.EQ, [hash], false);
 	 const quorumStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', quorumQuery);
 	 const expectedQuorum = quorumStats[0].current_expected_quorum;
 
 	 let votingQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-	 votingQuery = conseiljs.ConseilQueryBuilder.addFields(votingQuery, 'yay_count', 'nay_count', 'pass_count', 'proposal_hash');
-	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'cycle', conseiljs.ConseilOperator.EQ, [cycle], false);
+	 votingQuery = conseiljs.ConseilQueryBuilder.addFields(votingQuery, 'yay_rolls', 'nay_rolls', 'pass_rolls', 'proposal_hash');
+	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'block_hash', conseiljs.ConseilOperator.EQ, [hash], false);
+	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'proposal_hash', conseiljs.ConseilOperator.EQ, [proposal], false);
 	 const votingStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', votingQuery);
 	 
 	 let voteInfo = votingStats[0]
@@ -255,14 +256,15 @@
 	 if (periodKind == "proposal") {
 	     setProposalInfo(latestBlock.meta_cycle);
 	 }
-	 else if (periodKind == "testing") {
-	     setTestingInfo(latestBlock.meta_cycle);
-	 }
 	 else if (periodKind == "testing_vote") {
-	     setTestingVoteInfo(latestBlock.meta_cycle);
+	     setTestingVoteInfo(latestBlock.hash, latestBlock.active_proposal);
 	 }
+	 else if (periodKind == "testing") {
+	     setTestingInfo(latestBlock.hash, latestBlock.active_proposal);
+	 }
+
 	 else if (periodKind == "promotion_vote") {
-	     setPromotionVoteInfo(latestBlock.meta_cycle);
+	     setPromotionVoteInfo(latestBlock.hash, latestBlock.active_proposal);
 	 }
      }
      
@@ -294,48 +296,63 @@
 	 }
      }
 
-     async function setTestingVoteInfo(cycle) {
-	 document.getElementById('phase').innerHTML = 'exploration';
+     async function setTestingVoteInfo(hash, proposal) {
+	 document.getElementById('phase').innerHTML = 'testing vote';
 	 let output = 'The active proposal is: <br>';
-
-	 const voteInfo = await getVoteInfo(cycle);
-	 const sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
-	 const proposal = voteInfo.proposal_hash
+	 const voteInfo = await getVoteInfo(hash, proposal);
+	 const sumYayNay = voteInfo.yay_rolls + voteInfo.nay_rolls
+	 const percentYay = ((voteInfo.yay_rolls/sumYayNay) * 100).toFixed(2)
 
 	 output += emphasize(proposal) + "<br> <br>"
-	 output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
-		   emphasize(voteInfo.yay_count) + ' ballots have been cast for, ' + emphasize(voteInfo.nay_count) + ' against and ' +
-		   emphasize(voteInfo.pass_count) + ' have passed.'
+	 output += emphasize(voteInfo.yay_rolls) + ' rolls have been cast for, ' + emphasize(voteInfo.nay_rolls) + ' against and ' +
+		   emphasize(voteInfo.pass_rolls) + ' have passed. ' + emphasize(percentYay + "%") + ' of commited rolls were in favor of the proposal, '
+
+	 if (percentYay < 90) {
+	     output += 'not '
+	 }
+
+	 output += 'exceeding the supermajority requirement of 80%'
+
+
+
 
 	 document.getElementById('governance_info').innerHTML = output;
      }
      
-     async function setPromotionVoteInfo(cycle) {
+     async function setPromotionVoteInfo(hash, proposal) {
 	 document.getElementById('phase').innerHTML = 'promotion vote';
 	 let output = 'The active proposal is: <br>';
 
-	 const voteInfo = await getVoteInfo(cycle);
-	 const sumVotes = voteInfo.yay_count + voteInfo.nay_count + voteInfo.pass_count
-	 const proposal = voteInfo.proposal_hash
+	 const voteInfo = await getVoteInfo(hash, proposal);
+	 const sumVotes = voteInfo.yay_rolls + voteInfo.nay_rolls + voteInfo.pass_rolls
+	 const sumYayNay = voteInfo.yay_rolls + voteInfo.nay_rolls
+	 const percentYay = ((voteInfo.yay_rolls/sumYayNay) * 100).toFixed(2)
+	 //	 const proposal = voteInfo.proposal_hash
 
 	 output += emphasize(proposal) + "<br> <br>"
-	 output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
-		   emphasize(voteInfo.yay_count) + ' ballots have been cast for, ' + emphasize(voteInfo.nay_count) + ' against and ' +
-		   emphasize(voteInfo.pass_count) + ' have passed.'
+	 output += emphasize(voteInfo.yay_rolls) + ' rolls have been cast for, ' + emphasize(voteInfo.nay_rolls) + ' against and ' +
+		   emphasize(voteInfo.pass_rolls) + ' have passed. ' + emphasize(percentYay + "%") + ' of commited rolls were in favor of the proposal, '
 
+	 if (percentYay < 90) {
+	     output += 'not '
+	 }
+
+	 output += 'exceeding the supermajority requirement of 80%'
+
+
+	 /*
+	    output += emphasize(sumVotes) + ' of the required quorum of ' + emphasize(voteInfo.expected_quorum) + ' ballots have been cast. <br>' +
+	    emphasize(voteInfo.yay_rolls) + ' ballots have been cast for, ' + emphasize(voteInfo.nay_rolls) + ' against and ' +
+	    emphasize(voteInfo.pass_rolls) + ' have passed.'
+	  */
 	 output += "<br> If this proposal passes, it will take effect when the next cycle begins.";
 	 document.getElementById('governance_info').innerHTML = output;
      }
 
-     async function setTestingInfo(cycle) {
+     async function setTestingInfo(hash, proposal) {
 	 document.getElementById('phase').innerHTML = 'testing';
 	 let output = 'The active proposal: <br>'
-
-	 let proposalQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-	 proposalQuery = conseiljs.ConseilQueryBuilder.addFields(proposalQuery, 'proposal_hash');
-	 proposalQuery = conseiljs.ConseilQueryBuilder.addPredicate(proposalQuery, 'cycle',  conseiljs.ConseilOperator.EQ, [cycle], false);
-	 const proposalStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', proposalQuery);
-	 output += proposalStats[0].proposal_hash
+	 output += proposal
 	 document.getElementById('governance_info').innerHTML = output;
      }
 
