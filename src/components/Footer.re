@@ -26,7 +26,10 @@ module Styles = {
     ]),
     border(px(1), solid, rgba(0, 0, 0, 0.12)),
     fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")),
-    backgroundColor(hex(themes[index].searchBgColor))
+    backgroundColor(hex(themes[index].searchBgColor)), 
+    media("(max-width: 1300px)", [
+      flex(`num(1.0))
+    ])
   ]);
 
   let searhBtn = index => style([
@@ -58,7 +61,10 @@ module Styles = {
       Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
       Shadow.box(~x=px(7), ~y=px(7), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor)),
     ]),
-    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif"))
+    fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")), 
+    media("(max-width: 1300px)", [
+      marginLeft(px(30))
+    ])
   ]);
 
   let upDown = style([

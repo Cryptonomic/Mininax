@@ -19,7 +19,7 @@ module Styles = {
     width(px(400)),
     height(px(285)),
     padding(px(15)),
-    backgroundColor(hex("c22c2c")),
+    backgroundColor(hex("ffffff")),
     boxShadows([
       Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
       Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
@@ -31,31 +31,31 @@ module Styles = {
     width(pct(100.)),
     height(pct(100.)),
     padding(px(4)),
-    border(px(2), solid, white)
+    border(px(2), solid, black)
   ]);
 
   let contentContainer = style([
     width(pct(100.)),
     height(pct(100.)),
-    border(px(2), solid, white)
+    border(px(2), solid, black)
   ]);
 
   let title = style([
     position(relative),
     fontSize(px(20)),
-    color(white),
+    color(black),
     letterSpacing(px(2)),
     display(inlineBlock),
     padding4(~top=px(0), ~bottom=px(0), ~left=px(15), ~right=px(15)),
     top(px(-13)),
-    backgroundColor(hex("c22c2c"))
+    backgroundColor(hex("ffffff"))
   ]);
 
   let okBtn = index => style([
     fontSize(px(20)),
     padding4(~top=px(7), ~bottom=px(7), ~left=px(15), ~right=px(15)),
     minWidth(px(100)),
-    backgroundColor(hex("EEFF00")),
+    backgroundColor(hex("ffffff")),
     boxShadows([
       Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.2)),
       Shadow.box(~x=px(0), ~y=px(4), ~blur=px(12), ~spread=px(0), rgba(0, 0, 0, 0.14)),
@@ -64,7 +64,8 @@ module Styles = {
     textAlign(center),
     letterSpacing(px(1)),
     fontFamily(`custom("'Perfect DOS VGA 437 Win', sans-serif")),
-    outline(px(0), none, transparent)
+    outline(px(0), none, transparent), 
+    border(px(2), solid, black)
   ]);
 
   let selectContainer = style([
@@ -86,7 +87,9 @@ module Styles = {
     boxShadow(Shadow.box(~x=px(3), ~y=px(3), ~blur=px(0), ~spread=px(0), hex(themes[index].fieldBgColor))),
     border(px(0), none, transparent),
     outline(px(0), none, transparent),
-    fontSize(px(18))
+    fontSize(px(18)), 
+    backgroundColor(hex(themes[index].networkBgCol)), 
+    color(hex(themes[index].mainBgColor))
   ]);
 };
 [@react.component]
@@ -116,9 +119,16 @@ let make = (~selectedIndex, ~onChange, ~onCancel) => {
               configs
               |> Array.mapi((index, config) =>
                 <div key=config.network className=Styles.rowcontainer>
-                  <button className=Styles.checkBtn(theme) onClick={_ev => change(_ev, index)}>
-                    {ReasonReact.string(selected === index ? "x":"")}
-                  </button>
+                  // <button className=Styles.checkBtn(index) onClick={_ev => change(_ev, index)}>
+                  //   {ReasonReact.string(selected === index ? "x":"")}
+                  // </button>
+                  <NetworkCheckBtn
+                    bgCol={themes[index].networkBgCol}
+                    shadowCol={themes[index].networkShadowCol}
+                    fontCol={themes[index].fieldColor}
+                    isChecked={selected === index}
+                    onClick={_ev => change(_ev, index)}
+                  />
                   {ReasonReact.string(config.displayName)}
                 </div>
               )

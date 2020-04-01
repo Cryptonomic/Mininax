@@ -111,7 +111,7 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
   let fieldsLength = ref(fields |> Js.Array.length);
 
   let openTelegramBot = (address: string) => {
-    let newUrl = "https://t.me/TezosNotifierBot?start=" ++ address;
+    let newUrl = "https://t.me/TezosNotifierBot?start=mininax_" ++ address;
     Utils.open_(newUrl, "_blank");
   };
   

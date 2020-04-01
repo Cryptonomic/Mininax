@@ -249,9 +249,9 @@ let getMarketCapApi = (config: MainType.config) => {
   );
 };
 
-let getQuorumInfoApi = (metaCycle: int, config: MainType.config) => {
+let getQuorumInfoApi = (hash: string, config: MainType.config) => {
   let (conseilServerInfo, platform, network) = Utils.getInfo(config);
-  let query = Queries.getQueryForQuorum(metaCycle);
+  let query = Queries.getQueryForQuorum(hash);
   Js.Promise.(
     ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "blocks", query)
     |> then_(quorumStats =>
@@ -265,9 +265,9 @@ let getQuorumInfoApi = (metaCycle: int, config: MainType.config) => {
   );
 };
 
-let getVotingStatsApi = (metaCycle: int, config: MainType.config) => {
+let getVotingStatsApi = (hash: string, proposal: string, config: MainType.config) => {
   let (conseilServerInfo, platform, network) = Utils.getInfo(config);
-  let query = Queries.getQueryForVotingStats(metaCycle);
+  let query = Queries.getQueryForVotingStats(hash, proposal);
   Js.Promise.(
     ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "governance", query)
     |> then_(votingStats =>
@@ -281,18 +281,18 @@ let getVotingStatsApi = (metaCycle: int, config: MainType.config) => {
   );
 };
 
-let getVoteInfoThunk = (metaCycle: int, config: MainType.config) => {
+let getVoteInfoThunk = (hash: string, active_proposal: string, config: MainType.config) => {
   Js.Promise.(
-    all2((getQuorumInfoApi(metaCycle, config), getVotingStatsApi(metaCycle, config)))
+    all2((getQuorumInfoApi(hash, config), getVotingStatsApi(hash, active_proposal, config)))
     |> then_(result => {
       switch (result) {
         | (Some(quorumStat), Some(votingStat)) => {
           let quorumObj = quorumStat |> Obj.magic;
           let votingObj = votingStat |> Obj.magic;
           let votinfo: MainType.voteInfo = {
-            yay_count: votingObj##yay_count,
-            nay_count: votingObj##nay_count,
-            pass_count: votingObj##pass_count,
+            yay_rolls: votingObj##yay_rolls,
+            nay_rolls: votingObj##nay_rolls,
+            pass_rolls: votingObj##pass_rolls,
             proposal_hash: votingObj##proposal_hash, 
             current_expected_quorum: quorumObj##current_expected_quorum
           }
@@ -301,23 +301,6 @@ let getVoteInfoThunk = (metaCycle: int, config: MainType.config) => {
         | _ => resolve(None)
       };
     })
-    |> catch(_err => resolve(None))
-  );
-};
-
-let getTestingStatsThunk = (metaCycle: int, config: MainType.config) => {
-  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
-  let query = Queries.getQueryForTestingInfo(metaCycle);
-  Js.Promise.(
-    ConseiljsRe.ConseilDataClient.executeEntityQuery(conseilServerInfo, platform, network, "governance", query)
-    |> then_(testingStats =>
-        if (testingStats |> Js.Array.length > 0) {
-          let testingStatObj = testingStats[0] |> Obj.magic;
-          resolve(Some(testingStatObj##proposal_hash));
-        } else {
-          resolve(None);
-        }
-      )
     |> catch(_err => resolve(None))
   );
 };

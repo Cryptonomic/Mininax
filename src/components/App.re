@@ -51,10 +51,9 @@ let reducer = (state, action) =>
       {...state, lastBlock, transinfo, blockinfo, isLoading: false}
     | SetProposals(proposals) => { ...state, proposals}
     | SetVoteInfo(voteinfo) => { ...state, voteinfo}
-    | SetTestHash(hash) => { ...state, testing_proposal_hash: hash}
   };
 
-let isFirstLoad = ref(false);
+
 let selectedConfig = ref(0);
 
 [@react.component]
@@ -79,29 +78,13 @@ let make = () => {
     );
   };
 
-  let getVoteInfo = (meta_cycle: int) => {
+  let getVoteInfo = (hash: string, active_proposal: string) => {
     Js.Promise.(
-      ApiCall.getVoteInfoThunk(meta_cycle, configs[selectedConfig^])
+      ApiCall.getVoteInfoThunk(hash, active_proposal, configs[selectedConfig^])
       |> then_(result =>
         switch (result) {
           | Some(voteinfo) => {
             resolve(dispatch(SetVoteInfo(voteinfo)));
-          }
-          | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-        }
-      )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
-    );
-  };
-
-  let getTestInfo = (meta_cycle: int) => {
-    Js.Promise.(
-      ApiCall.getTestingStatsThunk(meta_cycle, configs[selectedConfig^])
-      |> then_(result =>
-        switch (result) {
-          | Some(hash) => {
-            resolve(dispatch(SetTestHash(hash)));
           }
           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
         }
@@ -152,8 +135,8 @@ let make = () => {
                 dispatch(SetBlock(block, "", true));
                 switch lastBlock##period_kind {
                   | "proposal" => getProposalsInfo(lastBlock##meta_cycle)
-                  | "testing" => getTestInfo(lastBlock##meta_cycle)
-                  | _ => getVoteInfo(lastBlock##meta_cycle)
+                  | "testing" => ()
+                  | _ => getVoteInfo(lastBlock##hash, lastBlock##active_proposal)
                 };
                 resolve(getBlockInfo(lastBlock));
               }
@@ -259,7 +242,7 @@ let make = () => {
       | _ => {
         dispatch(ChangeNetwork(selectedIndex));
         selectedConfig := selectedIndex;
-        goToMainPage()
+        getMainPage();
       }
     };
   }
@@ -337,14 +320,14 @@ let make = () => {
     }
   };
 
-  if (!isFirstLoad^) {
-    isFirstLoad := true;
+  React.useEffect0(() => {
     switch (url.path) {
       | [network, entity, id] => goToPage(network, entity, id)
       | [network] => goToNetwork(network)
       | _ => goToMainPage()
     };
-  };
+    None;
+  });
 
   <ReactIntl.IntlProvider>
     <ContextProvider value={state.selectedConfig}>
@@ -376,7 +359,6 @@ let make = () => {
                         transinfo=state.transinfo
                         voteinfo=state.voteinfo
                         proposals=state.proposals
-                        test_hash=state.testing_proposal_hash
                         onSearch={val_ => onSearchMain(val_)}
                         changeLevel={(level) => getHashByLevel(level, true)}
                       />

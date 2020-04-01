@@ -171,18 +171,19 @@ let getQueryForTestingInfo = (cycle: int) => {
   ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
 };
 
-let getQueryForQuorum = (cycle: int) => {
+let getQueryForQuorum = (hash: string) => {
   let query = ConseilQueryBuilder.blankQuery();
   let attributes = ["current_expected_quorum"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
-  ConseilQueryBuilder.addPredicate(query, "meta_cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
+  ConseilQueryBuilder.addPredicate(query, "hash", ConseiljsType.EQ, `Str([|hash|]), false);
 };
 
-let getQueryForVotingStats = (cycle: int) => {
+let getQueryForVotingStats = (hash: string, propasal: string) => {
   let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["yay_count", "nay_count", "pass_count", "proposal_hash"];
+  let attributes = ["yay_rolls", "nay_rolls", "pass_rolls", "proposal_hash"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
-  ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
+  let query = ConseilQueryBuilder.addPredicate(query, "block_hash", ConseiljsType.EQ, `Str([|hash|]), false);
+  ConseilQueryBuilder.addPredicate(query, "proposal_hash", ConseiljsType.EQ, `Str([|propasal|]), false);
 };
 
 let getQueryForBlocksTab = () => {
