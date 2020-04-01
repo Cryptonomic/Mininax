@@ -24,7 +24,12 @@ type theme = {
   fieldBgColor: string,
   searchBgColor: string,
   fieldColor: string,
-  valueColor: string
+  valueColor: string,
+  fontCol1: string,
+  fontCol2: string,
+  levelBgcol: string,
+  networkBgCol: string, 
+  networkShadowCol: string
 };
 
 type transInfo = {
@@ -34,9 +39,9 @@ type transInfo = {
 }
 
 type voteInfo = {
-  yay_count: int,
-  nay_count: int,
-  pass_count: int,
+  yay_rolls: int,
+  nay_rolls: int,
+  pass_rolls: int,
   proposal_hash: string, 
   current_expected_quorum: int
 }
@@ -72,8 +77,7 @@ type state = {
   transinfo: transInfo,
   blockinfo: blockInfo,
   voteinfo: voteInfo,
-  proposals: array(proposalInfo), 
-  testing_proposal_hash: string
+  proposals: array(proposalInfo)
 };
 
 let initState = {
@@ -104,14 +108,13 @@ let initState = {
     totalTez: 0.0
   }, 
   voteinfo: {
-    yay_count: 0,
-    nay_count: 0,
-    pass_count: 0,
+    yay_rolls: 0,
+    nay_rolls: 0,
+    pass_rolls: 0,
     proposal_hash: "", 
     current_expected_quorum: 0
   }, 
-  proposals: [||], 
-  testing_proposal_hash: ""
+  proposals: [||]
 };
 
 type action =
@@ -127,5 +130,4 @@ type action =
   | OpenNetwork(bool)
   | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
   | SetProposals(array(proposalInfo))
-  | SetVoteInfo(voteInfo)
-  | SetTestHash(string);
+  | SetVoteInfo(voteInfo);

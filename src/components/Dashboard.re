@@ -24,8 +24,8 @@ module Styles = {
   ]);
 
   let itemContainer = index => style([
-    backgroundColor(hex(Themes.themes[index].fieldColor)),
-    color(hex(Themes.themes[index].fieldBgColor)),
+    backgroundColor(hex(Themes.themes[index].searchBgColor)),
+    color(hex(Themes.themes[index].fontCol1)),
     width(px(215)), 
     padding4(~top=px(7), ~bottom=px(4), ~left=px(13), ~right=px(7)),
     fontSize(px(19)), 
@@ -35,7 +35,7 @@ module Styles = {
   ]);
 
   let divider = index => style([
-    backgroundColor(hex(Themes.themes[index].fieldBgColor)),
+    backgroundColor(hex(Themes.themes[index].levelBgcol)),
     height(px(2)), 
     flex(`num(1.0))
   ]);
@@ -66,7 +66,7 @@ module Styles = {
   let leftBottomContainer = index => style([
     padding4(~top=px(17), ~bottom=px(23), ~left=px(30), ~right=px(23)),
     border(px(2), solid, hex(Themes.themes[index].fieldBgColor)),
-    color(hex(Themes.themes[index].fieldColor))
+    color(hex(Themes.themes[index].fontCol2))
   ]);
 
   let rightContainer = style([
@@ -89,7 +89,7 @@ module Styles = {
   let rightMdContainer = index => style([
     padding4(~top=px(17), ~bottom=px(34), ~left=px(30), ~right=px(23)),
     border(px(2), solid, hex(Themes.themes[index].fieldBgColor)),
-    color(hex(Themes.themes[index].fieldColor))
+    color(hex(Themes.themes[index].fontCol2))
   ]);
 
   let rightMdMainContainer = style([
@@ -158,7 +158,7 @@ module Styles = {
     border(px(0), none, black),
     outline(px(0), none, transparent),
     color(hex(Themes.themes[index].fieldColor)),
-    backgroundColor(hex(Themes.themes[index].fieldBgColor))
+    backgroundColor(hex(Themes.themes[index].levelBgcol))
   ]);
 
   let rightSearchConainer = style([
@@ -173,7 +173,7 @@ module Styles = {
     marginLeft(px(12)),
     fontSize(px(16)),
     color(hex(Themes.themes[index].fieldColor)),
-    backgroundColor(hex(Themes.themes[index].fieldBgColor)), 
+    backgroundColor(hex(Themes.themes[index].levelBgcol)), 
     display(flexBox), 
     justifyContent(`center), 
     alignItems(`center)
@@ -213,7 +213,7 @@ module Styles = {
 let numFormatOptions = numberFormatOptions( ~maximumFractionDigits=2, ());
 
 [@react.component]
-let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo, ~voteinfo: MainType.voteInfo, ~proposals: array(MainType.proposalInfo), ~test_hash: string, ~onSearch, ~changeLevel) => {
+let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transInfo, ~voteinfo: MainType.voteInfo, ~proposals: array(MainType.proposalInfo), ~onSearch, ~changeLevel) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
   let (searchVal, setSearchVal) = React.useState(() => "");
@@ -233,14 +233,15 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
   let percent_staked = Js.Math.round((blockinfo.bakers_sum_staking_balance /. blockinfo.totalTez) *. 100.0);
   let periodKind = items##period_kind;
 
-  let sumVotes = intl->Intl.formatNumber(float_of_int(voteinfo.yay_count + voteinfo.nay_count + voteinfo.pass_count));
+  let sumYayNay = float_of_int(voteinfo.yay_rolls + voteinfo.nay_rolls);
+  let percentYay = Js.Math.round((float_of_int(voteinfo.yay_rolls) /. sumYayNay) *. 100.0);
 
   let (rightTitle, proposalsTitle) = switch (periodKind, proposals |> Js.Array.length) {
     | ("proposal", 0) => ("PROPOSAL", "There are no active proposals.")
     | ("proposal", 1) => ("PROPOSAL", "The active proposal is:")
     | ("proposal", _) => ("PROPOSAL", "The active proposals are:")
     | ("testing", _) => ("TESTING", "The active proposal is:")
-    | ("testing_vote", _) => ("EXPLORATION", "The active proposal is:")
+    | ("testing_vote", _) => ("TESTING VOTE", "The active proposal is:")
     | ("promotion_vote", _) => ("PROMOTION VOTE", "The active proposal is:")
     | _ => ("", "")
   };
@@ -372,36 +373,35 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
             | "testing" =>
               <div className=Styles.rightMdMainContainer>
                 <div className=Styles.content2(theme)>
-                  {ReasonReact.string(test_hash)}
-                  <CopyContent isReverse=false hash=test_hash />
+                  {ReasonReact.string(items##active_proposal)}
+                  <CopyContent isReverse=false hash=items##active_proposal />
                 </div>
               </div>
             | "testing_vote" | "promotion_vote" =>
               <div className=Styles.rightMdMainContainer>
                 <div className=Styles.content2(theme)>
-                  {ReasonReact.string(voteinfo.proposal_hash)}
-                  <CopyContent isReverse=false hash=voteinfo.proposal_hash />
+                  {ReasonReact.string(items##active_proposal)}
+                  <CopyContent isReverse=false hash=items##active_proposal />
                 </div>
                 <br /> 
-                <div className=Styles.content3(theme)>{ReasonReact.string(sumVotes)}</div>
-                {ReasonReact.string(" of the required quorum of ")}
                 <div className=Styles.content3(theme)>
-                  {intl->Intl.formatNumber(float_of_int(voteinfo.current_expected_quorum))->React.string}
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.yay_rolls))->React.string}
                 </div>
-                {ReasonReact.string(" ballots have been cast.")}
-                <br /> 
+                {ReasonReact.string(" rolls have been cast for, ")}
                 <div className=Styles.content3(theme)>
-                  {intl->Intl.formatNumber(float_of_int(voteinfo.yay_count))->React.string}
-                </div>
-                {ReasonReact.string(" ballots have been cast for, ")}
-                <div className=Styles.content3(theme)>
-                  {intl->Intl.formatNumber(float_of_int(voteinfo.nay_count))->React.string}
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.nay_rolls))->React.string}
                 </div>
                 {ReasonReact.string(" against and ")}
                 <div className=Styles.content3(theme)>
-                  {intl->Intl.formatNumber(float_of_int(voteinfo.pass_count))->React.string}
+                  {intl->Intl.formatNumber(float_of_int(voteinfo.pass_rolls))->React.string}
                 </div>
                 {ReasonReact.string(" have passed.")}
+                <div className=Styles.content3(theme)>
+                  {ReasonReact.string(Js.Float.toString(percentYay) ++ "%")}
+                </div>
+                {ReasonReact.string(" of commited rolls were in favor of the proposal, ")}
+                {percentYay < 90.0 ? ReasonReact.string("not "): ReasonReact.null}
+                {ReasonReact.string("exceeding the supermajority requirement of 80%.")}
               </div>
             | _ => ReasonReact.null
           }}
@@ -426,7 +426,7 @@ let make = (~items, ~blockinfo: MainType.blockInfo, ~transinfo: MainType.transIn
             <div className=Styles.levelLabel(theme)>
               {intl->Intl.formatNumber(float_of_int(items##level))->React.string}
             </div>
-            <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(items##level - 1)}>(ReasonReact.string(">"))</button>
+            <button className=Styles.levelBtn(theme) onClick={_ => changeLevel(items##level + 1)}>(ReasonReact.string(">"))</button>
           </div>
           <input
             value={searchVal}
