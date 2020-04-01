@@ -102,6 +102,7 @@ let getQueryForTransactionStats = (timeStamp: float) => {
   let attributes = ["amount", "originated_contracts"];
   let query = ConseilQueryBuilder.addFields(query, attributes);
   let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.IN, `Str([|"transaction", "origination"|]), false);
+  let query = ConseilQueryBuilder.addPredicate(query, "status", ConseiljsType.EQ, `Str([|"applied"|]), false);
   let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.AFTER, `Float([|timeYesterday|]), false);
   let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.BEFORE, `Float([|timeStamp|]), false);
   let query = ConseilQueryBuilder.addAggregationFunction(query, "originated_contracts", ConseiljsType.COUNT);
