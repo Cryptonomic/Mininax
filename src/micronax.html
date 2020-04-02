@@ -1,8 +1,8 @@
 <!-- saved from url=(0092)https://cryptonomic.tech/_matrix/media/r0/download/cryptonomic.tech/iMTLWSuCVJbIoqrjaBHKRXdl -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
-            integrity="sha384-1Lpjkva0cskGzGmrvU+WIbzNk24LwcaEFgsukzbI5wTl7T6kom1UA4DKS/oxtaqr"
-            crossorigin="anonymous"></script>
+   <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
+        integrity="sha384-eSd4aru4A1k5ejohBE9T8uPo4P1TT6TTdnuO71HrrNr0pmZaF+C5/YQyYv0JNqhV"
+        crossorigin="anonymous"></script>
 
     </script>
 
@@ -172,7 +172,7 @@
 	 blockQuery = conseiljs.ConseilQueryBuilder.addPredicate(blockQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [latestBlock.timestamp], false);
 	 blockQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(blockQuery, 'hash', 'count');
 	 const numBlocks = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'blocks', blockQuery);
-
+	 console.log("numBlocks-------", numBlocks);
 	 const percentBaked = Math.round((numBlocks[0].count_hash/blocksPerCycle[network]) * 100);
 
 	 document.getElementById("network").innerHTML = network;
@@ -305,16 +305,13 @@
 
 	 output += emphasize(proposal) + "<br> <br>"
 	 output += emphasize(voteInfo.yay_rolls) + ' rolls have been cast for, ' + emphasize(voteInfo.nay_rolls) + ' against and ' +
-		   emphasize(voteInfo.pass_rolls) + ' have passed. ' + emphasize(percentYay + "%") + ' of commited rolls were in favor of the proposal, '
+		   emphasize(voteInfo.pass_rolls) + ' have passed. '
 
-	 if (percentYay < 90) {
-	     output += 'not '
+	 if (sumYayNay > 0) {
+	     output += emphasize(percentYay + "%") + ' of commited rolls were in favor of the proposal, '
+	     if (percentYay < 90) { output += 'not ' }
+	     output += 'exceeding the supermajority requirement of 80%'
 	 }
-
-	 output += 'exceeding the supermajority requirement of 80%'
-
-
-
 
 	 document.getElementById('governance_info').innerHTML = output;
      }
@@ -331,13 +328,13 @@
 
 	 output += emphasize(proposal) + "<br> <br>"
 	 output += emphasize(voteInfo.yay_rolls) + ' rolls have been cast for, ' + emphasize(voteInfo.nay_rolls) + ' against and ' +
-		   emphasize(voteInfo.pass_rolls) + ' have passed. ' + emphasize(percentYay + "%") + ' of commited rolls were in favor of the proposal, '
-
-	 if (percentYay < 90) {
-	     output += 'not '
+		   emphasize(voteInfo.pass_rolls) + ' have passed. '
+	 
+	 if (sumYayNay > 0) {
+	     output += emphasize(percentYay + "%") + ' of commited rolls were in favor of the proposal, '
+	     if (percentYay < 90) { output += 'not ' }
+	     output += 'exceeding the supermajority requirement of 80%'
 	 }
-
-	 output += 'exceeding the supermajority requirement of 80%'
 
 
 	 /*
@@ -369,7 +366,7 @@
 
      async function initializeNetworkStats() {
 	 const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
-	 const headHash = block.hash
+	 const headHash = block.hash;
 	 updateNetworkStats(headHash)
      }
 
@@ -415,7 +412,8 @@
 
      async function initialize() {
 	 const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
-	 const headHash = block.hash
+	 const headHash = block.hash;
+	 console.log("head-hash----", headHash);
 	 updateBlock(headHash)
 	 updateNetworkStats(headHash)
 	 updateTransactionStats(headHash)
