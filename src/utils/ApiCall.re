@@ -1,72 +1,141 @@
-// TODO wrapping all function with fn that carry MainType.config
 // TODO wrap all functions with Future
 // TODO refactor all function to pipe
 
-let getBlockTotalsThunk = (id: string, config: MainType.config) => {
-  let (conseilServerInfo, platform, network) = Utils.getInfo(config);
-  let query = Queries.getQueryForBlockTotals(id);
-  Js.Promise.(
-    ConseiljsRe.ConseilDataClient.executeEntityQuery(
-      conseilServerInfo,
-      platform,
-      network,
-      "operations",
-      query,
+/*
+    In general ReasonML community complain a lot about Js.Promise module and how it handle asynchronus code.
+    It has "resolve" part you hadn't used here, it doesn't well play with type system, and it's hard to abort Promise (thought, you still can with AbortController from JS api).
+    What alternative we have?
+    reason-future, reason-promise, bs-rx
+    We're going to wrap promise with Future, and modify code to make it easier to use in components. Future gives us functionality to process data in pipes. Checkout docs: https://github.com/rationaljs/future
+
+    Another important thing here is how result from Promise/Future is handled.
+    In some functions you used return type to be option('a) and it's absolute fine,
+    but in others result type is a tuple (for exmaple for getBlockThunk, getOperationThunk, etc) with pattern
+    (string as result type, error value wrapped with option, success value wrapped with option)
+    downsides:
+    1. string as result type is not a great idea. We can't use full power of reasonML type system with it.
+    2. you have to wrap error and success result with option
+
+    There is pretty elegant way to handle that kind of situation with type system and variants:
+    type result('a,'b) =
+      | OK('a)
+      | Error('b);
+    It's mentioned in Reason documentation: https://reasonml.github.io/docs/en/more-on-type
+    but I think the nicer description you can find in Rust documentation (another language, but idea stays the same): https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html
+
+    So, in this case you don't need tuple with 3 values, you can return Ok(tuple) for success and Error(value) for failure, and you can handle it the same way with pattern matching and option.
+
+
+   Opening modules (`JS.Promise.(...)`) is a great way to work, but I'm not going to do that here to make example more descriptive. You can still use it in your code.
+   We're going to think about how to exchage this function into function that pipes data
+   Why?
+   It will make cleaner code to process all data in functions and just execute callback provided from react component (it might be for example "set" function from useState, callback for dispatch, etc.)
+   1. We want to free react component from logic so we'd like to define all logic here
+   2. We're going to wrap promises with reason-future for easier data processing
+
+   We need to define some helper function in order to pipe all data
+   1. we need to get values for  `ConseiljsRe.ConseilDataClient.executeEntityQuery`
+   executeEntityQuery need 2 ather functions to be executed in order to get all value it requires
+   In normal situation for applying 2 functions result to third function we would use function like Ramda.js' converge. Problem we have here is Utils.getInfo return tuple, so we need a helper funciton,
+   to apply tuple elements as invidual parameters
+
+   You can refactor rest of the code the same way.
+ */
+
+let applyTuple3 = (f, ~tuple) => {
+  let (x, y, z) = tuple;
+  f(x, y, z);
+};
+
+let applyQuery = (f, ~query) => f(query);
+
+let applyTuple3SkipSecond = (f, ~tuple) => {
+  let (x, _, z) = tuple;
+  f(x, z);
+};
+
+let labelExecuteEntityQuery = (info, platform, network, ~field, query) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery(
+    info,
+    platform,
+    network,
+    field,
+    query,
+  );
+
+let labelGetBlock = (conseilServerInfo, network, ~id) =>
+  ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id);
+
+// we need to return Future here, because it is used in Promise.all / Future.all later
+let getBlockTotalsThunk = (~id: string, ~config: MainType.config) =>
+  // we start applying parameters here, because reason automatically curry function without all parameters we can do that in steps
+  labelExecuteEntityQuery(~field="operations")
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyQuery(~query=Queries.getQueryForBlockTotals(id))
+  // we applied all parameters and got promise
+  // we're going to exchange promise to future, callback is required for handling `catch`. Check out future docs
+  ->FutureJs.fromPromise(_err => None)
+  //flat map allows us to get value from future and transform it into another future
+  ->Future.flatMap(value => {
+      switch (value) {
+      // we use 'when' clause to not repeat callback(None)
+      | Ok(totals) when totals |> Js.Array.length > 0 =>
+        // returns future
+        Future.value(Some(totals[0]))
+      | _err => Future.value(None)
+      }
+    });
+
+// it is used in react component, it can return unit type and execute callback
+let getBlockHeadThunk = (~callback, ~config: MainType.config) =>
+  ConseiljsRe.TezosConseilClient.getBlockHead
+  ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
+  ->FutureJs.fromPromise(_err => None)
+  // map takes value from Future and return other value that is not Future
+  ->Future.map(
+      fun
+      | Ok(result) => Some(result)
+      | _err => None,
     )
-    |> then_(totals =>
-         if (totals |> Js.Array.length > 0) {
-           resolve(Some(totals[0]));
-         } else {
-           resolve(None);
-         }
-       )
-    |> catch(_err => resolve(None))
-  );
-};
+  ->Future.get(callback);
 
-let getBlockHeadThunk = (config: MainType.config) => {
-  let (conseilServerInfo, _, network) = Utils.getInfo(config);
-  Js.Promise.(
-    ConseiljsRe.TezosConseilClient.getBlockHead(conseilServerInfo, network)
-    |> then_(head => resolve(Some(head)))
-    |> catch(_err => resolve(None))
-  );
-};
+let getBlockFromApi = (~id: string, ~config: MainType.config) =>
+  labelGetBlock(~id)
+  ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.flatMap(value =>
+      switch (value) {
+      | Ok(block) => Future.value(Some(block))
+      | _err => Future.value(None)
+      }
+    );
 
-let getBlockFromApi =
-    (
-      conseilServerInfo: MainType.conseilServerInfo,
-      network: string,
-      id: string,
-    ) => {
-  Js.Promise.(
-    ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id)
-    |> then_(block => resolve(Some(block)))
-    |> catch(_err => resolve(None))
-  );
-};
-
-let getBlockThunk = (id: string, config: MainType.config) => {
-  let (conseilServerInfo, _, network) = Utils.getInfo(config);
-  Js.Promise.(
-    all2((
-      getBlockFromApi(conseilServerInfo, network, id),
-      getBlockTotalsThunk(id, config),
-    ))
-    |> then_(((blocks, totals)) => {
-         switch (blocks, totals) {
-         | (Some(block), Some(total)) =>
-           let realBlock = Utils.convertBlock(~block, ~total, ());
-           resolve(("Valid", None, Some(realBlock), Some(block)));
-         | (Some(block), None) =>
-           let realBlock = Utils.convertBlock(~block, ());
-           resolve(("Valid", None, Some(realBlock), Some(block)));
-         | _ => resolve(("Error", Some(Utils.invalidId), None, None))
-         }
-       })
-    |> catch(_err => resolve(("Error", Some(Utils.noAvailable), None, None)))
-  );
-};
+let getBlockThunk = (~callback, ~id: string, ~config: MainType.config) =>
+  // return types from getBlockFromApi & getBlockTotalsThunk are different, Future.all expects list('a), so it won't fit,
+  // instead we are going to use Js.Promise.all2 as before and convert params to promise and than result to future
+  Js.Promise.all2((
+    FutureJs.toPromise(getBlockFromApi(~id, ~config)),
+    FutureJs.toPromise(getBlockTotalsThunk(~id, ~config)),
+  ))
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(result => {
+      switch (result) {
+      // Destruction can be done in switch
+      // Also as you can see, using build in result type make code much cleaner
+      // we got Ok(option('a), option('b)) because we set this 2 promises to result option('a)
+      | Ok((Some(block), Some(total))) =>
+        let realBlock = Utils.convertBlock(~block, ~total, ());
+        // but we don't have to wrap option with result anymore, we can just pass result with tuple
+        Ok((realBlock, block));
+      | Ok((Some(block), None)) =>
+        let realBlock = Utils.convertBlock(~block, ());
+        Ok((realBlock, block));
+      | Ok((None, None)) => Error(Utils.noAvailable)
+      | _err => Error(Utils.invalidId)
+      }
+    })
+  // Future.get gets value from promise and pass it to callback
+  ->Future.get(callback);
 
 let getBlockHashThunk = (level: int, config: MainType.config) => {
   let (conseilServerInfo, _, network) = Utils.getInfo(config);

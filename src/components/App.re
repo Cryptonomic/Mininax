@@ -147,50 +147,38 @@ let make = () => {
 
   let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
     dispatch(SetLoading);
-    Js.Promise.(
-      ApiCall.getBlockThunk(id, configs[selectedConfig^])
-      |> then_(result => {
-           switch (result) {
-           | ("Error", Some(error), _, _) =>
-             resolve(dispatch(SetError(error)))
-           | ("Valid", _, Some(block), Some(lastBlock)) =>
-             switch (isRoute, isMain, level) {
-             | (true, false, 0) =>
-               let url =
-                 Utils.makeUrl(
-                   configs[selectedConfig^].network,
-                   "blocks",
-                   id,
-                 );
-               ReasonReactRouter.push(url);
-               resolve(dispatch(SetBlock(block, id, false)));
-             | (true, false, _) =>
-               let strLevel = string_of_int(level);
-               let url =
-                 Utils.makeUrl(
-                   configs[selectedConfig^].network,
-                   "blocks",
-                   strLevel,
-                 );
-               ReasonReactRouter.push(url);
-               resolve(dispatch(SetBlock(block, strLevel, false)));
-             | (false, false, _) =>
-               resolve(dispatch(SetBlock(block, id, false)))
-             | _ =>
-               dispatch(SetBlock(block, "", true));
-               switch (lastBlock##period_kind) {
-               | "proposal" => getProposalsInfo(lastBlock##meta_cycle)
-               | "testing" => ()
-               | _ => getVoteInfo(lastBlock##hash, lastBlock##active_proposal)
-               };
-               resolve(getBlockInfo(lastBlock));
-             }
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         })
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
-    );
+    let callback = result =>
+      switch (result) {
+      | Ok((block, lastBlock)) =>
+        switch (isRoute, isMain, level) {
+        | (true, false, 0) =>
+          let url =
+            Utils.makeUrl(configs[selectedConfig^].network, "blocks", id);
+          ReasonReactRouter.push(url);
+          dispatch(SetBlock(block, id, false));
+        | (true, false, _) =>
+          let strLevel = string_of_int(level);
+          let url =
+            Utils.makeUrl(
+              configs[selectedConfig^].network,
+              "blocks",
+              strLevel,
+            );
+          ReasonReactRouter.push(url);
+          dispatch(SetBlock(block, strLevel, false));
+        | (false, false, _) => dispatch(SetBlock(block, id, false))
+        | _ =>
+          dispatch(SetBlock(block, "", true));
+          switch (lastBlock##period_kind) {
+          | "proposal" => getProposalsInfo(lastBlock##meta_cycle)
+          | "testing" => ()
+          | _ => getVoteInfo(lastBlock##hash, lastBlock##active_proposal)
+          };
+          getBlockInfo(lastBlock);
+        }
+      | Error(err) => dispatch(SetError(err))
+      };
+    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig^]);
   };
 
   let getOperation = (id: string, isRoute: bool) => {
@@ -271,16 +259,14 @@ let make = () => {
 
   let getMainPage = () => {
     dispatch(SetLoading);
-    Js.Promise.(
-      ApiCall.getBlockHeadThunk(configs[selectedConfig^])
-      |> then_(result =>
-           switch (result) {
-           | Some(head) => resolve(getBlock(head##hash, false, true, 0))
-           | None => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         )
-      |> ignore
-    );
+    let callback = result =>
+      switch (result) {
+      | Some(head) => getBlock(head##hash, false, true, 0)
+      | None => dispatch(SetError(Utils.noAvailable))
+      };
+    // After refactoring getBlockHeadThunk we can remove Js.Promise oddity, and pipe callback
+    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig^]);
+    ();
   };
 
   let goToMainPage = () => {

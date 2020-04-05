@@ -1,3 +1,5 @@
+// TODO idea how to remove long arrays to some file with consts
+// TODO how to handle bs.raw
 open MainType;
 
 [@bs.val] external btoa : string => string = "window.btoa";

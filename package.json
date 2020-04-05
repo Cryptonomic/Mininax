@@ -33,6 +33,7 @@
     "react": "16.8.1",
     "react-dom": "16.8.1",
     "react-intl": "3.0.0-beta-8",
+    "reason-future": "^2.5.0",
     "reason-react": "0.7.0"
   },
   "devDependencies": {
