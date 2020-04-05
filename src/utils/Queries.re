@@ -1,195 +1,314 @@
+/*
+   The main problem in this file is code repetition.
+   If we examine all functions they have very simillar pattern:
+   1. create empty query
+   2. execute ConseilQueryBuilder function where query is always passed as first parameter
+   return last ConseilQueryBuilder result
+   Also, other similarities:
+   - all functions produce blank query
+   - addFields always accept the same type: list(string)
+   - addPredicate always use query as first argument,  ConseiljsType variant as third, and false bool as last
+   - addAggregationFunction always use query as first argument a field name as second and SUM or COUNT variant as last
+
+   What we are going to do:
+     Pipe all data through ConseilQueryBuilder methods to simplify code
+     At the moment there are a lot of variables declaration and shadowing (query variable redeclaration).
+     We declare variables only to pass them as parameters. They are extra text that make code a bit less readable.
+     Also thanks to pipe operators: pipe-last `|>` & pipe-frist `->` we are able to simplify functions body in that way
+     let simple_fun = param => createEmptyQuery -> operation1 -> operation 2 -> operation3;
+     It let us focus on how we are going to process our data instead of folowing which variables went where.
+    Why are we going to do that?
+    It will make code cleaner and help to fucous on processing data instead of redeclaring variables.
+
+   Important:
+   - Pipes:
+   More idiomatic for ReasonML (from Ocaml perspective) is `|>` pipe-last. It applies value as the last argument to piped function
+   Havely used by BuckleScript is `->` pipe-first. It applies value as the first argument to piped function
+   While handling BuckleScript related code we should use `->` pipe, in other custom function we rather should use `|>` pipe last. In our case because ulabeled ConseiljsRe API we going to use `->` more.
+   - Labels:
+   It's good practice and highly recommended to label positional parameters and JS binding. Labels are not only important as descriptive part of code
+   While ConseiljsRe doesn't provide function with labels we have to deal with partial application a bit different way. See QueriesPlus.re file for more details
+ */
 open ConseiljsRe;
+// while this module mostly reuse ConseilQueryBuilder functionality it would save a lot of space opening module here
+open ConseiljsRe.ConseilQueryBuilder;
 
 let oneDayMillis = 86400000.0;
 let getTimeYesterday = (nowTime: float) => nowTime -. oneDayMillis;
-let getQueryForBlockTotals = (blockid: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["block_hash", "amount", "fee"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "block_hash", ConseiljsType.EQ, `Str([|blockid|]), false);
-  let query = ConseilQueryBuilder.addAggregationFunction(query, "fee", ConseiljsType.SUM);
-  ConseilQueryBuilder.addAggregationFunction(query, "amount", ConseiljsType.SUM);
-};
 
-let getQueryForOperations = (operationid: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let query = ConseilQueryBuilder.addPredicate(query, "operation_group_hash", ConseiljsType.EQ, `Str([|operationid|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+// by removing all variables from function and defining flow via pipe (piper first in this example) we can achive much cleaner code
+// isn't it easier to understand what happening with query, is it?
+let getQueryForBlockTotals = (blockid: string) =>
+  // We're creating query
+  blankQuery()
+  // adding fields to it
+  ->addFields(["block_hash", "amount", "fee"])
+  // adding predicate to field
+  ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|blockid|]), false)
+  // adinng aggregation to field
+  ->addAggregationFunction("fee", ConseiljsType.SUM)
+  // ading aggregation to another field
+  ->addAggregationFunction("amount", ConseiljsType.SUM);
 
-let getQueryForBakerInfo = (accountid: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["deactivated", "balance", "delegated_balance", "staking_balance", "frozen_balance"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "pkh", ConseiljsType.EQ, `Str([|accountid|]), false);
-  let query = ConseilQueryBuilder.addOrdering(query, "block_level", ConseiljsType.DESC);
-  ConseilQueryBuilder.setLimit(query, 1);
-};
+let getQueryForOperations = (operationid: string) =>
+  blankQuery()
+  ->addPredicate(
+      "operation_group_hash",
+      ConseiljsType.EQ,
+      `Str([|operationid|]),
+      false,
+    )
+  ->setLimit(1000);
 
-let getQueryForBlockLink = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "slots"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "block_hash", ConseiljsType.EQ, `Str([|id|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForBakerInfo = (accountid: string) =>
+  blankQuery()
+  ->addFields([
+      "deactivated",
+      "balance",
+      "delegated_balance",
+      "staking_balance",
+      "frozen_balance",
+    ])
+  ->addPredicate("pkh", ConseiljsType.EQ, `Str([|accountid|]), false)
+  ->addOrdering("block_level", ConseiljsType.DESC)
+  ->setLimit(1);
 
-let getQueryForAccountSends = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "status"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, `Str([|id|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, `Str([|"transaction"|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForBlockLink = (id: string) =>
+  blankQuery()
+  ->addFields([
+      "block_hash",
+      "operation_group_hash",
+      "kind",
+      "source",
+      "destination",
+      "amount",
+      "fee",
+      "slots",
+    ])
+  ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|id|]), false)
+  ->setLimit(1000);
 
-let getQueryForAccountReceipts = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["timestamp", "block_hash", "operation_group_hash", "kind", "source", "destination", "amount", "fee", "status"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  let query = ConseilQueryBuilder.addPredicate(query, "destination", ConseiljsType.EQ, `Str([|id|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, `Str([|"transaction"|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForAccountSends = (id: string) =>
+  blankQuery()
+  ->addFields([
+      "timestamp",
+      "block_hash",
+      "operation_group_hash",
+      "kind",
+      "source",
+      "destination",
+      "amount",
+      "fee",
+      "status",
+    ])
+  ->addPredicate("source", ConseiljsType.EQ, `Str([|id|]), false)
+  ->addPredicate("kind", ConseiljsType.EQ, `Str([|"transaction"|]), false)
+  ->setLimit(1000);
 
-let getQueryForOtherOperations = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "source", "kind", "status", "originated_contracts"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, `Str([|id|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.IN, `Str([|"reveal", "delegation", "origination"|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForAccountReceipts = (id: string) =>
+  blankQuery()
+  ->addFields([
+      "timestamp",
+      "block_hash",
+      "operation_group_hash",
+      "kind",
+      "source",
+      "destination",
+      "amount",
+      "fee",
+      "status",
+    ])
+  ->addPredicate("destination", ConseiljsType.EQ, `Str([|id|]), false)
+  ->addPredicate("kind", ConseiljsType.EQ, `Str([|"transaction"|]), false)
+  ->setLimit(1000);
 
-let getQueryForEndorsements = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "block_hash", "block_level", "operation_group_hash", "kind", "delegate", "slots"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, `Str([|id|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, `Str([|"endorsement"|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForOtherOperations = (id: string) =>
+  blankQuery()
+  ->addFields([
+      "timestamp",
+      "block_hash",
+      "block_level",
+      "operation_group_hash",
+      "source",
+      "kind",
+      "status",
+      "originated_contracts",
+    ])
+  ->addPredicate("source", ConseiljsType.EQ, `Str([|id|]), false)
+  ->addPredicate(
+      "kind",
+      ConseiljsType.IN,
+      `Str([|"reveal", "delegation", "origination"|]),
+      false,
+    )
+  ->setLimit(1000);
 
-let getQueryForBakedBlocks = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["timestamp", "hash", "level", "baker"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "baker", ConseiljsType.EQ, `Str([|id|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForEndorsements = (id: string) =>
+  blankQuery()
+  ->addFields([
+      "timestamp",
+      "block_hash",
+      "block_level",
+      "operation_group_hash",
+      "kind",
+      "delegate",
+      "slots",
+    ])
+  ->addPredicate("delegate", ConseiljsType.EQ, `Str([|id|]), false)
+  ->addPredicate("kind", ConseiljsType.EQ, `Str([|"endorsement"|]), false)
+  ->setLimit(1000);
 
-let getQueryForDepositsAndRewards = (id: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["source_hash", "delegate", "category", "change"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "delegate", ConseiljsType.EQ, `Str([|id|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "source", ConseiljsType.EQ, `Str([|"block"|]), false);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForBakedBlocks = (id: string) =>
+  blankQuery()
+  ->addFields(["timestamp", "hash", "level", "baker"])
+  ->addPredicate("baker", ConseiljsType.EQ, `Str([|id|]), false)
+  ->setLimit(1000);
 
-let getQueryForNumBlocks = (metaCycle: int, timeStamp: float) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["hash"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "meta_cycle", ConseiljsType.EQ, `Int([|metaCycle|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.BEFORE, `Float([|timeStamp|]), false);
-  ConseilQueryBuilder.addAggregationFunction(query, "hash", ConseiljsType.COUNT);
-};
+let getQueryForDepositsAndRewards = (id: string) =>
+  blankQuery()
+  ->addFields(["source_hash", "delegate", "category", "change"])
+  ->addPredicate("delegate", ConseiljsType.EQ, `Str([|id|]), false)
+  ->addPredicate("source", ConseiljsType.EQ, `Str([|"block"|]), false)
+  ->setLimit(1000);
 
-let getQueryForTransactionStats = (timeStamp: float) => {
-  let timeYesterday = getTimeYesterday(timeStamp);
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["amount", "originated_contracts"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.IN, `Str([|"transaction", "origination"|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "status", ConseiljsType.EQ, `Str([|"applied"|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.AFTER, `Float([|timeYesterday|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.BEFORE, `Float([|timeStamp|]), false);
-  let query = ConseilQueryBuilder.addAggregationFunction(query, "originated_contracts", ConseiljsType.COUNT);
-  let query = ConseilQueryBuilder.addAggregationFunction(query, "amount", ConseiljsType.COUNT);
-  ConseilQueryBuilder.addAggregationFunction(query, "amount", ConseiljsType.SUM);
-};
+let getQueryForNumBlocks = (metaCycle: int, timeStamp: float) =>
+  blankQuery()
+  ->addFields(["hash"])
+  ->addPredicate("meta_cycle", ConseiljsType.EQ, `Int([|metaCycle|]), false)
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.BEFORE,
+      `Float([|timeStamp|]),
+      false,
+    )
+  ->ConseilQueryBuilder.addAggregationFunction("hash", ConseiljsType.COUNT);
 
-let getQueryForFundraiserStats = (timeStamp: float) => {
-  let timeYesterday = getTimeYesterday(timeStamp);
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["kind"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, `Str([|"activate_account"|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.AFTER, `Float([|timeYesterday|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.BEFORE, `Float([|timeStamp|]), false);
-  ConseilQueryBuilder.addAggregationFunction(query, "kind", ConseiljsType.COUNT);
-};
+let getQueryForTransactionStats = (timeStamp: float) =>
+  blankQuery()
+  ->addFields(["amount", "originated_contracts"])
+  ->addPredicate(
+      "kind",
+      ConseiljsType.IN,
+      `Str([|"transaction", "origination"|]),
+      false,
+    )
+  ->addPredicate("status", ConseiljsType.EQ, `Str([|"applied"|]), false)
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.AFTER,
+      `Float([|getTimeYesterday(timeStamp)|]),
+      false,
+    )
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.BEFORE,
+      `Float([|timeStamp|]),
+      false,
+    )
+  ->addAggregationFunction("originated_contracts", ConseiljsType.COUNT)
+  ->addAggregationFunction("amount", ConseiljsType.COUNT)
+  ->addAggregationFunction("amount", ConseiljsType.SUM);
 
-let getQueryForTotalFundraiserActivated = () => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["kind"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "kind", ConseiljsType.EQ, `Str([|"activate_account"|]), false);
-  ConseilQueryBuilder.addAggregationFunction(query, "kind", ConseiljsType.COUNT);
-};
+let getQueryForFundraiserStats = (timeStamp: float) =>
+  blankQuery()
+  ->addFields(["kind"])
+  ->addPredicate(
+      "kind",
+      ConseiljsType.EQ,
+      `Str([|"activate_account"|]),
+      false,
+    )
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.AFTER,
+      `Float([|getTimeYesterday(timeStamp)|]),
+      false,
+    )
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.BEFORE,
+      `Float([|timeStamp|]),
+      false,
+    )
+  ->addAggregationFunction("kind", ConseiljsType.COUNT);
 
-let getQueryForFeesStats = (timeStamp: float) => {
-  let timeYesterday = getTimeYesterday(timeStamp);
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["fee", "consumed_gas"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.AFTER, `Float([|timeYesterday|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "timestamp", ConseiljsType.BEFORE, `Float([|timeStamp|]), false);
-  let query = ConseilQueryBuilder.addAggregationFunction(query, "fee", ConseiljsType.SUM);
-  ConseilQueryBuilder.addAggregationFunction(query, "consumed_gas", ConseiljsType.SUM);
-};
+let getQueryForTotalFundraiserActivated = () =>
+  blankQuery()
+  ->addFields(["kind"])
+  ->addPredicate(
+      "kind",
+      ConseiljsType.EQ,
+      `Str([|"activate_account"|]),
+      false,
+    )
+  ->addAggregationFunction("kind", ConseiljsType.COUNT);
 
-let getQueryForBakerStats = () => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["pkh", "staking_balance"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "deactivated", ConseiljsType.EQ, `Str([|"false"|]), false);
-  let query = ConseilQueryBuilder.addAggregationFunction(query, "pkh", ConseiljsType.COUNT);
-  ConseilQueryBuilder.addAggregationFunction(query, "staking_balance", ConseiljsType.SUM);
-};
+let getQueryForFeesStats = (timeStamp: float) =>
+  blankQuery()
+  ->addFields(["fee", "consumed_gas"])
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.AFTER,
+      `Float([|getTimeYesterday(timeStamp)|]),
+      false,
+    )
+  ->addPredicate(
+      "timestamp",
+      ConseiljsType.BEFORE,
+      `Float([|timeStamp|]),
+      false,
+    )
+  ->addAggregationFunction("fee", ConseiljsType.SUM)
+  ->addAggregationFunction("consumed_gas", ConseiljsType.SUM);
 
-let getQueryForMarketCap = () => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["balance"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  ConseilQueryBuilder.addAggregationFunction(query, "balance", ConseiljsType.SUM);
-};
+let getQueryForBakerStats = () =>
+  blankQuery()
+  ->addFields(["pkh", "staking_balance"])
+  ->addPredicate("deactivated", ConseiljsType.EQ, `Str([|"false"|]), false)
+  ->addAggregationFunction("pkh", ConseiljsType.COUNT)
+  ->addAggregationFunction("staking_balance", ConseiljsType.SUM);
 
-let getQueryForProposalInfo = (cycle: int) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["proposal", "operation_group_hash"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
-  let query = ConseilQueryBuilder.addPredicate(query, "proposal", ConseiljsType.ISNULL, `Str([|""|]), true);
-  ConseilQueryBuilder.addAggregationFunction(query, "operation_group_hash", ConseiljsType.COUNT);
-};
+let getQueryForMarketCap = () =>
+  blankQuery()
+  ->addFields(["balance"])
+  ->addAggregationFunction("balance", ConseiljsType.SUM);
 
-let getQueryForTestingInfo = (cycle: int) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["proposal_hash"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  ConseilQueryBuilder.addPredicate(query, "cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
-};
+let getQueryForProposalInfo = (cycle: int) =>
+  blankQuery()
+  ->addFields(["proposal", "operation_group_hash"])
+  ->addPredicate("cycle", ConseiljsType.EQ, `Int([|cycle|]), false)
+  ->addPredicate("proposal", ConseiljsType.ISNULL, `Str([|""|]), true)
+  ->addAggregationFunction("operation_group_hash", ConseiljsType.COUNT);
 
-let getQueryForQuorum = (hash: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["current_expected_quorum"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  ConseilQueryBuilder.addPredicate(query, "hash", ConseiljsType.EQ, `Str([|hash|]), false);
-};
+let getQueryForTestingInfo = (cycle: int) =>
+  blankQuery()
+  ->addFields(["proposal_hash"])
+  ->addPredicate("cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
 
-let getQueryForVotingStats = (hash: string, propasal: string) => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let attributes = ["yay_rolls", "nay_rolls", "pass_rolls", "proposal_hash"];
-  let query = ConseilQueryBuilder.addFields(query, attributes);
-  let query = ConseilQueryBuilder.addPredicate(query, "block_hash", ConseiljsType.EQ, `Str([|hash|]), false);
-  ConseilQueryBuilder.addPredicate(query, "proposal_hash", ConseiljsType.EQ, `Str([|propasal|]), false);
-};
+let getQueryForQuorum = (hash: string) =>
+  blankQuery()
+  ->addFields(["current_expected_quorum"])
+  ->addPredicate("hash", ConseiljsType.EQ, `Str([|hash|]), false);
 
-let getQueryForBlocksTab = () => {
-  let query = ConseilQueryBuilder.blankQuery();
-  let entities = ["meta_voting_period", "meta_cycle", "level", "timestamp", "hash", "priority"];
-  let query = ConseilQueryBuilder.addFields(query, entities);
-  ConseilQueryBuilder.setLimit(query, 1000);
-};
+let getQueryForVotingStats = (hash: string, propasal: string) =>
+  blankQuery()
+  ->addFields(["yay_rolls", "nay_rolls", "pass_rolls", "proposal_hash"])
+  ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|hash|]), false)
+  ->addPredicate(
+      "proposal_hash",
+      ConseiljsType.EQ,
+      `Str([|propasal|]),
+      false,
+    );
+
+let getQueryForBlocksTab = () =>
+  blankQuery()
+  ->addFields([
+      "meta_voting_period",
+      "meta_cycle",
+      "level",
+      "timestamp",
+      "hash",
+      "priority",
+    ])
+  ->setLimit(1000);
