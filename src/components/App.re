@@ -108,17 +108,14 @@ let make = () => {
   let footerRef = ref(None);
   let (state, dispatch) = React.useReducer(reducer, initState);
 
-  let getProposalsInfo = (meta_cycle: int) => {
-    Js.Promise.(
-      ApiCall.getProposalInfoThunk(meta_cycle, configs[selectedConfig^])
-      |> then_(result =>
-           switch (result) {
-           | Some(proposals) => resolve(dispatch(SetProposals(proposals)))
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
+  let getProposalsInfo = (metaCycle: int) => {
+    ApiCall.getProposalInfoThunk(
+      ~metaCycle,
+      ~config=configs[selectedConfig^],
+      ~callback=
+        fun
+        | Some(proposals) => dispatch(SetProposals(proposals))
+        | _ => dispatch(SetError(Utils.noAvailable)),
     );
   };
 
