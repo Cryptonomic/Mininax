@@ -1,5 +1,3 @@
-// TODO idea how to remove long arrays to some file with consts
-// TODO how to handle bs.raw
 open MainType;
 
 [@bs.val] external btoa : string => string = "window.btoa";
@@ -64,6 +62,7 @@ let formatString = (value, isConvert) => {
 
 let makeUrl = (network: string, entity: string, id: string) => "/" ++ network ++ "/" ++ entity ++ "/" ++ id;
 
+// It's a lot of code here, that actually might be moved to a file with constants
 let getFields = (~entity, ~kind=?, ()): array(MainType.field) => {
   switch (entity, kind) {
     | ("operation", Some("Transaction")) => [|
@@ -204,24 +203,31 @@ let getFields = (~entity, ~kind=?, ()): array(MainType.field) => {
   };
 };
 
+// at the basic level we could reduce a bit code here by applying records to set, it's also a bit more descriptive. Mind we're mutating data here.
+let applyProperties = (block, ~field, ~value) => {
+  Js.Dict.set(block, field, value);
+  block;
+}
+
 let convertBlock = (~block, ~total=?, ()) => {
   let assBlock = Js.Obj.assign (Js.Obj.empty(), block);
-  let newBlock = Js.Dict.empty();
-  Js.Dict.set(newBlock, "hash", formatString(assBlock##hash, false));
-  Js.Dict.set(newBlock, "predecessor", formatString(assBlock##predecessor, false));
-  Js.Dict.set(newBlock, "level", assBlock##level |> string_of_int);
-  Js.Dict.set(newBlock, "meta_voting_period", assBlock##meta_voting_period |> string_of_int);
-  Js.Dict.set(newBlock, "timestamp", assBlock##timestamp |> string_of_int);
-  Js.Dict.set(newBlock, "chain_id", formatString(assBlock##chain_id, true));
-  Js.Dict.set(newBlock, "protocol", formatString(assBlock##protocol, false));
-  Js.Dict.set(newBlock, "consumed_gas", formatNumber(assBlock##consumed_gas, false));
-  Js.Dict.set(newBlock, "baker", formatString(assBlock##baker, false));
-  Js.Dict.set(newBlock, "baker_priority", formatNumber(assBlock##priority, false));
-  Js.Dict.set(newBlock, "meta_cycle", assBlock##meta_cycle |> string_of_int);
-  Js.Dict.set(newBlock, "meta_cycle_position", assBlock##meta_cycle_position |> string_of_int);
-  Js.Dict.set(newBlock, "period_kind", formatString(assBlock##period_kind, true));
-  Js.Dict.set(newBlock, "active_proposal", formatString(assBlock##active_proposal, true));
-  Js.Dict.set(newBlock, "signature", formatString(assBlock##signature, false));
+  let newBlock = Js.Dict.empty()
+  |> applyProperties(~field="hash", ~value=formatString(assBlock##hash, false))
+  |> applyProperties(~field="hash", ~value=formatString(assBlock##hash, false))
+  |> applyProperties(~field="predecessor", ~value=formatString(assBlock##predecessor, false))
+  |> applyProperties(~field="level", ~value=assBlock##level |> string_of_int)
+  |> applyProperties(~field="meta_voting_period", ~value=assBlock##meta_voting_period |> string_of_int)
+  |> applyProperties(~field="timestamp", ~value=assBlock##timestamp |> string_of_int)
+  |> applyProperties(~field="chain_id", ~value=formatString(assBlock##chain_id, true))
+  |> applyProperties(~field="protocol", ~value=formatString(assBlock##protocol, false))
+  |> applyProperties(~field="consumed_gas", ~value=formatNumber(assBlock##consumed_gas, false))
+  |> applyProperties(~field="baker", ~value=formatString(assBlock##baker, false))
+  |> applyProperties(~field="baker_priority", ~value=formatNumber(assBlock##priority, false))
+  |> applyProperties(~field="meta_cycle", ~value=assBlock##meta_cycle |> string_of_int)
+  |> applyProperties(~field="meta_cycle_position", ~value=assBlock##meta_cycle_position |> string_of_int)
+  |> applyProperties(~field="period_kind", ~value=formatString(assBlock##period_kind, true))
+  |> applyProperties(~field="active_proposal", ~value=formatString(assBlock##active_proposal, true))
+  |> applyProperties(~field="signature", ~value=formatString(assBlock##signature, false));
   switch (total) {
   | None => {
     Js.Dict.set(newBlock, "total_amount", "");
@@ -356,6 +362,7 @@ let getValueFromDict = (dict: Js.Dict.t(string), key_: string) => {
   };
 };
 
+// I think it would be better to crate binding for document methods instead of just using bs.raw to execude that code.
 let copyContent: (string) => unit = [%bs.raw {|
     function (value) {
       const textField = document.createElement("textarea");
@@ -367,6 +374,7 @@ let copyContent: (string) => unit = [%bs.raw {|
     }
   |}];
 
+// it's like bypassing type system. Is there a reason to not use tools like bs-json? It's more work but safer code
 let jsonConvertQuery: (ConseiljsType.conseilQuery) => string = [%bs.raw {|
     function (value) {
       return JSON.stringify(value)
