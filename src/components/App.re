@@ -1,6 +1,17 @@
-// TODO implement state as redux
-// TODO implement router instead of pushing history on useEffect
-// TODO move sub components as independent components
+/*
+   I would like to discuss how the state is solved here. Overall I think it's okay while the application is small but might be problematic to scale. The same works for context.
+   The app file is a good place to implement a router. It gives as a straightforward solution to handle URL changes and clear separation of responsibilities.
+ With router we have to separate part of App jsx as separate components and this leads to the problem with state management. While reducer + context is okay, it might be hard to scale. Personally I think that flux tools like reductive (reasonML version of redux) are a great way to handle state changes, implement multiple stores, move part of the logic to actions.
+ It's not overkill, even for small applications, but at this point, it would involve a bit more refactoring so I just want to mention the possibility. Thanks to the hooks it allows us to use state everywhere in application easily.
+
+ Examples:
+  - moving footer to separate file - cleaner App component
+  - moving all api calls to custom hook with actions - most code from App file would be moved to another file
+  - defining "routes" dir to handle "smart components" and keep general purpose stateless components in "components" dir - better separation of responsibilites between components
+
+  This futher would allow as to move bigger part of API calls to ApiCall file, extending how we pipe our data. API calls in this file depends on other functions and component state directly.
+  We would need to refactor code in a way to pass too many arguments into ApiCall functions. with custom action hook file and global state with flux it would be easier to handle.
+  */
 open MainType;
 open Configs;
 
@@ -86,6 +97,9 @@ let reducer = (state, action) =>
   | SetVoteInfo(voteinfo) => {...state, voteinfo}
   };
 
+// I'm not sure why the ref is even used here
+// both mutable variables should be defined as an immutable part of the component state, and change by state-related methods like to set from useState, or changes on reducer state
+// selectedConfig is already defined in reducer, maybe it would be better to reuse it or implement another reducer variable if it's required for state transition
 let selectedConfig = ref(0);
 
 [@react.component]
