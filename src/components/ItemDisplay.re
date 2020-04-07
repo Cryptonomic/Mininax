@@ -152,7 +152,7 @@ let make = (~entity: string, ~items: Js.Dict.t(string), ~changeLevel, ~goToDetai
               <div className=Styles.rowContainer key=field.name>
                 <div className=Styles.fieldLabel(index === 0 || index === fieldsLength^ - 1, theme)>
                   (ReasonReact.string(field.displayName))
-                  <img className=Styles.copyImg src={copyYellow} onClick={_=> Utils.copyContent(fieldVal)} />
+                  <img className=Styles.copyImg src={copyYellow} onClick={_=> BsRaw.copyContent(fieldVal)} />
                 </div>
                 <div className=Styles.fieldContent(theme)>(ReasonReact.string(fieldVal))</div>
               </div>

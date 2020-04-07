@@ -47,7 +47,7 @@ let make = (~isReverse, ~hash) => {
         Themes.themes[theme].fieldColor,
       )
     };
-  <div className=Styles.mainContainer onClick={_ => Utils.copyContent(hash)}>
+  <div className=Styles.mainContainer onClick={_ => BsRaw.copyContent(hash)}>
     <div className={Styles.container1(fieldBgColor)} />
     <div className={Styles.container2(fieldColor, fieldBgColor)} />
   </div>;

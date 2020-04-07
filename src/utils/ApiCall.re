@@ -82,15 +82,15 @@ let getBlockThunk = (~callback, ~id: string, ~config: MainType.config) =>
   ->Future.map(
       fun
       | Ok((Some(block), Some(total))) => {
-          let realBlock = Utils.convertBlock(~block, ~total, ());
+          let realBlock = Convert.convertBlock(~block, ~total, ());
           Ok((realBlock, block));
         }
       | Ok((Some(block), None)) => {
-          let realBlock = Utils.convertBlock(~block, ());
+          let realBlock = Convert.convertBlock(~block, ());
           Ok((realBlock, block));
         }
-      | Ok((None, None)) => Error(Utils.noAvailable)
-      | _err => Error(Utils.invalidId),
+      | Ok((None, None)) => Error(ErrMessage.noAvailable)
+      | _err => Error(ErrMessage.invalidId),
     )
   ->Future.get(callback);
 
@@ -110,12 +110,12 @@ let getOperationThunk = (~callback, ~id: string, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getOperations
   ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
   ->applyQuery(~query=Queries.getQueryForOperations(id))
-  ->FutureJs.fromPromise(_err => Utils.noAvailable)
+  ->FutureJs.fromPromise(_err => ErrMessage.noAvailable)
   ->Future.map(
       fun
       | Ok(operations) when operations |> Js.Array.length > 0 =>
-        operations |> Array.map(Utils.convertOperation) |> toResult
-      | Ok(_) => Error(Utils.noAvailable)
+        operations |> Array.map(Convert.convertOperation) |> toResult
+      | Ok(_) => Error(ErrMessage.noAvailable)
       | Error(e) => Error(e),
     )
   ->Future.get(callback);
@@ -125,17 +125,18 @@ let getAccountThunk = (~callback, ~id: string, ~config: MainType.config) =>
     getAccountFromApi(~id, ~config) |> FutureJs.toPromise,
     getAccountBakerThunk(~id, ~config) |> FutureJs.toPromise,
   ))
-  ->FutureJs.fromPromise(_err => Utils.noAvailable)
+  ->FutureJs.fromPromise(_err => ErrMessage.noAvailable)
   ->Future.map(
       fun
       | Ok((Some(account), Some(baker))) =>
-        Utils.convertAccount(~account, ~baker, ()) |> toResult
+        Convert.convertAccount(~account, ~baker, ()) |> toResult
       | Ok((Some(account), None)) =>
-        Utils.convertAccount(~account, ()) |> toResult
-      | Ok(_) when id |> slice(~to_=2) == "tz" => Error(Utils.missingAccount)
+        Convert.convertAccount(~account, ()) |> toResult
+      | Ok(_) when id |> slice(~to_=2) == "tz" =>
+        Error(ErrMessage.missingAccount)
       | Ok(_) when id |> slice(~to_=2) == "kt" =>
-        Error(Utils.missingContract)
-      | Ok(_) => Error(Utils.invalidAccountId)
+        Error(ErrMessage.missingContract)
+      | Ok(_) => Error(ErrMessage.invalidAccountId)
       | Error(err) => Error(err),
     )
   ->Future.get(callback);

@@ -324,7 +324,7 @@ let make =
     };
 
   let gotoLastBlock = () => {
-    let url = Utils.makeUrl(network, "blocks", items##hash);
+    let url = Utils.makeUrl(~network, ~entity="blocks", ~id=items##hash);
     ReasonReactRouter.push(url);
   };
 

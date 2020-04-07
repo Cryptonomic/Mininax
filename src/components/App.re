@@ -98,7 +98,7 @@ let make = () => {
       ~callback=
         fun
         | Some(proposals) => dispatch(SetProposals(proposals))
-        | _ => dispatch(SetError(Utils.noAvailable)),
+        | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );
 
   let getVoteInfo = (hash: string, active_proposal: string) =>
@@ -109,7 +109,7 @@ let make = () => {
       ~callback=
         fun
         | Some(voteinfo) => dispatch(SetVoteInfo(voteinfo))
-        | _ => dispatch(SetError(Utils.noAvailable)),
+        | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );
 
   let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
@@ -121,7 +121,7 @@ let make = () => {
         fun
         | Some((blockinfo, transinfo)) =>
           dispatch(SetLastBlock(block, blockinfo, transinfo))
-        | _ => dispatch(SetError(Utils.noAvailable)),
+        | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );
 
   let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
@@ -132,16 +132,20 @@ let make = () => {
         switch (isRoute, isMain, level) {
         | (true, false, 0) =>
           let url =
-            Utils.makeUrl(configs[selectedConfig].network, "blocks", id);
+            Utils.makeUrl(
+              ~network=configs[selectedConfig].network,
+              ~entity="blocks",
+              ~id,
+            );
           ReasonReactRouter.push(url);
           dispatch(SetBlock(block, id, false));
         | (true, false, _) =>
           let strLevel = string_of_int(level);
           let url =
             Utils.makeUrl(
-              configs[selectedConfig].network,
-              "blocks",
-              strLevel,
+              ~network=configs[selectedConfig].network,
+              ~entity="blocks",
+              ~id=strLevel,
             );
           ReasonReactRouter.push(url);
           dispatch(SetBlock(block, strLevel, false));
@@ -168,7 +172,11 @@ let make = () => {
       ~callback=
         fun
         | Ok(operations) when isRoute == true => {
-            Utils.makeUrl(configs[selectedConfig].network, "operations", id)
+            Utils.makeUrl(
+              ~network=configs[selectedConfig].network,
+              ~entity="operations",
+              ~id,
+            )
             |> ReasonReactRouter.push;
             dispatch(SetOperations(operations, id));
           }
@@ -185,7 +193,11 @@ let make = () => {
       ~callback=
         fun
         | Ok(account) when isRoute => {
-            Utils.makeUrl(configs[selectedConfig].network, "accounts", id)
+            Utils.makeUrl(
+              ~network=configs[selectedConfig].network,
+              ~entity="accounts",
+              ~id,
+            )
             |> ReasonReactRouter.push;
             dispatch(SetAccount(account, id));
           }
@@ -203,7 +215,7 @@ let make = () => {
         fun
         | Some(head) when isMain => getBlock(head##hash, false, true, level)
         | Some(head) => getBlock(head##hash, true, false, level)
-        | _err => dispatch(SetError(Utils.noAvailable)),
+        | _err => dispatch(SetError(ErrMessage.noAvailable)),
     );
   };
 
@@ -212,7 +224,7 @@ let make = () => {
     let callback = result =>
       switch (result) {
       | Some(head) => getBlock(head##hash, false, true, 0)
-      | None => dispatch(SetError(Utils.noAvailable))
+      | None => dispatch(SetError(ErrMessage.noAvailable))
       };
     // After refactoring getBlockHeadThunk we can remove Js.Promise oddity, and pipe callback
     ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
@@ -292,7 +304,7 @@ let make = () => {
     | (_, "tz", _)
     | (_, "kt", _) => getAccount(id, true)
     | (_, _, true) => getHashByLevel(id |> int_of_string, false)
-    | _ => dispatch(SetError(Utils.invalidId))
+    | _ => dispatch(SetError(ErrMessage.invalidId))
     };
   };
 
@@ -303,7 +315,7 @@ let make = () => {
     switch (firstChar, isNumber) {
     | ("b", _) => getBlock(id, true, true, 0)
     | (_, true) => getHashByLevel(id |> int_of_string, true)
-    | _ => dispatch(SetError(Utils.invalidId))
+    | _ => dispatch(SetError(ErrMessage.invalidId))
     };
   };
 
