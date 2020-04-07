@@ -1,24 +1,42 @@
-open ConseiljsRe;
-// while this module mostly reuse ConseilQueryBuilder functionality it would save a lot of space opening module here
 open ConseiljsRe.ConseilQueryBuilder;
 
 let oneDayMillis = 86400000.0;
 let getTimeYesterday = (nowTime: float) => nowTime -. oneDayMillis;
 
+let labelAddPredicate =
+    (
+      query: ConseiljsType.conseilQuery,
+      ~field: string,
+      ~type_: ConseiljsType.conseilOperator,
+      ~aggrSetType: ConseiljsType.aggrSetType,
+    ) =>
+  addPredicate(query, field, type_, aggrSetType, false);
+
+let labelAddAggregationFunction =
+    (
+      query: ConseiljsType.conseilQuery,
+      ~field: string,
+      ~aggType: ConseiljsType.conseilFunction,
+    ) =>
+  addAggregationFunction(query, field, aggType);
+
 let getQueryForBlockTotals = (blockid: string) =>
   blankQuery()
   ->addFields(["block_hash", "amount", "fee"])
-  ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|blockid|]), false)
-  ->addAggregationFunction("fee", ConseiljsType.SUM)
-  ->addAggregationFunction("amount", ConseiljsType.SUM);
+  ->labelAddPredicate(
+      ~field="block_hash",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|blockid|]),
+    )
+  ->labelAddAggregationFunction(~field="fee", ~aggType=ConseiljsType.SUM)
+  ->labelAddAggregationFunction(~field="amount", ~aggType=ConseiljsType.SUM);
 
 let getQueryForOperations = (operationid: string) =>
   blankQuery()
-  ->addPredicate(
-      "operation_group_hash",
-      ConseiljsType.EQ,
-      `Str([|operationid|]),
-      false,
+  ->labelAddPredicate(
+      ~field="operation_group_hash",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|operationid|]),
     )
   ->setLimit(1000);
 
@@ -31,7 +49,11 @@ let getQueryForBakerInfo = (accountid: string) =>
       "staking_balance",
       "frozen_balance",
     ])
-  ->addPredicate("pkh", ConseiljsType.EQ, `Str([|accountid|]), false)
+  ->labelAddPredicate(
+      ~field="pkh",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|accountid|]),
+    )
   ->addOrdering("block_level", ConseiljsType.DESC)
   ->setLimit(1);
 
@@ -47,7 +69,11 @@ let getQueryForBlockLink = (id: string) =>
       "fee",
       "slots",
     ])
-  ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|id|]), false)
+  ->labelAddPredicate(
+      ~field="block_hash",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
   ->setLimit(1000);
 
 let getQueryForAccountSends = (id: string) =>
@@ -63,8 +89,16 @@ let getQueryForAccountSends = (id: string) =>
       "fee",
       "status",
     ])
-  ->addPredicate("source", ConseiljsType.EQ, `Str([|id|]), false)
-  ->addPredicate("kind", ConseiljsType.EQ, `Str([|"transaction"|]), false)
+  ->labelAddPredicate(
+      ~field="source",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"transaction"|]),
+    )
   ->setLimit(1000);
 
 let getQueryForAccountReceipts = (id: string) =>
@@ -80,8 +114,16 @@ let getQueryForAccountReceipts = (id: string) =>
       "fee",
       "status",
     ])
-  ->addPredicate("destination", ConseiljsType.EQ, `Str([|id|]), false)
-  ->addPredicate("kind", ConseiljsType.EQ, `Str([|"transaction"|]), false)
+  ->labelAddPredicate(
+      ~field="destination",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"transaction"|]),
+    )
   ->setLimit(1000);
 
 let getQueryForOtherOperations = (id: string) =>
@@ -96,12 +138,15 @@ let getQueryForOtherOperations = (id: string) =>
       "status",
       "originated_contracts",
     ])
-  ->addPredicate("source", ConseiljsType.EQ, `Str([|id|]), false)
-  ->addPredicate(
-      "kind",
-      ConseiljsType.IN,
-      `Str([|"reveal", "delegation", "origination"|]),
-      false,
+  ->labelAddPredicate(
+      ~field="source",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.IN,
+      ~aggrSetType=`Str([|"reveal", "delegation", "origination"|]),
     )
   ->setLimit(1000);
 
@@ -116,151 +161,204 @@ let getQueryForEndorsements = (id: string) =>
       "delegate",
       "slots",
     ])
-  ->addPredicate("delegate", ConseiljsType.EQ, `Str([|id|]), false)
-  ->addPredicate("kind", ConseiljsType.EQ, `Str([|"endorsement"|]), false)
+  ->labelAddPredicate(
+      ~field="delegate",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"endorsement"|]),
+    )
   ->setLimit(1000);
 
 let getQueryForBakedBlocks = (id: string) =>
   blankQuery()
   ->addFields(["timestamp", "hash", "level", "baker"])
-  ->addPredicate("baker", ConseiljsType.EQ, `Str([|id|]), false)
+  ->labelAddPredicate(
+      ~field="baker",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
   ->setLimit(1000);
 
 let getQueryForDepositsAndRewards = (id: string) =>
   blankQuery()
   ->addFields(["source_hash", "delegate", "category", "change"])
-  ->addPredicate("delegate", ConseiljsType.EQ, `Str([|id|]), false)
-  ->addPredicate("source", ConseiljsType.EQ, `Str([|"block"|]), false)
+  ->labelAddPredicate(
+      ~field="delegate",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|id|]),
+    )
+  ->labelAddPredicate(
+      ~field="source",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"block"|]),
+    )
   ->setLimit(1000);
 
 let getQueryForNumBlocks = (metaCycle: int, timeStamp: float) =>
   blankQuery()
   ->addFields(["hash"])
-  ->addPredicate("meta_cycle", ConseiljsType.EQ, `Int([|metaCycle|]), false)
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.BEFORE,
-      `Float([|timeStamp|]),
-      false,
+  ->labelAddPredicate(
+      ~field="meta_cycle",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Int([|metaCycle|]),
     )
-  ->ConseilQueryBuilder.addAggregationFunction("hash", ConseiljsType.COUNT);
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BEFORE,
+      ~aggrSetType=`Float([|timeStamp|]),
+    )
+  ->labelAddAggregationFunction(~field="hash", ~aggType=ConseiljsType.COUNT);
 
 let getQueryForTransactionStats = (timeStamp: float) =>
   blankQuery()
   ->addFields(["amount", "originated_contracts"])
-  ->addPredicate(
-      "kind",
-      ConseiljsType.IN,
-      `Str([|"transaction", "origination"|]),
-      false,
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.IN,
+      ~aggrSetType=`Str([|"transaction", "origination"|]),
     )
-  ->addPredicate("status", ConseiljsType.EQ, `Str([|"applied"|]), false)
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.AFTER,
-      `Float([|getTimeYesterday(timeStamp)|]),
-      false,
+  ->labelAddPredicate(
+      ~field="status",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"applied"|]),
     )
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.BEFORE,
-      `Float([|timeStamp|]),
-      false,
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.AFTER,
+      ~aggrSetType=`Float([|getTimeYesterday(timeStamp)|]),
     )
-  ->addAggregationFunction("originated_contracts", ConseiljsType.COUNT)
-  ->addAggregationFunction("amount", ConseiljsType.COUNT)
-  ->addAggregationFunction("amount", ConseiljsType.SUM);
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BEFORE,
+      ~aggrSetType=`Float([|timeStamp|]),
+    )
+  ->labelAddAggregationFunction(
+      ~field="originated_contracts",
+      ~aggType=ConseiljsType.COUNT,
+    )
+  ->labelAddAggregationFunction(~field="amount", ~aggType=ConseiljsType.COUNT)
+  ->labelAddAggregationFunction(~field="amount", ~aggType=ConseiljsType.SUM);
 
 let getQueryForFundraiserStats = (timeStamp: float) =>
   blankQuery()
   ->addFields(["kind"])
-  ->addPredicate(
-      "kind",
-      ConseiljsType.EQ,
-      `Str([|"activate_account"|]),
-      false,
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"activate_account"|]),
     )
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.AFTER,
-      `Float([|getTimeYesterday(timeStamp)|]),
-      false,
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.AFTER,
+      ~aggrSetType=`Float([|getTimeYesterday(timeStamp)|]),
     )
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.BEFORE,
-      `Float([|timeStamp|]),
-      false,
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BEFORE,
+      ~aggrSetType=`Float([|timeStamp|]),
     )
-  ->addAggregationFunction("kind", ConseiljsType.COUNT);
+  ->labelAddAggregationFunction(~field="kind", ~aggType=ConseiljsType.COUNT);
 
 let getQueryForTotalFundraiserActivated = () =>
   blankQuery()
   ->addFields(["kind"])
-  ->addPredicate(
-      "kind",
-      ConseiljsType.EQ,
-      `Str([|"activate_account"|]),
-      false,
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"activate_account"|]),
     )
-  ->addAggregationFunction("kind", ConseiljsType.COUNT);
+  ->labelAddAggregationFunction(~field="kind", ~aggType=ConseiljsType.COUNT);
 
 let getQueryForFeesStats = (timeStamp: float) =>
   blankQuery()
   ->addFields(["fee", "consumed_gas"])
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.AFTER,
-      `Float([|getTimeYesterday(timeStamp)|]),
-      false,
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.AFTER,
+      ~aggrSetType=`Float([|getTimeYesterday(timeStamp)|]),
     )
-  ->addPredicate(
-      "timestamp",
-      ConseiljsType.BEFORE,
-      `Float([|timeStamp|]),
-      false,
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BEFORE,
+      ~aggrSetType=`Float([|timeStamp|]),
     )
-  ->addAggregationFunction("fee", ConseiljsType.SUM)
-  ->addAggregationFunction("consumed_gas", ConseiljsType.SUM);
+  ->labelAddAggregationFunction(~field="fee", ~aggType=ConseiljsType.SUM)
+  ->labelAddAggregationFunction(
+      ~field="consumed_gas",
+      ~aggType=ConseiljsType.SUM,
+    );
 
 let getQueryForBakerStats = () =>
   blankQuery()
   ->addFields(["pkh", "staking_balance"])
-  ->addPredicate("deactivated", ConseiljsType.EQ, `Str([|"false"|]), false)
-  ->addAggregationFunction("pkh", ConseiljsType.COUNT)
-  ->addAggregationFunction("staking_balance", ConseiljsType.SUM);
+  ->labelAddPredicate(
+      ~field="deactivated",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"false"|]),
+    )
+  ->labelAddAggregationFunction(~field="pkh", ~aggType=ConseiljsType.COUNT)
+  ->labelAddAggregationFunction(
+      ~field="staking_balance",
+      ~aggType=ConseiljsType.SUM,
+    );
 
 let getQueryForMarketCap = () =>
   blankQuery()
   ->addFields(["balance"])
-  ->addAggregationFunction("balance", ConseiljsType.SUM);
+  ->labelAddAggregationFunction(~field="balance", ~aggType=ConseiljsType.SUM);
 
 let getQueryForProposalInfo = (cycle: int) =>
   blankQuery()
   ->addFields(["proposal", "operation_group_hash"])
-  ->addPredicate("cycle", ConseiljsType.EQ, `Int([|cycle|]), false)
-  ->addPredicate("proposal", ConseiljsType.ISNULL, `Str([|""|]), true)
-  ->addAggregationFunction("operation_group_hash", ConseiljsType.COUNT);
+  ->labelAddPredicate(
+      ~field="cycle",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Int([|cycle|]),
+    )
+  ->labelAddPredicate(
+      ~field="proposal",
+      ~type_=ConseiljsType.ISNULL,
+      ~aggrSetType=`Str([|""|]),
+    )
+  ->labelAddAggregationFunction(
+      ~field="operation_group_hash",
+      ~aggType=ConseiljsType.COUNT,
+    );
 
 let getQueryForTestingInfo = (cycle: int) =>
   blankQuery()
   ->addFields(["proposal_hash"])
-  ->addPredicate("cycle", ConseiljsType.EQ, `Int([|cycle|]), false);
+  ->labelAddPredicate(
+      ~field="cycle",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Int([|cycle|]),
+    );
 
 let getQueryForQuorum = (hash: string) =>
   blankQuery()
   ->addFields(["current_expected_quorum"])
-  ->addPredicate("hash", ConseiljsType.EQ, `Str([|hash|]), false);
+  ->labelAddPredicate(
+      ~field="hash",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|hash|]),
+    );
 
 let getQueryForVotingStats = (hash: string, propasal: string) =>
   blankQuery()
   ->addFields(["yay_rolls", "nay_rolls", "pass_rolls", "proposal_hash"])
-  ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|hash|]), false)
-  ->addPredicate(
-      "proposal_hash",
-      ConseiljsType.EQ,
-      `Str([|propasal|]),
-      false,
+  ->labelAddPredicate(
+      ~field="block_hash",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|hash|]),
+    )
+  ->labelAddPredicate(
+      ~field="proposal_hash",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|propasal|]),
     );
 
 let getQueryForBlocksTab = () =>
