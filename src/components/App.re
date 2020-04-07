@@ -79,9 +79,6 @@ let reducer = (state, action) =>
   | SetVoteInfo(voteinfo) => {...state, voteinfo}
   };
 
-// I'm not sure why the ref is even used here
-// both mutable variables should be defined as an immutable part of the component state, and change by state-related methods like to set from useState, or changes on reducer state
-// selectedConfig is already defined in reducer, maybe it would be better to reuse it or implement another reducer variable if it's required for state transition
 let selectedConfig = ref(0);
 
 [@react.component]
@@ -226,7 +223,6 @@ let make = () => {
       | Some(head) => getBlock(head##hash, false, true, 0)
       | None => dispatch(SetError(ErrMessage.noAvailable))
       };
-    // After refactoring getBlockHeadThunk we can remove Js.Promise oddity, and pipe callback
     ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
     ();
   };

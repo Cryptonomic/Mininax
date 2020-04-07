@@ -1,6 +1,5 @@
 [@bs.val] external btoa: string => string = "window.btoa";
 [@bs.val] external encodeURIComponent: string => string = "encodeURIComponent";
-// [@bs.scope "window"] [@bs.val]
 
 let convertNumberByIntl: (bool, int, int, float) => string = [%bs.raw
   {|
