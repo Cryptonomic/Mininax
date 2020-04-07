@@ -62,7 +62,6 @@ let formatString = (value, isConvert) => {
 
 let makeUrl = (network: string, entity: string, id: string) => "/" ++ network ++ "/" ++ entity ++ "/" ++ id;
 
-// It's a lot of code here, that actually might be moved to a file with constants
 let getFields = (~entity, ~kind=?, ()): array(MainType.field) => {
   switch (entity, kind) {
     | ("operation", Some("Transaction")) => [|
@@ -362,7 +361,6 @@ let getValueFromDict = (dict: Js.Dict.t(string), key_: string) => {
   };
 };
 
-// I think it would be better to crate binding for document methods instead of just using bs.raw to execude that code.
 let copyContent: (string) => unit = [%bs.raw {|
     function (value) {
       const textField = document.createElement("textarea");
@@ -374,7 +372,6 @@ let copyContent: (string) => unit = [%bs.raw {|
     }
   |}];
 
-// it's like bypassing type system. Is there a reason to not use tools like bs-json? It's more work but safer code
 let jsonConvertQuery: (ConseiljsType.conseilQuery) => string = [%bs.raw {|
     function (value) {
       return JSON.stringify(value)

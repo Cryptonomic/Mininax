@@ -1,44 +1,66 @@
-let applyTuple3 = (f, ~tuple) => {
-  let (x, y, z) = tuple;
-  f(x, y, z);
-};
+open Helpers;
 
-let applyQuery = (f, ~query) => f(query);
-let apply1 = (f, param) => f(param);
-let applyField = (f, ~field) => f(field);
-let toOption = value => Some(value);
-let toResult = value => Ok(value);
-let slice = (value: string, ~to_: int) =>
-  value |> Js.String.slice(~from=0, ~to_) |> Js.String.toLowerCase;
-
-let applyTuple3SkipSecond = (f, ~tuple) => {
-  let (x, _, z) = tuple;
-  f(x, z);
-};
-
-let labelExecuteEntityQuery = (info, platform, network, ~field, query) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery(
-    info,
-    platform,
-    network,
-    field,
-    query,
-  );
-
-let labelGetBlock = (conseilServerInfo, network, ~id) =>
-  ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id);
-
-let getBlockTotalsThunk = (~id: string, ~config: MainType.config) =>
-  labelExecuteEntityQuery(~field="operations")
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyQuery(~query=Queries.getQueryForBlockTotals(id))
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.flatMap(
-      fun
-      | Ok(totals) when totals |> Js.Array.length > 0 =>
-        Future.value(Some(totals[0]))
-      | _err => Future.value(None),
+module RerutningPromise = {
+  let labelExecuteEntityQuery = (info, platform, network, ~field, query) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery(
+      info,
+      platform,
+      network,
+      field,
+      query,
     );
+
+  let labelGetBlock = (conseilServerInfo, network, ~id) =>
+    ConseiljsRe.TezosConseilClient.getBlock(conseilServerInfo, network, id);
+
+  let getBlockTotalsThunk = (~id: string, ~config: MainType.config) =>
+    labelExecuteEntityQuery(~field="operations")
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyQuery(~query=Queries.getQueryForBlockTotals(id))
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.flatMap(
+        fun
+        | Ok(totals) when totals |> Js.Array.length > 0 =>
+          Future.value(Some(totals[0]))
+        | _err => Future.value(None),
+      );
+
+  let getBlockFromApi = (~id: string, ~config: MainType.config) =>
+    labelGetBlock(~id)
+    ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.flatMap(
+        fun
+        | Ok(block) => Future.value(Some(block))
+        | _err => Future.value(None),
+      );
+
+  let getAccountBakerThunk = (~id: string, ~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="delegates")
+    ->applyQuery(~query=Queries.getQueryForBakerInfo(id))
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.flatMap(
+        fun
+        | Ok(delegates) when delegates |> Js.Array.length > 0 =>
+          Future.value(Some(delegates[0]))
+        | _err => Future.value(None),
+      );
+
+  let getAccountFromApi = (~id: string, ~config: MainType.config) =>
+    ConseiljsRe.TezosConseilClient.getAccount
+    ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
+    ->apply1(id)
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.flatMap(
+        fun
+        | Ok(account) => Some(account) |> Future.value
+        | _err => None |> Future.value,
+      );
+};
+
+open RerutningPromise;
 
 let getBlockHeadThunk = (~callback, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getBlockHead
@@ -50,16 +72,6 @@ let getBlockHeadThunk = (~callback, ~config: MainType.config) =>
       | _err => None,
     )
   ->Future.get(callback);
-
-let getBlockFromApi = (~id: string, ~config: MainType.config) =>
-  labelGetBlock(~id)
-  ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.flatMap(
-      fun
-      | Ok(block) => Future.value(Some(block))
-      | _err => Future.value(None),
-    );
 
 let getBlockThunk = (~callback, ~id: string, ~config: MainType.config) =>
   Js.Promise.all2((
@@ -82,7 +94,6 @@ let getBlockThunk = (~callback, ~id: string, ~config: MainType.config) =>
     )
   ->Future.get(callback);
 
-// TODO Started here
 let getBlockHashThunk = (~callback, ~level: int, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getBlockByLevel
   ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
@@ -94,19 +105,6 @@ let getBlockHashThunk = (~callback, ~level: int, ~config: MainType.config) =>
       | _err => None,
     )
   ->Future.get(callback);
-
-let getAccountBakerThunk = (~id: string, ~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="delegates")
-  ->applyQuery(~query=Queries.getQueryForBakerInfo(id))
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.flatMap(
-      fun
-      | Ok(delegates) when delegates |> Js.Array.length > 0 =>
-        Future.value(Some(delegates[0]))
-      | _err => Future.value(None),
-    );
 
 let getOperationThunk = (~callback, ~id: string, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getOperations
@@ -121,17 +119,6 @@ let getOperationThunk = (~callback, ~id: string, ~config: MainType.config) =>
       | Error(e) => Error(e),
     )
   ->Future.get(callback);
-
-let getAccountFromApi = (~id: string, ~config: MainType.config) =>
-  ConseiljsRe.TezosConseilClient.getAccount
-  ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
-  ->apply1(id)
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.flatMap(
-      fun
-      | Ok(account) => Some(account) |> Future.value
-      | _err => None |> Future.value,
-    );
 
 let getAccountThunk = (~callback, ~id: string, ~config: MainType.config) =>
   Js.Promise.all2((
@@ -166,8 +153,6 @@ let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
       | _ => None |> Future.value,
     );
 
-// getQuorumInfoApi = blocks = getQueryForQuorum
-// getVotingStatsApi = governance = getQueryForVotingStats
 let getVoteInfoThunk =
     (
       ~callback,
@@ -234,13 +219,6 @@ let getProposalInfoThunk =
     )
   ->Future.get(callback);
 
-// getNumBlocksApi = blocks = Queries.getQueryForNumBlocks
-// getTransactionsApi = operations = getQueryForTransactionStats
-// getFundraiserApi = operations = getQueryForFundraiserStats
-// getTotalFundraiserApi = operations = getQueryForTotalFundraiserActivated
-// getFeesStatsApi = operations = getQueryForFeesStats
-// getBakersStatsApi = delegates = getQueryForBakerStats
-// getMarketCapApi = accounts = getQueryForMarketCap
 // TODO List is pretty bad idea of storing elements we'd like to use in specific order. Need to find a better way.
 let getBlockInfoThunk =
     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>

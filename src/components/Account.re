@@ -7,19 +7,11 @@ let make = (~items, ~goToDetail) => {
     Js.log2("level", level);
     ();
   };
-  /*
-     Let's see what happening in next two lines:
-     we have 2 variables that are assigned with every component rerender.
-     We don't need to run it with every rerender, so we can just wrap it with useState
-   */
   let (id, _) =
     React.useState(() => Utils.getValueFromDict(items, "account_id"));
   let (displayName, _) =
     React.useState(() => Utils.getDisplayName(configs[theme]));
 
-  // in all this functions we don't need to declare query
-  // also, functions are declared with every rerender. Potentially we can use useCallback, but as advised by React documentation,
-  // we should use it only if we had performance issue. It won't be the case in this exmaple.
   let onOpenAccountSends = _ev =>
     Queries.getQueryForAccountSends(id)
     ->Utils.openSharedUrl(displayName, "operations");
