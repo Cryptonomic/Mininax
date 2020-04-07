@@ -241,6 +241,7 @@ let getProposalInfoThunk =
 // getFeesStatsApi = operations = getQueryForFeesStats
 // getBakersStatsApi = delegates = getQueryForBakerStats
 // getMarketCapApi = accounts = getQueryForMarketCap
+// TODO List is pretty bad idea of storing elements we'd like to use in specific order. Need to find a better way.
 let getBlockInfoThunk =
     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
   Future.all([
@@ -282,30 +283,29 @@ let getBlockInfoThunk =
   ])
   ->Future.map(
       fun
-      | [
-          Some(res1),
-          Some(res2),
-          Some(res3),
-          Some(res4),
-          Some(res5),
-          Some(res6),
-          Some(res7),
-        ] => {
-          let newTransInfoObj = res1 |> Obj.magic;
+      | [res1, res2, res3, res4, res5, res6, res7] => {
+          res1 |> Js.log;
+          res2 |> Js.log;
+          res3 |> Js.log;
+          res4 |> Js.log;
+          res5 |> Js.log;
+          res6 |> Js.log;
+          res7 |> Js.log;
+          let newTransInfoObj = res2 |> Obj.magic;
           let newTranInfo: MainType.transInfo = {
             countOriginatedContracts:
               newTransInfoObj##count_originated_contracts,
             countAmount: newTransInfoObj##count_amount,
             sumAmount: newTransInfoObj##sum_amount,
           };
-          let newFundraiser = res2 |> Obj.magic;
-          let newTotalFundraiser = res3 |> Obj.magic;
-          let feesObj = res4 |> Obj.magic;
-          let bakersObj = res5 |> Obj.magic;
-          let marketObj = res6 |> Obj.magic;
+          let newFundraiser = res3 |> Obj.magic;
+          let newTotalFundraiser = res4 |> Obj.magic;
+          let feesObj = res5 |> Obj.magic;
+          let bakersObj = res6 |> Obj.magic;
+          let marketObj = res7 |> Obj.magic;
 
           let newBlockInfo: MainType.blockInfo = {
-            blockCount: (res7 |> Obj.magic)##count_hash,
+            blockCount: (res1 |> Obj.magic)##count_hash,
             fundraiserCount: newFundraiser##count_kind,
             totalFundraiserCount: newTotalFundraiser##count_kind,
             sum_fee: feesObj##sum_fee,
