@@ -1,17 +1,3 @@
-/*
-   I would like to discuss how the state is solved here. Overall I think it's okay while the application is small but might be problematic to scale. The same works for context.
-   The app file is a good place to implement a router. It gives as a straightforward solution to handle URL changes and clear separation of responsibilities.
- With router we have to separate part of App jsx as separate components and this leads to the problem with state management. While reducer + context is okay, it might be hard to scale. Personally I think that flux tools like reductive (reasonML version of redux) are a great way to handle state changes, implement multiple stores, move part of the logic to actions.
- It's not overkill, even for small applications, but at this point, it would involve a bit more refactoring so I just want to mention the possibility. Thanks to the hooks it allows us to use state everywhere in application easily.
-
- Examples:
-  - moving footer to separate file - cleaner App component
-  - moving all api calls to custom hook with actions - most code from App file would be moved to another file
-  - defining "routes" dir to handle "smart components" and keep general purpose stateless components in "components" dir - better separation of responsibilites between components
-
-  This futher would allow as to move bigger part of API calls to ApiCall file, extending how we pipe our data. API calls in this file depends on other functions and component state directly.
-  We would need to refactor code in a way to pass too many arguments into ApiCall functions. with custom action hook file and global state with flux it would be easier to handle.
-  */
 open MainType;
 open Configs;
 
@@ -86,13 +72,9 @@ let reducer = (state, action) =>
       isLoading: false,
     }
   | OpenNetwork(status) => {...state, isOpenNetworkSelector: status}
-  | SetLastBlock(lastBlock, blockinfo, transinfo) => {
-      ...state,
-      lastBlock,
-      transinfo,
-      blockinfo,
-      isLoading: false,
-    }
+  | SetLastBlock(lastBlock, blockinfo, transinfo) =>
+    Js.log(blockinfo);
+    {...state, lastBlock, transinfo, blockinfo, isLoading: false};
   | SetProposals(proposals) => {...state, proposals}
   | SetVoteInfo(voteinfo) => {...state, voteinfo}
   };
@@ -105,56 +87,42 @@ let selectedConfig = ref(0);
 [@react.component]
 let make = () => {
   let url = ReasonReactRouter.useUrl();
+  let (selectedConfig, setSelectedConfig) = React.useState(() => 0);
   let footerRef = ref(None);
   let (state, dispatch) = React.useReducer(reducer, initState);
 
-  let getProposalsInfo = (metaCycle: int) => {
+  let getProposalsInfo = (metaCycle: int) =>
     ApiCall.getProposalInfoThunk(
       ~metaCycle,
-      ~config=configs[selectedConfig^],
+      ~config=configs[selectedConfig],
       ~callback=
         fun
         | Some(proposals) => dispatch(SetProposals(proposals))
         | _ => dispatch(SetError(Utils.noAvailable)),
     );
-  };
 
-  let getVoteInfo = (hash: string, active_proposal: string) => {
-    Js.Promise.(
-      ApiCall.getVoteInfoThunk(
-        hash,
-        active_proposal,
-        configs[selectedConfig^],
-      )
-      |> then_(result =>
-           switch (result) {
-           | Some(voteinfo) => resolve(dispatch(SetVoteInfo(voteinfo)))
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
+  let getVoteInfo = (hash: string, active_proposal: string) =>
+    ApiCall.getVoteInfoThunk(
+      ~hash,
+      ~active_proposal,
+      ~config=configs[selectedConfig],
+      ~callback=
+        fun
+        | Some(voteinfo) => dispatch(SetVoteInfo(voteinfo))
+        | _ => dispatch(SetError(Utils.noAvailable)),
     );
-  };
 
-  let getBlockInfo = (block: ConseiljsType.tezosBlock) => {
-    Js.Promise.(
-      ApiCall.getBlockInfoThunk(
-        block##meta_cycle,
-        block##timestamp,
-        configs[selectedConfig^],
-      )
-      |> then_(result =>
-           switch (result) {
-           | (Some(blockinfo), Some(transinfo)) =>
-             resolve(dispatch(SetLastBlock(block, blockinfo, transinfo)))
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
+  let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
+    ApiCall.getBlockInfoThunk(
+      ~metaCycle=block##meta_cycle,
+      ~timestamp=block##timestamp,
+      ~config=configs[selectedConfig],
+      ~callback=
+        fun
+        | Some((blockinfo, transinfo)) =>
+          dispatch(SetLastBlock(block, blockinfo, transinfo))
+        | _ => dispatch(SetError(Utils.noAvailable)),
     );
-  };
 
   let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
     dispatch(SetLoading);
@@ -164,14 +132,14 @@ let make = () => {
         switch (isRoute, isMain, level) {
         | (true, false, 0) =>
           let url =
-            Utils.makeUrl(configs[selectedConfig^].network, "blocks", id);
+            Utils.makeUrl(configs[selectedConfig].network, "blocks", id);
           ReasonReactRouter.push(url);
           dispatch(SetBlock(block, id, false));
         | (true, false, _) =>
           let strLevel = string_of_int(level);
           let url =
             Utils.makeUrl(
-              configs[selectedConfig^].network,
+              configs[selectedConfig].network,
               "blocks",
               strLevel,
             );
@@ -189,82 +157,53 @@ let make = () => {
         }
       | Error(err) => dispatch(SetError(err))
       };
-    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig^]);
+    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig]);
   };
 
   let getOperation = (id: string, isRoute: bool) => {
     dispatch(SetLoading);
-    Js.Promise.(
-      ApiCall.getOperationThunk(id, configs[selectedConfig^])
-      |> then_(result => {
-           switch (result) {
-           | ("Error", Some(error), _) =>
-             resolve(dispatch(SetError(error)))
-           | ("Valid", _, Some(operations)) =>
-             isRoute
-               ? {
-                 let url =
-                   Utils.makeUrl(
-                     configs[selectedConfig^].network,
-                     "operations",
-                     id,
-                   );
-                 ReasonReactRouter.push(url);
-                 resolve(dispatch(SetOperations(operations, id)));
-               }
-               : resolve(dispatch(SetOperations(operations, id)))
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         })
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
+    ApiCall.getOperationThunk(
+      ~id,
+      ~config=configs[selectedConfig],
+      ~callback=
+        fun
+        | Ok(operations) when isRoute == true => {
+            Utils.makeUrl(configs[selectedConfig].network, "operations", id)
+            |> ReasonReactRouter.push;
+            dispatch(SetOperations(operations, id));
+          }
+        | Ok(operations) => dispatch(SetOperations(operations, id))
+        | Error(err) => dispatch(SetError(err)),
     );
   };
 
   let getAccount = (id: string, isRoute: bool) => {
     dispatch(SetLoading);
-    Js.Promise.(
-      ApiCall.getAccountThunk(id, configs[selectedConfig^])
-      |> then_(result => {
-           switch (result) {
-           | ("Error", Some(error), _) =>
-             resolve(dispatch(SetError(error)))
-           | ("Valid", _, Some(account)) =>
-             isRoute
-               ? {
-                 let url =
-                   Utils.makeUrl(
-                     configs[selectedConfig^].network,
-                     "accounts",
-                     id,
-                   );
-                 ReasonReactRouter.push(url);
-                 resolve(dispatch(SetAccount(account, id)));
-               }
-               : resolve(dispatch(SetAccount(account, id)))
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         })
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
+    ApiCall.getAccountThunk(
+      ~id,
+      ~config=configs[selectedConfig],
+      ~callback=
+        fun
+        | Ok(account) when isRoute => {
+            Utils.makeUrl(configs[selectedConfig].network, "accounts", id)
+            |> ReasonReactRouter.push;
+            dispatch(SetAccount(account, id));
+          }
+        | Ok(account) => dispatch(SetAccount(account, id))
+        | Error(err) => dispatch(SetError(err)),
     );
   };
 
   let getHashByLevel = (level: int, isMain: bool) => {
     dispatch(SetLoading);
-    Js.Promise.(
-      ApiCall.getBlockHashThunk(level, configs[selectedConfig^])
-      |> then_(result =>
-           switch (result, isMain) {
-           | (Some(head), true) =>
-             resolve(getBlock(head##hash, false, true, level))
-           | (Some(head), false) =>
-             resolve(getBlock(head##hash, true, false, level))
-           | _ => resolve(dispatch(SetError(Utils.noAvailable)))
-           }
-         )
-      |> catch(_err => resolve(dispatch(SetError(Utils.noAvailable))))
-      |> ignore
+    ApiCall.getBlockHashThunk(
+      ~level,
+      ~config=configs[selectedConfig],
+      ~callback=
+        fun
+        | Some(head) when isMain => getBlock(head##hash, false, true, level)
+        | Some(head) => getBlock(head##hash, true, false, level)
+        | _err => dispatch(SetError(Utils.noAvailable)),
     );
   };
 
@@ -276,13 +215,13 @@ let make = () => {
       | None => dispatch(SetError(Utils.noAvailable))
       };
     // After refactoring getBlockHeadThunk we can remove Js.Promise oddity, and pipe callback
-    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig^]);
+    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
     ();
   };
 
   let goToMainPage = () => {
     getMainPage();
-    ReasonReactRouter.push("/" ++ configs[selectedConfig^].network);
+    ReasonReactRouter.push("/" ++ configs[selectedConfig].network);
   };
 
   let goToNetwork = network => {
@@ -292,7 +231,7 @@ let make = () => {
     | (-1) => goToMainPage()
     | _ =>
       dispatch(ChangeNetwork(selectedIndex));
-      selectedConfig := selectedIndex;
+      setSelectedConfig(_old => selectedIndex);
       getMainPage();
     };
   };
@@ -305,7 +244,7 @@ let make = () => {
     | (-1) => goToMainPage()
     | _ =>
       dispatch(ChangeNetwork(selectedIndex));
-      selectedConfig := selectedIndex;
+      setSelectedConfig(_old => selectedIndex);
       switch (entity, isNumber) {
       | ("blocks", false) => getBlock(id, false, false, 0)
       | ("blocks", true) => getHashByLevel(id |> int_of_string, false)
@@ -371,7 +310,7 @@ let make = () => {
   let onChangeNetwork = (index: int) =>
     if (state.selectedConfig !== index) {
       dispatch(ChangeNetwork(index));
-      selectedConfig := index;
+      setSelectedConfig(_old => index);
       goToMainPage();
     } else {
       dispatch(OpenNetwork(false));

@@ -242,20 +242,20 @@ let getProposalInfoThunk =
 // getBakersStatsApi = delegates = getQueryForBakerStats
 // getMarketCapApi = accounts = getQueryForMarketCap
 let getBlockInfoThunk =
-    (~callback, ~metaCycle: int, ~timeStamp: float, ~config: MainType.config) =>
+    (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
   Future.all([
     getForQueryApi(
-      ~query=Queries.getQueryForNumBlocks(metaCycle, timeStamp),
+      ~query=Queries.getQueryForNumBlocks(metaCycle, timestamp),
       ~field="blocks",
       ~config,
     ),
     getForQueryApi(
-      ~query=Queries.getQueryForTransactionStats(timeStamp),
+      ~query=Queries.getQueryForTransactionStats(timestamp),
       ~field="operations",
       ~config,
     ),
     getForQueryApi(
-      ~query=Queries.getQueryForFundraiserStats(timeStamp),
+      ~query=Queries.getQueryForFundraiserStats(timestamp),
       ~field="operations",
       ~config,
     ),
@@ -265,7 +265,7 @@ let getBlockInfoThunk =
       ~config,
     ),
     getForQueryApi(
-      ~query=Queries.getQueryForFeesStats(timeStamp),
+      ~query=Queries.getQueryForFeesStats(timestamp),
       ~field="operations",
       ~config,
     ),
