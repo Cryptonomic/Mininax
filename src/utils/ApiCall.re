@@ -284,13 +284,6 @@ let getBlockInfoThunk =
   ->Future.map(
       fun
       | [res1, res2, res3, res4, res5, res6, res7] => {
-          res1 |> Js.log;
-          res2 |> Js.log;
-          res3 |> Js.log;
-          res4 |> Js.log;
-          res5 |> Js.log;
-          res6 |> Js.log;
-          res7 |> Js.log;
           let newTransInfoObj = res2 |> Obj.magic;
           let newTranInfo: MainType.transInfo = {
             countOriginatedContracts:
