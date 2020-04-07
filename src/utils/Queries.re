@@ -1,34 +1,3 @@
-/*
-   The main problem in this file is code repetition.
-   If we examine all functions they have a very similar pattern:
-   1. create an empty query
-   2. execute ConseilQueryBuilder function where a query is always passed as the first parameter
-   return last ConseilQueryBuilder result
-   Also, other similarities:
-   - all functions produce a blank query
-   - addFields always accept the same type: list(string)
-   - addPredicate always use query as the first argument,  ConseiljsType variant as third, and false bool as last
-   - addAggregationFunction always use query as first argument a field name as second and SUM or COUNT variant as last
-
-   What we are going to do:
-     Pipe all data through ConseilQueryBuilder methods to simplify code
-     At the moment there are a lot of variables declaration and shadowing (query variable redeclaration).
-     We declare variables only to pass them as parameters. They are extra text that makes code a bit less readable.
-     Also thanks to pipe operators: pipe-last `|>` & pipe-frist `->` we are able to simplify functions body in that way
-     let simple_fun = param => createEmptyQuery -> operation1 -> operation 2 -> operation3;
-     It let us focus on how we are going to process our data instead of folowing which variables went where.
-    Why are we going to do that?
-    It will make code cleaner and help to focus on processing data instead of redeclaring variables.
-
-   Important:
-   - Pipes:
-   More idiomatic for ReasonML (from Ocaml perspective) is `|>` pipe-last. It applies value as the last argument to a piped function
-   Havely used by BuckleScript is `->` pipe-first. It applies value as the first argument to piped function
-   While handling BuckleScript related code we should use `->` pipe, in other custom functions we rather should use `|>` pipe last. In our case because unlabeled ConseiljsRe API we going to use `->` more.
-   - Labels:
-   It's good practice and highly recommended to label positional parameters and JS binding. Labels are not only important as descriptive part of code
-   While ConseiljsRe doesn't provide a function with labels we have to deal with the partial application a bit different way. See QueriesPlus.re file for more details
- */
 open ConseiljsRe;
 // while this module mostly reuse ConseilQueryBuilder functionality it would save a lot of space opening module here
 open ConseiljsRe.ConseilQueryBuilder;
@@ -36,18 +5,11 @@ open ConseiljsRe.ConseilQueryBuilder;
 let oneDayMillis = 86400000.0;
 let getTimeYesterday = (nowTime: float) => nowTime -. oneDayMillis;
 
-// by removing all variables from function and defining flow via pipe (piper first in this example) we can achive much cleaner code
-// isn't it easier to understand what happening with query, is it?
 let getQueryForBlockTotals = (blockid: string) =>
-  // We're creating query
   blankQuery()
-  // adding fields to it
   ->addFields(["block_hash", "amount", "fee"])
-  // adding predicate to field
   ->addPredicate("block_hash", ConseiljsType.EQ, `Str([|blockid|]), false)
-  // adinng aggregation to field
   ->addAggregationFunction("fee", ConseiljsType.SUM)
-  // ading aggregation to another field
   ->addAggregationFunction("amount", ConseiljsType.SUM);
 
 let getQueryForOperations = (operationid: string) =>
