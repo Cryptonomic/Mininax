@@ -333,18 +333,21 @@ let make = () => {
     None;
   });
 
+  let onKeyPress =
+    React.useCallback0(event =>
+      switch (event |> ReactEvent.Keyboard.key) {
+      | "s"
+      | "S" => setFocusOfSearch()
+      | _ => ignore()
+      }
+    );
+
   <ReactIntl.IntlProvider>
     <ContextProvider value={state.selectedConfig}>
       <div
         className={Styles.container(state.selectedConfig)}
         tabIndex=0
-        onKeyPress={event =>
-          switch (event |> ReactEvent.Keyboard.key) {
-          | "s"
-          | "S" => setFocusOfSearch()
-          | _ => ignore()
-          }
-        }>
+        onKeyPress>
         <div className=Styles.container1>
           <div className=Styles.header>
             <div className=Styles.headerTitle onClick={_ => goToMainPage()}>
@@ -383,20 +386,17 @@ let make = () => {
             onSearch={_ => onSearchById(state.id)}
             onOpenNetworkSelector={_ => dispatch(OpenNetwork(true))}
           />
-          {state.isLoading ? <Loader /> : ReasonReact.null}
-          {state.isError
-             ? <Error
-                 error={state.error}
-                 onTry={_ => dispatch(RemoveError)}
-               />
-             : ReasonReact.null}
-          {state.isOpenNetworkSelector
-             ? <NetworkSelector
-                 selectedIndex={state.selectedConfig}
-                 onChange=onChangeNetwork
-                 onCancel={_ => dispatch(OpenNetwork(false))}
-               />
-             : ReasonReact.null}
+          <If validator={state.isLoading}> <Loader /> </If>
+          <If validator={state.isError}>
+            <Error error={state.error} onTry={_ => dispatch(RemoveError)} />
+          </If>
+          <If validator={state.isOpenNetworkSelector}>
+            <NetworkSelector
+              selectedIndex={state.selectedConfig}
+              onChange=onChangeNetwork
+              onCancel={_ => dispatch(OpenNetwork(false))}
+            />
+          </If>
         </div>
       </div>
     </ContextProvider>
