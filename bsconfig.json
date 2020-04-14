@@ -8,7 +8,8 @@
     "subdirs": [
       "components",
       "utils",
-      "styles"
+      "styles",
+      "store"
     ]
   },
   "package-specs": [
@@ -26,7 +27,8 @@
     "bs-css",
     "bs-css-emotion",
     "bs-react-intl",
-    "bs-moment"
+    "bs-moment",
+    "reductive"
   ],
   "refmt": 3
 }
