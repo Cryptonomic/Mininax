@@ -80,43 +80,6 @@ type state = {
   proposals: array(proposalInfo)
 };
 
-let initState = {
-  entity: "",
-  id: "",
-  isLoading: false,
-  selectedConfig: 0,
-  isOpenNetworkSelector: false,
-  isError: false,
-  error: "",
-  block: Js.Dict.empty(),
-  account: Js.Dict.empty(),
-  operation: [||],
-  lastBlock: Js.Obj.empty(), 
-  transinfo: {
-    countOriginatedContracts: "0",
-    countAmount: "0",
-    sumAmount: 0
-  }, 
-  blockinfo: {
-    blockCount: 0,
-    fundraiserCount: "0",
-    totalFundraiserCount: "0",
-    sum_fee: 0,
-    sum_consumed_gas: 0, 
-    num_bakers: "0", 
-    bakers_sum_staking_balance: 0.0, 
-    totalTez: 0.0
-  }, 
-  voteinfo: {
-    yay_rolls: 0,
-    nay_rolls: 0,
-    pass_rolls: 0,
-    proposal_hash: "", 
-    current_expected_quorum: 0
-  }, 
-  proposals: [||]
-};
-
 type action =
   | SetId(string)
   | SetLoading

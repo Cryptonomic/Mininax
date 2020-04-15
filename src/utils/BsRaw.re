@@ -1,6 +1,8 @@
 [@bs.val] external btoa: string => string = "window.btoa";
 [@bs.val] external encodeURIComponent: string => string = "encodeURIComponent";
 
+[@bs.module] external copyYellow: string = "../assets/images/copy-yellow.svg";
+
 let convertNumberByIntl: (bool, int, int, float) => string = [%bs.raw
   {|
     function (useGrouping, minimumFractionDigits, maximumFractionDigits, value) {

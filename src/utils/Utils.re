@@ -117,3 +117,8 @@ let getBlocksPerCycle = (network: string) =>
   | "zeronet" => 128
   | _ => 0
   };
+
+let openTelegramBot = (address: string) => {
+  let newUrl = "https://t.me/TezosNotifierBot?start=mininax_" ++ address;
+  open_(newUrl, "_blank");
+};

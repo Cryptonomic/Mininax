@@ -1,93 +1,11 @@
-open MainType;
 open Configs;
+open GlobalStore;
 
-module Styles = {
-  open Css;
-  let container = index =>
-    style([
-      width(pct(100.)),
-      height(pct(100.)),
-      minHeight(vh(100.)),
-      padding4(~top=px(45), ~bottom=px(45), ~left=px(35), ~right=px(35)),
-      backgroundColor(hex(Themes.themes[index].mainBgColor)),
-    ]);
-  let container1 =
-    style([
-      width(pct(100.)),
-      height(pct(100.)),
-      marginLeft(`auto),
-      marginRight(`auto),
-      maxWidth(px(1510)),
-      display(flexBox),
-      flexDirection(column),
-    ]);
-  let header =
-    style([
-      padding4(~top=px(0), ~bottom=px(30), ~left=px(10), ~right=px(10)),
-    ]);
-  let headerTitle =
-    style([
-      fontFamily(`custom("'Arcade', sans-serif")),
-      fontSize(px(60)),
-      color(white),
-      lineHeight(px(35)),
-      letterSpacing(px(3)),
-      cursor(`pointer),
-      display(inlineBlock),
-    ]);
-  let mainContainer = style([flex(`num(1.)), marginBottom(px(57))]);
-};
+let selector = ( state: MainType.state ) => state.selectedConfig;
 
-let reducer = (state, action) =>
-  switch (action) {
-  | SetId(id) => {...state, id}
-  | SetLoading => {...state, isLoading: true}
-  | ChangeNetwork(config) => {
-      ...state,
-      selectedConfig: config,
-      isOpenNetworkSelector: false,
-    }
-  | SetParams(entity, id) => {...state, entity, id}
-  | SetError(error) => {...state, error, isError: true, isLoading: false}
-  | RemoveError => {...state, error: "", isError: false, isLoading: false}
-  | SetBlock(block, id, isLoading) => {
-      ...state,
-      block,
-      entity: "blocks",
-      id,
-      isLoading,
-    }
-  | SetAccount(account, id) => {
-      ...state,
-      account,
-      entity: "accounts",
-      id,
-      isLoading: false,
-    }
-  | SetOperations(operation, id) => {
-      ...state,
-      operation,
-      entity: "operations",
-      id,
-      isLoading: false,
-    }
-  | OpenNetwork(status) => {...state, isOpenNetworkSelector: status}
-  | SetLastBlock(lastBlock, blockinfo, transinfo) =>
-    Js.log(blockinfo);
-    {...state, lastBlock, transinfo, blockinfo, isLoading: false};
-  | SetProposals(proposals) => {...state, proposals}
-  | SetVoteInfo(voteinfo) => {...state, voteinfo}
-  };
-
-let selectedConfig = ref(0);
-
-[@react.component]
-let make = () => {
-  let url = ReasonReactRouter.useUrl();
-  let (selectedConfig, setSelectedConfig) = React.useState(() => 0);
-  let footerRef = ref(None);
-  let (state, dispatch) = React.useReducer(reducer, initState);
-
+module Make = (()) => {
+  let dispatch = AppStore.useDispatch();
+  let selectedConfig = AppStore.useSelector(selector);
   let getProposalsInfo = (metaCycle: int) =>
     ApiCall.getProposalInfoThunk(
       ~metaCycle,
@@ -158,7 +76,11 @@ let make = () => {
         }
       | Error(err) => dispatch(SetError(err))
       };
-    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig]);
+    ApiCall.getBlockThunk(
+      ~callback,
+      ~id,
+      ~config=configs[selectedConfig],
+    );
   };
 
   let getOperation = (id: string, isRoute: bool) => {
@@ -203,7 +125,7 @@ let make = () => {
     );
   };
 
-  let getHashByLevel = (level: int, isMain: bool) => {
+  let getHashByLevel = (level: int, ~isMain: bool) => {
     dispatch(SetLoading);
     ApiCall.getBlockHashThunk(
       ~level,
@@ -223,7 +145,10 @@ let make = () => {
       | Some(head) => getBlock(head##hash, false, true, 0)
       | None => dispatch(SetError(ErrMessage.noAvailable))
       };
-    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
+    ApiCall.getBlockHeadThunk(
+      ~callback,
+      ~config=configs[selectedConfig],
+    );
     ();
   };
 
@@ -234,25 +159,31 @@ let make = () => {
 
   let goToNetwork = network => {
     let selectedIndex =
-      configs |> Js.Array.findIndex(conf => conf.network === network);
+      configs
+      |> Js.Array.findIndex((conf: MainType.config) =>
+           conf.network === network
+         );
     switch (selectedIndex) {
     | (-1) => goToMainPage()
     | _ =>
       dispatch(ChangeNetwork(selectedIndex));
-      setSelectedConfig(_old => selectedIndex);
+      //   setSelectedConfig(_old => selectedIndex);
       getMainPage();
     };
   };
 
   let goToPage = (network: string, entity: string, id: string) => {
     let selectedIndex =
-      configs |> Js.Array.findIndex(conf => conf.network === network);
+      configs
+      |> Js.Array.findIndex((conf: MainType.config) =>
+           conf.network === network
+         );
     let isNumber = id |> Utils.isNumber;
     switch (selectedIndex) {
     | (-1) => goToMainPage()
     | _ =>
       dispatch(ChangeNetwork(selectedIndex));
-      setSelectedConfig(_old => selectedIndex);
+      //   setSelectedConfig(_old => selectedIndex);
       switch (entity, isNumber) {
       | ("blocks", false) => getBlock(id, false, false, 0)
       | ("blocks", true) => getHashByLevel(id |> int_of_string, false)
@@ -263,12 +194,8 @@ let make = () => {
     };
   };
 
-  let setFooterRef = ref => {
-    footerRef := Js.Nullable.toOption(ref);
-  };
-
-  let setFocusOfSearch = () => {
-    switch (footerRef^) {
+  let setFocusOfSearch = footerRef => {
+    switch (footerRef) {
     | Some(el) =>
       let _ =
         Js.Global.setTimeout(
@@ -283,6 +210,7 @@ let make = () => {
     | None => ignore()
     };
   };
+
   let onChangeId = id => {
     let newId = id |> Js.String.replaceByRe([%re "/ /g"], "");
     dispatch(SetId(newId));
@@ -316,89 +244,11 @@ let make = () => {
   };
 
   let onChangeNetwork = (index: int) =>
-    if (state.selectedConfig !== index) {
+    if (selectedConfig !== index) {
       dispatch(ChangeNetwork(index));
-      setSelectedConfig(_old => index);
+      //   setSelectedConfig(_old => index);
       goToMainPage();
     } else {
       dispatch(OpenNetwork(false));
     };
-
-  React.useEffect0(() => {
-    switch (url.path) {
-    | [network, entity, id] => goToPage(network, entity, id)
-    | [network] => goToNetwork(network)
-    | _ => goToMainPage()
-    };
-    None;
-  });
-
-  <ReactIntl.IntlProvider>
-    <ContextProvider value={state.selectedConfig}>
-      <div
-        className={Styles.container(state.selectedConfig)}
-        tabIndex=0
-        onKeyPress={event =>
-          switch (event |> ReactEvent.Keyboard.key) {
-          | "s"
-          | "S" => setFocusOfSearch()
-          | _ => ignore()
-          }
-        }>
-        <div className=Styles.container1>
-          <div className=Styles.header>
-            <div className=Styles.headerTitle onClick={_ => goToMainPage()}>
-              {ReasonReact.string("MININAX")}
-            </div>
-          </div>
-          <div className=Styles.mainContainer>
-            {switch (url.path) {
-             | [_, "accounts", _] =>
-               <Account items={state.account} goToDetail=onSearchById />
-             | [_, "operations", _] =>
-               <Operation items={state.operation} goToDetail=onSearchById />
-             | [_, "blocks", _] =>
-               <Block
-                 items={state.block}
-                 goToDetail=onSearchById
-                 changeLevel={level => getHashByLevel(level, false)}
-               />
-             | _ =>
-               <Dashboard
-                 items={state.lastBlock}
-                 blockinfo={state.blockinfo}
-                 transinfo={state.transinfo}
-                 voteinfo={state.voteinfo}
-                 proposals={state.proposals}
-                 onSearch={val_ => onSearchMain(val_)}
-                 changeLevel={level => getHashByLevel(level, true)}
-               />
-             }}
-          </div>
-          <Footer
-            searchVal={state.id}
-            network={configs[state.selectedConfig].displayName}
-            setRef=setFooterRef
-            changeId=onChangeId
-            onSearch={_ => onSearchById(state.id)}
-            onOpenNetworkSelector={_ => dispatch(OpenNetwork(true))}
-          />
-          {state.isLoading ? <Loader /> : ReasonReact.null}
-          {state.isError
-             ? <Error
-                 error={state.error}
-                 onTry={_ => dispatch(RemoveError)}
-               />
-             : ReasonReact.null}
-          {state.isOpenNetworkSelector
-             ? <NetworkSelector
-                 selectedIndex={state.selectedConfig}
-                 onChange=onChangeNetwork
-                 onCancel={_ => dispatch(OpenNetwork(false))}
-               />
-             : ReasonReact.null}
-        </div>
-      </div>
-    </ContextProvider>
-  </ReactIntl.IntlProvider>;
 };
