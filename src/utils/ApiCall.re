@@ -1,6 +1,6 @@
 open Helpers;
 
-module RerutningPromise = {
+module ReturningPromise = {
   let labelExecuteEntityQuery = (info, platform, network, ~field, query) =>
     ConseiljsRe.ConseilDataClient.executeEntityQuery(
       info,
@@ -60,7 +60,7 @@ module RerutningPromise = {
       );
 };
 
-open RerutningPromise;
+open ReturningPromise;
 
 let getBlockHeadThunk = (~callback, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getBlockHead
