@@ -9,7 +9,8 @@
       "components",
       "utils",
       "styles",
-      "store"
+      "store",
+      "routes"
     ]
   },
   "package-specs": [

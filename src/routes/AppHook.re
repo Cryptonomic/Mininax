@@ -125,7 +125,7 @@ module Make = (()) => {
     );
   };
 
-  let getHashByLevel = (level: int, isMain: bool) => {
+  let getHashByLevel = (level: int, ~isMain: bool) => {
     dispatch(SetLoading);
     ApiCall.getBlockHashThunk(
       ~level,

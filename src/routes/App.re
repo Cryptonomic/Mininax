@@ -1,9 +1,11 @@
+[@bs.scope "document"] [@bs.val]
+external activeElement: Dom.element = "activeElement";
 open GlobalStore;
 open Configs;
 
 let selector = state => state;
 
-module Styles = {
+module Style = {
   open Css;
   let container = index =>
     style([
@@ -37,29 +39,32 @@ module Styles = {
       cursor(`pointer),
       display(inlineBlock),
     ]);
-  let mainContainer = style([flex(`num(1.)), marginBottom(px(57))]);
 };
-
-let selectedConfig = ref(0);
 
 [@react.component]
 let make = () => {
   let url = ReasonReactRouter.useUrl();
   let state = AppStore.useSelector(selector);
-  let (footerRef, setFooterRef) = React.useState(() => None);
-  let changeFooterRef = ref =>
+  let (footerRef, setFooterRef) =
+    React.useState(() => (None: option(Dom.element)));
+  let changeFooterRef = ref => {
     setFooterRef(_old => Js.Nullable.toOption(ref));
+  };
   module UseApp =
     AppHook.Make({});
   open UseApp;
 
   let onKeyPress =
-    React.useCallback0(event =>
-      switch (event |> ReactEvent.Keyboard.key) {
-      | "s"
-      | "S" => setFocusOfSearch(footerRef)
-      | _ => ignore()
-      }
+    React.useCallback1(
+      event => {
+        switch (event |> ReactEvent.Keyboard.key, footerRef) {
+        | ("s", Some(x))
+        | ("S", Some(x)) when x !== activeElement =>
+          setFocusOfSearch(footerRef)
+        | _ => ignore()
+        }
+      },
+      [|footerRef|],
     );
 
   React.useEffect0(() => {
@@ -74,39 +79,16 @@ let make = () => {
   <ReactIntl.IntlProvider>
     <ContextProvider value={state.selectedConfig}>
       <div
-        className={Styles.container(state.selectedConfig)}
+        className={Style.container(state.selectedConfig)}
         tabIndex=0
         onKeyPress>
-        <div className=Styles.container1>
-          <div className=Styles.header>
-            <div className=Styles.headerTitle onClick={_ => goToMainPage()}>
+        <div className=Style.container1>
+          <div className=Style.header>
+            <div className=Style.headerTitle onClick={_ => goToMainPage()}>
               {ReasonReact.string("MININAX")}
             </div>
           </div>
-          <div className=Styles.mainContainer>
-            {switch (url.path) {
-             | [_, "accounts", _] =>
-               <Account items={state.account} goToDetail=onSearchById />
-             | [_, "operations", _] =>
-               <Operation items={state.operation} goToDetail=onSearchById />
-             | [_, "blocks", _] =>
-               <Block
-                 items={state.block}
-                 goToDetail=onSearchById
-                 changeLevel={level => getHashByLevel(level, false)}
-               />
-             | _ =>
-               <Dashboard
-                 items={state.lastBlock}
-                 blockinfo={state.blockinfo}
-                 transinfo={state.transinfo}
-                 voteinfo={state.voteinfo}
-                 proposals={state.proposals}
-                 onSearch={val_ => onSearchMain(val_)}
-                 changeLevel={level => getHashByLevel(level, true)}
-               />
-             }}
-          </div>
+          <Router />
           <Footer
             searchVal={state.id}
             network={configs[state.selectedConfig].displayName}
