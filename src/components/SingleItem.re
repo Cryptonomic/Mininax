@@ -158,15 +158,22 @@ let make =
         className={Style.linkContent(theme)}
         onClick={_ => goToDetail(fieldValue)}>
         {ReasonReact.string(displayValue)}
+        <If validator={field.showNotifierLink}>
+          <span onClick={_ => openTelegramBot(fieldValue)}>
+            <BellSvg />
+          </span>
+        </If>
       </div>
     </If>
     <If validator={field.isLink == false}>
       <div className={Style.fieldContent(theme)}>
         {ReasonReact.string(displayValue)}
+        <If validator={field.showNotifierLink}>
+          <span onClick={_ => openTelegramBot(fieldValue)}>
+            <BellSvg />
+          </span>
+        </If>
       </div>
-    </If>
-    <If validator={field.showNotifierLink}>
-      <span onClick={_ => openTelegramBot(fieldValue)}> <BellSvg /> </span>
     </If>
   </div>;
 };
