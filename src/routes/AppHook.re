@@ -1,7 +1,7 @@
 open Configs;
 open GlobalStore;
 
-let selector = ( state: MainType.state ) => state.selectedConfig;
+let selector = (state: MainType.state) => state.selectedConfig;
 
 module Make = (()) => {
   let dispatch = AppStore.useDispatch();
@@ -76,11 +76,7 @@ module Make = (()) => {
         }
       | Error(err) => dispatch(SetError(err))
       };
-    ApiCall.getBlockThunk(
-      ~callback,
-      ~id,
-      ~config=configs[selectedConfig],
-    );
+    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig]);
   };
 
   let getOperation = (id: string, isRoute: bool) => {
@@ -145,10 +141,7 @@ module Make = (()) => {
       | Some(head) => getBlock(head##hash, false, true, 0)
       | None => dispatch(SetError(ErrMessage.noAvailable))
       };
-    ApiCall.getBlockHeadThunk(
-      ~callback,
-      ~config=configs[selectedConfig],
-    );
+    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
     ();
   };
 
@@ -186,7 +179,8 @@ module Make = (()) => {
       //   setSelectedConfig(_old => selectedIndex);
       switch (entity, isNumber) {
       | ("blocks", false) => getBlock(id, false, false, 0)
-      | ("blocks", true) => getHashByLevel(id |> int_of_string, false)
+      | ("blocks", true) =>
+        getHashByLevel(id |> int_of_string, ~isMain=false)
       | ("accounts", false) => getAccount(id, false)
       | ("operations", false) => getOperation(id, false)
       | _ => goToMainPage()
@@ -227,7 +221,7 @@ module Make = (()) => {
     | ("o", _, _) => getOperation(id, true)
     | (_, "tz", _)
     | (_, "kt", _) => getAccount(id, true)
-    | (_, _, true) => getHashByLevel(id |> int_of_string, false)
+    | (_, _, true) => getHashByLevel(id |> int_of_string, ~isMain=false)
     | _ => dispatch(SetError(ErrMessage.invalidId))
     };
   };
@@ -238,7 +232,7 @@ module Make = (()) => {
     let isNumber = id |> Utils.isNumber;
     switch (firstChar, isNumber) {
     | ("b", _) => getBlock(id, true, true, 0)
-    | (_, true) => getHashByLevel(id |> int_of_string, true)
+    | (_, true) => getHashByLevel(id |> int_of_string, ~isMain=true)
     | _ => dispatch(SetError(ErrMessage.invalidId))
     };
   };
