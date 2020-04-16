@@ -1,26 +1,35 @@
-
 {
   "name": "mininax",
   "reason": {
     "react-jsx": 3
   },
   "sources": {
-    "dir" : "src",
-    "subdirs": ["components", "utils", "styles"]
+    "dir": "src",
+    "subdirs": [
+      "components",
+      "utils",
+      "styles",
+      "store",
+      "routes"
+    ]
   },
-  "package-specs": [{
-    "module": "es6",
-    "in-source": true
-  }],
+  "package-specs": [
+    {
+      "module": "es6",
+      "in-source": true
+    }
+  ],
   "suffix": ".bs.js",
   "namespace": true,
   "bs-dependencies": [
     "bs-conseiljs",
     "reason-react",
+    "reason-future",
     "bs-css",
     "bs-css-emotion",
     "bs-react-intl",
-    "bs-moment"
+    "bs-moment",
+    "reductive"
   ],
   "refmt": 3
 }
