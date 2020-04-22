@@ -1,7 +1,7 @@
 open Configs;
 open GlobalStore;
 
-let selector = ( state: MainType.state ) => state.selectedConfig;
+let selector = (state: MainType.state) => state.selectedConfig;
 
 module Make = (()) => {
   let dispatch = AppStore.useDispatch();
@@ -76,11 +76,7 @@ module Make = (()) => {
         }
       | Error(err) => dispatch(SetError(err))
       };
-    ApiCall.getBlockThunk(
-      ~callback,
-      ~id,
-      ~config=configs[selectedConfig],
-    );
+    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig]);
   };
 
   let getOperation = (id: string, isRoute: bool) => {
@@ -145,10 +141,7 @@ module Make = (()) => {
       | Some(head) => getBlock(head##hash, false, true, 0)
       | None => dispatch(SetError(ErrMessage.noAvailable))
       };
-    ApiCall.getBlockHeadThunk(
-      ~callback,
-      ~config=configs[selectedConfig],
-    );
+    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
     ();
   };
 
@@ -251,4 +244,17 @@ module Make = (()) => {
     } else {
       dispatch(OpenNetwork(false));
     };
+
+  let getLastDayTransactions = () => {
+    let endDate = Js.Date.make()->Js.Date.getTime;
+    let startDate = endDate -. 24. *. 60. *. 60. *. 1000.;
+    Js.log("1586836800000");
+    Js.log(startDate);
+    ApiCall.getLastDayTransactions(
+      ~config=configs[selectedConfig],
+      ~startDate,
+      ~endDate,
+    );
+    ();
+  };
 };

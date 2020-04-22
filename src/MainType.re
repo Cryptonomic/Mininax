@@ -94,3 +94,5 @@ type action =
   | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
   | SetProposals(array(proposalInfo))
   | SetVoteInfo(voteInfo);
+
+type transactionHash = {hash: int};

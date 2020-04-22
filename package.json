@@ -26,6 +26,7 @@
   "dependencies": {
     "bs-conseiljs": "git+https://github.com/Cryptonomic/ConseilJS-ReasonML-Bindings.git#272b594ec0f8ea47d784aec86a1e4a6bd3d2ec5d",
     "bs-css-emotion": "^1.1.0",
+    "@glennsl/bs-json": "^5.0.2",
     "bs-moment": "^0.4.5",
     "bs-react-intl": "1.0.0",
     "conseiljs": "0.4.0-alpha.2",
@@ -34,7 +35,7 @@
     "react-dom": "16.8.1",
     "react-intl": "3.0.0-beta-8",
     "reason-future": "^2.5.0",
-    "reason-react": "0.7.0",
+    "reason-react": "0.7.1",
     "reductive": "^2.0.1"
   },
   "devDependencies": {

@@ -291,3 +291,41 @@ let getBlockInfoThunk =
       | _ => None,
     )
   ->Future.get(callback);
+
+module Decode = {
+  let json_of_magic = magic => magic |> Obj.magic |> Js.Json.object_;
+  let hash = (json): MainType.transactionHash =>
+    Json.Decode.{
+      hash:
+        json
+        |> field("count_operation_group_hash", Json.Decode.string)
+        |> int_of_string,
+    };
+};
+
+let getLastDayTransactions =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="operations")
+  ->applyQuery(
+      ~query=Queries.getQueryForLastDayTransactions(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 => Some(value[0])
+      | _ => None,
+    )
+  ->Future.map(
+      fun
+      | Some(value) =>
+        value |> Decode.json_of_magic |> Decode.hash |> toOption
+      | _ => None,
+    )
+  ->Future.map(
+      fun
+      | Some(value) => Js.log3("--->", value, "<---")
+      | _ => Js.log("-->Nothing to parse<--"),
+    )
+  ->Future.get(_ => ());

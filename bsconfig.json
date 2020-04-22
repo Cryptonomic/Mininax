@@ -23,6 +23,7 @@
   "namespace": true,
   "bs-dependencies": [
     "bs-conseiljs",
+    "@glennsl/bs-json",
     "reason-react",
     "reason-future",
     "bs-css",

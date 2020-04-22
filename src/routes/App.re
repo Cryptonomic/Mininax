@@ -73,6 +73,7 @@ let make = () => {
     | [network] => goToNetwork(network)
     | _ => goToMainPage()
     };
+    getLastDayTransactions();
     None;
   });
 

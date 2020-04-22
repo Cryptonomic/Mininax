@@ -372,3 +372,22 @@ let getQueryForBlocksTab = () =>
       "priority",
     ])
   ->setLimit(1000);
+
+let getQueryForLastDayTransactions = (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields(["operation_group_hash"])
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"transaction"|]),
+    )
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddAggregationFunction(
+      ~field="operation_group_hash",
+      ~aggType=ConseiljsType.COUNT,
+    )
+  ->setLimit(1000);
