@@ -1,6 +1,7 @@
 open MainType;
 open Constants;
 open BsRaw;
+open MomentRe;
 
 [@bs.scope "window"] [@bs.val]
 external open_: (string, string) => unit = "open";
@@ -121,4 +122,18 @@ let getBlocksPerCycle = (network: string) =>
 let openTelegramBot = (address: string) => {
   let newUrl = "https://t.me/TezosNotifierBot?start=mininax_" ++ address;
   open_(newUrl, "_blank");
+};
+
+let getLastDayTime = () => {
+  let yestardayStart =
+    momentNow()
+    |> Moment.subtract(~duration=duration(1., `days))
+    |> Moment.startOf(`day)
+    |> Moment.valueOf;
+  let yestardayEnd =
+    momentNow()
+    |> Moment.subtract(~duration=duration(1., `days))
+    |> Moment.endOf(`day)
+    |> Moment.valueOf;
+  (yestardayStart, yestardayEnd);
 };

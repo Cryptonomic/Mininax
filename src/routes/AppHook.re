@@ -246,15 +246,16 @@ module Make = (()) => {
     };
 
   let getLastDayTransactions = () => {
-    let endDate = Js.Date.make()->Js.Date.getTime;
-    let startDate = endDate -. 24. *. 60. *. 60. *. 1000.;
-    Js.log("1586836800000");
-    Js.log(startDate);
+    let (yestardayStart, yestardayEnd) = Utils.getLastDayTime();
     ApiCall.getLastDayTransactions(
       ~config=configs[selectedConfig],
-      ~startDate,
-      ~endDate,
+      ~startDate=yestardayStart,
+      ~endDate=yestardayEnd,
+      ~callback=
+        fun
+        | Some(value) =>
+          dispatch(SetTransactionsCounter(value.countedTransactions))
+        | _ => (),
     );
-    ();
   };
 };

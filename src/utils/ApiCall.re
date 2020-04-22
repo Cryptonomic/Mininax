@@ -296,7 +296,7 @@ module Decode = {
   let json_of_magic = magic => magic |> Obj.magic |> Js.Json.object_;
   let hash = (json): MainType.transactionHash =>
     Json.Decode.{
-      hash:
+      countedTransactions:
         json
         |> field("count_operation_group_hash", Json.Decode.string)
         |> int_of_string,
@@ -304,7 +304,7 @@ module Decode = {
 };
 
 let getLastDayTransactions =
-    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+    (~callback, ~startDate: float, ~endDate: float, ~config: MainType.config) =>
   ConseiljsRe.ConseilDataClient.executeEntityQuery
   ->applyTuple3(~tuple=Utils.getInfo(config))
   ->applyField(~field="operations")
@@ -323,9 +323,4 @@ let getLastDayTransactions =
         value |> Decode.json_of_magic |> Decode.hash |> toOption
       | _ => None,
     )
-  ->Future.map(
-      fun
-      | Some(value) => Js.log3("--->", value, "<---")
-      | _ => Js.log("-->Nothing to parse<--"),
-    )
-  ->Future.get(_ => ());
+  ->Future.get(callback);

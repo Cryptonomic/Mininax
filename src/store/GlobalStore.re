@@ -12,6 +12,7 @@ let initState = {
   account: Js.Dict.empty(),
   operation: [||],
   lastBlock: Js.Obj.empty(),
+  transactionsCounter: 0,
   transinfo: {
     countOriginatedContracts: "0",
     countAmount: "0",
@@ -80,6 +81,10 @@ let globalReducer = (state, action) =>
     }
   | SetProposals(proposals) => {...state, proposals}
   | SetVoteInfo(voteinfo) => {...state, voteinfo}
+  | SetTransactionsCounter(transactionsCounter) => {
+      ...state,
+      transactionsCounter,
+    }
   };
 
 let globalStore =

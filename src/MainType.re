@@ -3,21 +3,22 @@ type config = {
   apiKey: string,
   platform: string,
   network: string,
-  displayName: string
+  displayName: string,
 };
 
 type field = {
   name: string,
   displayName: string,
   isLink: bool,
-  showNotifierLink: bool
+  showNotifierLink: bool,
 };
 
-type conseilServerInfo = Js.t({
-  . url: string,
-  apiKey: string,
-  network: string
-});
+type conseilServerInfo = {
+  .
+  "url": string,
+  "apiKey": string,
+  "network": string,
+};
 
 type theme = {
   mainBgColor: string,
@@ -28,38 +29,38 @@ type theme = {
   fontCol1: string,
   fontCol2: string,
   levelBgcol: string,
-  networkBgCol: string, 
-  networkShadowCol: string
+  networkBgCol: string,
+  networkShadowCol: string,
 };
 
 type transInfo = {
   countOriginatedContracts: string,
   countAmount: string,
-  sumAmount: int
-}
+  sumAmount: int,
+};
 
 type voteInfo = {
   yay_rolls: int,
   nay_rolls: int,
   pass_rolls: int,
-  proposal_hash: string, 
-  current_expected_quorum: int
-}
+  proposal_hash: string,
+  current_expected_quorum: int,
+};
 
 type blockInfo = {
   blockCount: int,
   fundraiserCount: string,
   totalFundraiserCount: string,
   sum_fee: int,
-  sum_consumed_gas: int, 
+  sum_consumed_gas: int,
   num_bakers: string,
   bakers_sum_staking_balance: float,
-  totalTez: float
-}
+  totalTez: float,
+};
 
 type proposalInfo = {
   count_operation_group_hash: string,
-  proposal: string
+  proposal: string,
 };
 
 type state = {
@@ -72,12 +73,13 @@ type state = {
   error: string,
   block: Js.Dict.t(string),
   account: Js.Dict.t(string),
-  operation: array(Js.Dict.t(string)), 
+  operation: array(Js.Dict.t(string)),
   lastBlock: ConseiljsType.tezosBlock,
+  transactionsCounter: int,
   transinfo: transInfo,
   blockinfo: blockInfo,
   voteinfo: voteInfo,
-  proposals: array(proposalInfo)
+  proposals: array(proposalInfo),
 };
 
 type action =
@@ -93,6 +95,7 @@ type action =
   | OpenNetwork(bool)
   | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
   | SetProposals(array(proposalInfo))
-  | SetVoteInfo(voteInfo);
+  | SetVoteInfo(voteInfo)
+  | SetTransactionsCounter(int);
 
-type transactionHash = {hash: int};
+type transactionHash = {countedTransactions: int};
