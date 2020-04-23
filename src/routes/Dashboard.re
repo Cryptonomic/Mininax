@@ -218,7 +218,7 @@ let make =
           <div className={Styles.content2(theme)}>
             {ReasonReact.string(string_of_int(totalTransactions))}
           </div>
-          {ReasonReact.string("  transactions was made.")}
+          {ReasonReact.string("  transactions were made.")}
         </div>
       </div>
       <div className=Styles.rightContainer>

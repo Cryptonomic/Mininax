@@ -30,6 +30,7 @@
     "bs-css-emotion",
     "bs-react-intl",
     "bs-moment",
+    "bs-moment-timezone",
     "reductive"
   ],
   "refmt": 3
