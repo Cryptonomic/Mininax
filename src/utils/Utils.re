@@ -125,16 +125,11 @@ let openTelegramBot = (address: string) => {
   open_(newUrl, "_blank");
 };
 
-let getLastDayTime = () => {
-  let yestardayStart =
+let getLast24h = () => {
+  let startTime =
     momentNow()
     |> Moment.subtract(~duration=duration(1., `days))
-    |> Moment.startOf(`day)
     |> Moment.valueOf;
-  let yestardayEnd =
-    momentNow()
-    |> Moment.subtract(~duration=duration(1., `days))
-    |> Moment.endOf(`day)
-    |> Moment.valueOf;
-  (yestardayStart, yestardayEnd);
+  let endTime = momentNow() |> Moment.valueOf;
+  (startTime, endTime);
 };

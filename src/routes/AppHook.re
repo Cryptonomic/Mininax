@@ -34,8 +34,14 @@ module Make = (()) => {
       ~config=configs[selectedConfig],
       ~callback=
         fun
-        | Some((blockinfo, transinfo)) =>
-          dispatch(SetLastBlock(block, blockinfo, transinfo))
+        | Some((blockinfo, transinfo, countedTransactions)) => {
+            dispatch(SetLastBlock(block, blockinfo, transinfo));
+            switch (countedTransactions) {
+            | Some(value) =>
+              dispatch(SetTransactionsCounter(value.countedTransactions))
+            | _ => ()
+            };
+          }
         | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );
 
@@ -179,7 +185,8 @@ module Make = (()) => {
       //   setSelectedConfig(_old => selectedIndex);
       switch (entity, isNumber) {
       | ("blocks", false) => getBlock(id, false, false, 0)
-      | ("blocks", true) => getHashByLevel(id |> int_of_string, false)
+      | ("blocks", true) =>
+        getHashByLevel(id |> int_of_string, ~isMain=false)
       | ("accounts", false) => getAccount(id, false)
       | ("operations", false) => getOperation(id, false)
       | _ => goToMainPage()
@@ -220,7 +227,7 @@ module Make = (()) => {
     | ("o", _, _) => getOperation(id, true)
     | (_, "tz", _)
     | (_, "kt", _) => getAccount(id, true)
-    | (_, _, true) => getHashByLevel(id |> int_of_string, false)
+    | (_, _, true) => getHashByLevel(id |> int_of_string, ~isMain=false)
     | _ => dispatch(SetError(ErrMessage.invalidId))
     };
   };
@@ -231,7 +238,7 @@ module Make = (()) => {
     let isNumber = id |> Utils.isNumber;
     switch (firstChar, isNumber) {
     | ("b", _) => getBlock(id, true, true, 0)
-    | (_, true) => getHashByLevel(id |> int_of_string, true)
+    | (_, true) => getHashByLevel(id |> int_of_string, ~isMain=true)
     | _ => dispatch(SetError(ErrMessage.invalidId))
     };
   };
@@ -244,18 +251,4 @@ module Make = (()) => {
     } else {
       dispatch(OpenNetwork(false));
     };
-
-  let getLastDayTransactions = () => {
-    let (yestardayStart, yestardayEnd) = Utils.getLastDayTime();
-    ApiCall.getLastDayTransactions(
-      ~config=configs[selectedConfig],
-      ~startDate=yestardayStart,
-      ~endDate=yestardayEnd,
-      ~callback=
-        fun
-        | Some(value) =>
-          dispatch(SetTransactionsCounter(value.countedTransactions))
-        | _ => (),
-    );
-  };
 };

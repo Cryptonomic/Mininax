@@ -220,6 +220,31 @@ let getProposalInfoThunk =
     )
   ->Future.get(callback);
 
+let getLastDayTransactions =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="operations")
+  ->applyQuery(
+      ~query=Queries.getQueryForLastDayTransactions(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.flatMap(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        Some(value[0]) |> Future.value
+      | _ => None |> Future.value,
+    );
+// ->Future.flatMap(
+//     fun
+//     | Some(value) =>
+//       value
+//       |> Decode.CountedTransactions.json_of_magic
+//       |> Decode.CountedTransactions.hash
+//       |> toOption
+//       |> Future.value
+//     | _ => None |> Future.value,
+//   );
 // TODO List is pretty bad idea of storing elements we'd like to use in specific order. Need to find a better way.
 let getBlockInfoThunk =
     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
@@ -259,10 +284,31 @@ let getBlockInfoThunk =
       ~field="accounts",
       ~config,
     ),
+    getLastDayTransactions(
+      ~startDate={
+        timestamp
+        |> MomentRe.momentWithTimestampMS
+        |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
+        |> MomentRe.Moment.valueOf;
+      },
+      ~endDate={
+        timestamp;
+      },
+      ~config,
+    ),
   ])
   ->Future.map(
       fun
-      | [res1, res2, res3, res4, res5, res6, res7] => {
+      | [res1, res2, res3, res4, res5, res6, res7, res8] => {
+          let countedTransactions =
+            switch (res8) {
+            | Some(value) =>
+              value
+              |> Decode.CountedTransactions.json_of_magic
+              |> Decode.CountedTransactions.hash
+              |> toOption
+            | None => None
+            };
           let newTransInfoObj = res2 |> Obj.magic;
           let newTranInfo: MainType.transInfo = {
             countOriginatedContracts:
@@ -286,41 +332,8 @@ let getBlockInfoThunk =
             bakers_sum_staking_balance: bakersObj##sum_staking_balance,
             totalTez: marketObj##sum_balance,
           };
-          Some((newBlockInfo, newTranInfo));
+          Some((newBlockInfo, newTranInfo, countedTransactions));
         }
-      | _ => None,
-    )
-  ->Future.get(callback);
-
-module Decode = {
-  let json_of_magic = magic => magic |> Obj.magic |> Js.Json.object_;
-  let hash = (json): MainType.transactionHash =>
-    Json.Decode.{
-      countedTransactions:
-        json
-        |> field("count_operation_group_hash", Json.Decode.string)
-        |> int_of_string,
-    };
-};
-
-let getLastDayTransactions =
-    (~callback, ~startDate: float, ~endDate: float, ~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="operations")
-  ->applyQuery(
-      ~query=Queries.getQueryForLastDayTransactions(startDate, endDate),
-    )
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok(value) when value |> Array.length > 0 => Some(value[0])
-      | _ => None,
-    )
-  ->Future.map(
-      fun
-      | Some(value) =>
-        value |> Decode.json_of_magic |> Decode.hash |> toOption
       | _ => None,
     )
   ->Future.get(callback);

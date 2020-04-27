@@ -391,3 +391,19 @@ let getQueryForLastDayTransactions = (startDate: float, endDate: float) =>
       ~aggType=ConseiljsType.COUNT,
     )
   ->setLimit(1000);
+
+let getQueryForZeroPriorityBlocksLast24 = (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields(["priority", "level"])
+  ->labelAddPredicate(
+      ~field="priority",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"0"|]),
+    )
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddAggregationFunction(~field="level", ~aggType=ConseiljsType.COUNT)
+  ->setLimit(1000);

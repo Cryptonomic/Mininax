@@ -216,7 +216,9 @@ let make =
           </div>
           {ReasonReact.string("  activated so far.")}
           <div className={Styles.content2(theme)}>
-            {ReasonReact.string(string_of_int(totalTransactions))}
+            {intl
+             ->Intl.formatNumber(float_of_int(totalTransactions))
+             ->React.string}
           </div>
           {ReasonReact.string("  transactions were made.")}
         </div>
