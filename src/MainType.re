@@ -99,4 +99,6 @@ type action =
 type transactionHash = {countedTransactions: int};
 
 type otherTotals =
-  | CountedTransactions24h(int);
+  | CountedTransactions24h(int)
+  | CountedZeroPriorityBlocksLevels24h(int)
+  | CountedBakers24h(int);

@@ -220,36 +220,6 @@ let getProposalInfoThunk =
     )
   ->Future.get(callback);
 
-let getLastDayTransactions =
-    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="operations")
-  ->applyQuery(
-      ~query=Queries.getQueryForLastDayTransactions(startDate, endDate),
-    )
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok(value) when value |> Array.length > 0 => value[0] |> toOption
-      | _ => None,
-    )
-  ->Future.map(
-      fun
-      | Some(value) =>
-        value
-        |> Decode.CountedTransactions.json_of_magic
-        |> Decode.CountedTransactions.hash
-        |> toOption
-      | _ => None,
-    )
-  ->Future.flatMap(
-      fun
-      | Some(value) =>
-        MainType.CountedTransactions24h(value) |> toOption |> Future.value
-      | _ => None |> Future.value,
-    );
-
 let getBlockInfoThunk =
     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
   Future.all([
@@ -321,28 +291,103 @@ let getBlockInfoThunk =
     )
   ->Future.get(callback);
 
+let getLastDayTransactions =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="operations")
+  ->applyQuery(
+      ~query=Queries.getQueryForLastDayTransactions(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        value[0]
+        |> Decode.json_of_magic
+        |> Decode.countedTransactions
+        |> toOption
+      | _ => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) =>
+        MainType.CountedTransactions24h(value) |> toOption |> Future.value
+      | _ => None |> Future.value,
+    );
+
+let getLastDayZeroPriorityBlocks =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="blocks")
+  ->applyQuery(
+      ~query=Queries.getQueryForZeroPriorityBlocksLast24(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        value[0]
+        |> Decode.json_of_magic
+        |> Decode.countedZeroPriorityBlocksLevels
+        |> toOption
+      | _ => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) =>
+        MainType.CountedZeroPriorityBlocksLevels24h(value)
+        |> toOption
+        |> Future.value
+      | _ => None |> Future.value,
+    );
+
+let getLastDayBakers =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="blocks")
+  ->applyQuery(
+      ~query=Queries.getQueryForBakersWithOutput(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        value[0] |> Decode.json_of_magic |> Decode.countedBaker |> toOption
+      | _ => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) =>
+        MainType.CountedBakers24h(value) |> toOption |> Future.value
+      | _ => None |> Future.value,
+    );
+
 let getExtraOtherTotals =
-    (~callback, ~timestamp: float, ~config: MainType.config) =>
+    (~callback, ~timestamp: float, ~config: MainType.config) => {
+  let startDate =
+    timestamp
+    |> MomentRe.momentWithTimestampMS
+    |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
+    |> MomentRe.Moment.valueOf;
   Future.all([
-    getLastDayTransactions(
-      ~startDate={
-        timestamp
-        |> MomentRe.momentWithTimestampMS
-        |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
-        |> MomentRe.Moment.valueOf;
-      },
-      ~endDate={
-        timestamp;
-      },
-      ~config,
-    ),
+    getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
+    getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
+    getLastDayBakers(~startDate, ~endDate=timestamp, ~config),
   ])
   ->Future.map(
       List.map(
         fun
         | Some(MainType.CountedTransactions24h(value)) =>
           Js.log2("Counted transactions", value)
+        | Some(MainType.CountedZeroPriorityBlocksLevels24h(value)) =>
+          Js.log2("Counted zero priority blocks levels", value)
+        | Some(MainType.CountedBakers24h(value)) =>
+          Js.log2("Counted bakers with output", value)
         | _ => Js.log("unknown value"),
       ),
     )
   ->Future.get(callback);
+};
