@@ -229,23 +229,27 @@ let getLastDayTransactions =
       ~query=Queries.getQueryForLastDayTransactions(startDate, endDate),
     )
   ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 => value[0] |> toOption
+      | _ => None,
+    )
+  ->Future.map(
+      fun
+      | Some(value) =>
+        value
+        |> Decode.CountedTransactions.json_of_magic
+        |> Decode.CountedTransactions.hash
+        |> toOption
+      | _ => None,
+    )
   ->Future.flatMap(
       fun
-      | Ok(value) when value |> Array.length > 0 =>
-        Some(value[0]) |> Future.value
+      | Some(value) =>
+        MainType.CountedTransactions24h(value) |> toOption |> Future.value
       | _ => None |> Future.value,
     );
-// ->Future.flatMap(
-//     fun
-//     | Some(value) =>
-//       value
-//       |> Decode.CountedTransactions.json_of_magic
-//       |> Decode.CountedTransactions.hash
-//       |> toOption
-//       |> Future.value
-//     | _ => None |> Future.value,
-//   );
-// TODO List is pretty bad idea of storing elements we'd like to use in specific order. Need to find a better way.
+
 let getBlockInfoThunk =
     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
   Future.all([
@@ -284,31 +288,10 @@ let getBlockInfoThunk =
       ~field="accounts",
       ~config,
     ),
-    getLastDayTransactions(
-      ~startDate={
-        timestamp
-        |> MomentRe.momentWithTimestampMS
-        |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
-        |> MomentRe.Moment.valueOf;
-      },
-      ~endDate={
-        timestamp;
-      },
-      ~config,
-    ),
   ])
   ->Future.map(
       fun
-      | [res1, res2, res3, res4, res5, res6, res7, res8] => {
-          let countedTransactions =
-            switch (res8) {
-            | Some(value) =>
-              value
-              |> Decode.CountedTransactions.json_of_magic
-              |> Decode.CountedTransactions.hash
-              |> toOption
-            | None => None
-            };
+      | [res1, res2, res3, res4, res5, res6, res7] => {
           let newTransInfoObj = res2 |> Obj.magic;
           let newTranInfo: MainType.transInfo = {
             countOriginatedContracts:
@@ -332,8 +315,34 @@ let getBlockInfoThunk =
             bakers_sum_staking_balance: bakersObj##sum_staking_balance,
             totalTez: marketObj##sum_balance,
           };
-          Some((newBlockInfo, newTranInfo, countedTransactions));
+          Some((newBlockInfo, newTranInfo));
         }
       | _ => None,
+    )
+  ->Future.get(callback);
+
+let getExtraOtherTotals =
+    (~callback, ~timestamp: float, ~config: MainType.config) =>
+  Future.all([
+    getLastDayTransactions(
+      ~startDate={
+        timestamp
+        |> MomentRe.momentWithTimestampMS
+        |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
+        |> MomentRe.Moment.valueOf;
+      },
+      ~endDate={
+        timestamp;
+      },
+      ~config,
+    ),
+  ])
+  ->Future.map(
+      List.map(
+        fun
+        | Some(MainType.CountedTransactions24h(value)) =>
+          Js.log2("Counted transactions", value)
+        | _ => Js.log("unknown value"),
+      ),
     )
   ->Future.get(callback);

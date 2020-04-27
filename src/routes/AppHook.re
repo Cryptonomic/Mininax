@@ -34,13 +34,8 @@ module Make = (()) => {
       ~config=configs[selectedConfig],
       ~callback=
         fun
-        | Some((blockinfo, transinfo, countedTransactions)) => {
+        | Some((blockinfo, transinfo)) => {
             dispatch(SetLastBlock(block, blockinfo, transinfo));
-            switch (countedTransactions) {
-            | Some(value) =>
-              dispatch(SetTransactionsCounter(value.countedTransactions))
-            | _ => ()
-            };
           }
         | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );

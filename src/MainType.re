@@ -75,7 +75,6 @@ type state = {
   account: Js.Dict.t(string),
   operation: array(Js.Dict.t(string)),
   lastBlock: ConseiljsType.tezosBlock,
-  transactionsCounter: int,
   transinfo: transInfo,
   blockinfo: blockInfo,
   voteinfo: voteInfo,
@@ -95,7 +94,9 @@ type action =
   | OpenNetwork(bool)
   | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
   | SetProposals(array(proposalInfo))
-  | SetVoteInfo(voteInfo)
-  | SetTransactionsCounter(int);
+  | SetVoteInfo(voteInfo);
 
 type transactionHash = {countedTransactions: int};
+
+type otherTotals =
+  | CountedTransactions24h(int);

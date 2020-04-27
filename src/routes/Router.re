@@ -34,7 +34,6 @@ let make = () => {
            proposals={state.proposals}
            onSearch=onSearchMain
            changeLevel={getHashByLevel(~isMain=true)}
-           totalTransactions={state.transactionsCounter}
          />
        }}
     </div>

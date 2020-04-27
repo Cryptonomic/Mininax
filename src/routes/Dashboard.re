@@ -16,7 +16,6 @@ let make =
       ~proposals: array(MainType.proposalInfo),
       ~onSearch,
       ~changeLevel,
-      ~totalTransactions: int,
     ) => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
@@ -215,12 +214,6 @@ let make =
              )}
           </div>
           {ReasonReact.string("  activated so far.")}
-          <div className={Styles.content2(theme)}>
-            {intl
-             ->Intl.formatNumber(float_of_int(totalTransactions))
-             ->React.string}
-          </div>
-          {ReasonReact.string("  transactions were made.")}
         </div>
       </div>
       <div className=Styles.rightContainer>
