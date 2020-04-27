@@ -343,7 +343,7 @@ let getLastDayZeroPriorityBlocks =
       | _ => None |> Future.value,
     );
 
-let getLastDayBakers =
+let getLastDayBakersWithOutput =
     (~startDate: float, ~endDate: float, ~config: MainType.config) =>
   ConseiljsRe.ConseilDataClient.executeEntityQuery
   ->applyTuple3(~tuple=Utils.getInfo(config))
@@ -365,6 +365,100 @@ let getLastDayBakers =
       | _ => None |> Future.value,
     );
 
+let getLastDayOriginationAndReveal =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="operations")
+  ->applyQuery(
+      ~query=
+        Queries.getQueryForOriginationAndRevealLastDay(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        value
+        |> Decode.json_of_magic
+        |> Json.Decode.array(Decode.countOriginationsAndReveals)
+        |> toOption
+      | _ => None,
+    )
+  ->Future.map(
+      fun
+      | Some(value) => {
+          value
+          |> Array.fold_left(
+               (accu, curr: Decode.originationAndReveals) => {
+                 let (countContracts, countOrigination) = accu;
+                 switch (curr.kind, curr.status) {
+                 | (Decode.Reveal, _) => (
+                     curr.countOperation |> toOption,
+                     countOrigination,
+                   )
+                 | (Decode.Origination, Decode.Applied) => (
+                     countContracts,
+                     curr.countOperation |> toOption,
+                   )
+                 | _ => accu
+                 };
+               },
+               (None, None),
+             );
+        }
+      | _ => (None, None),
+    )
+  ->Future.flatMap(value => {
+      let (countContracts, countOriginations) = value;
+      MainType.CountOriginationAndReveal(countContracts, countOriginations)
+      |> toOption
+      |> Future.value;
+    });
+
+let getLastDayStorageDelta =
+    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="operations")
+  ->applyQuery(
+      ~query=Queries.getQueryForStorageDeltaLastDay(startDate, endDate),
+    )
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        value[0] |> Decode.json_of_magic |> Decode.getStorageDelta |> toOption
+      | _ => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) =>
+        MainType.GetStorageDelta24h(value) |> toOption |> Future.value
+      | _ => None |> Future.value,
+    );
+
+let getTop3Bakers = (~config: MainType.config) =>
+  ConseiljsRe.ConseilDataClient.executeEntityQuery
+  ->applyTuple3(~tuple=Utils.getInfo(config))
+  ->applyField(~field="accounts")
+  ->applyQuery(~query=Queries.getQueryForTop3BakersLastDay())
+  ->FutureJs.fromPromise(_err => None)
+  ->Future.map(
+      fun
+      | Ok(value) when value |> Array.length > 0 =>
+        value
+        |> Decode.json_of_magic
+        |> Json.Decode.array(Decode.getBaker)
+        |> toOption
+      | _ => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) =>
+        MainType.GetTop3Bakers(value) |> toOption |> Future.value
+      | _ => None |> Future.value,
+    );
+
 let getExtraOtherTotals =
     (~callback, ~timestamp: float, ~config: MainType.config) => {
   let startDate =
@@ -375,7 +469,10 @@ let getExtraOtherTotals =
   Future.all([
     getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
     getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
-    getLastDayBakers(~startDate, ~endDate=timestamp, ~config),
+    getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
+    getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
+    getTop3Bakers(~config),
+    getLastDayStorageDelta(~startDate, ~endDate=timestamp, ~config),
   ])
   ->Future.map(
       List.map(
@@ -386,6 +483,21 @@ let getExtraOtherTotals =
           Js.log2("Counted zero priority blocks levels", value)
         | Some(MainType.CountedBakers24h(value)) =>
           Js.log2("Counted bakers with output", value)
+        | Some(
+            MainType.CountOriginationAndReveal(
+              countContracts,
+              countOriginations,
+            ),
+          ) =>
+          Js.log3(
+            "Counted contracts and originations",
+            countContracts,
+            countOriginations,
+          )
+        | Some(MainType.GetTop3Bakers(value)) =>
+          Js.log2("top 3 bakers", value)
+        | Some(MainType.GetStorageDelta24h(value)) =>
+          Js.log2("storage delta", value)
         | _ => Js.log("unknown value"),
       ),
     )

@@ -101,4 +101,7 @@ type transactionHash = {countedTransactions: int};
 type otherTotals =
   | CountedTransactions24h(int)
   | CountedZeroPriorityBlocksLevels24h(int)
-  | CountedBakers24h(int);
+  | CountedBakers24h(int)
+  | CountOriginationAndReveal(option(int), option(int))
+  | GetTop3Bakers(array(Decode.baker))
+  | GetStorageDelta24h(Decode.storageDelta);
