@@ -544,13 +544,14 @@ let make =
            }}
         </div>
         <div className={Styles.rightBottomContainer(theme)}>
-          {ReasonReact.string("There are ")}
+          /*{ReasonReact.string("There are ")}
           <div className={Styles.networkContent(theme)}>
             {intl
              ->Intl.formatNumber(float_of_string(blockinfo.num_bakers))
              ->React.string}
           </div>
-          {ReasonReact.string(" active bakers. A total of ")}
+          {ReasonReact.string(" active bakers. A total of ")}*/
+          {ReasonReact.string("A total of ")}
           <div className={Styles.networkContent(theme)}>
             {ReasonReact.string(tez_staked ++ " XTZ")}
           </div>
