@@ -86,7 +86,7 @@
 
      async function updateStatsByLevel(level) {
 	 const block = await conseiljs.TezosConseilClient.getBlockByLevel(conseilServer, network, level)
-	 const blockHash = block[0].hash
+	 const blockHash = block.hash
 	 updateStats(blockHash)
      }
 
