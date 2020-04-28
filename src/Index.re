@@ -1,6 +1,6 @@
 open GlobalStore;
 
 ReactDOMRe.renderToElementWithId(
-  <AppStore.Provider store=globalStore> <App /> </AppStore.Provider>,
+  <Store.Provider store=globalStore> <App /> </Store.Provider>,
   "root",
 );

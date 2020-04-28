@@ -10,7 +10,8 @@
       "utils",
       "styles",
       "store",
-      "routes"
+      "routes",
+      "hooks"
     ]
   },
   "package-specs": [

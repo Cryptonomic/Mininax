@@ -3,7 +3,7 @@ external activeElement: Dom.element = "activeElement";
 open GlobalStore;
 open Configs;
 
-let selector = state => state;
+let selector = state => state.appState;
 
 module Style = {
   open Css;
@@ -44,7 +44,7 @@ module Style = {
 [@react.component]
 let make = () => {
   let url = ReasonReactRouter.useUrl();
-  let state = AppStore.useSelector(selector);
+  let state = GlobalStore.Store.useSelector(selector);
   let (footerRef, setFooterRef) =
     React.useState(() => (None: option(Dom.element)));
   let changeFooterRef = ref => {
@@ -103,17 +103,22 @@ let make = () => {
             setRef=changeFooterRef
             changeId=onChangeId
             onSearch={_ => onSearchById(state.id)}
-            onOpenNetworkSelector={_ => dispatch(OpenNetwork(true))}
+            onOpenNetworkSelector={_ =>
+              dispatch(AppAction(OpenNetwork(true)))
+            }
           />
           <If validator={state.isLoading}> <Loader /> </If>
           <If validator={state.isError}>
-            <Error error={state.error} onTry={_ => dispatch(RemoveError)} />
+            <Error
+              error={state.error}
+              onTry={_ => dispatch(AppAction(RemoveError))}
+            />
           </If>
           <If validator={state.isOpenNetworkSelector}>
             <NetworkSelector
               selectedIndex={state.selectedConfig}
               onChange=onChangeNetwork
-              onCancel={_ => dispatch(OpenNetwork(false))}
+              onCancel={_ => dispatch(AppAction(OpenNetwork(false)))}
             />
           </If>
         </div>

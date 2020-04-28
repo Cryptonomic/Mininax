@@ -181,7 +181,7 @@ let getVoteInfoThunk =
       | Ok((Some(quorumStat), Some(votingStat))) => {
           let quorumObj = quorumStat |> Obj.magic;
           let votingObj = votingStat |> Obj.magic;
-          let votinfo: MainType.voteInfo = {
+          let votinfo: DashboardStore.voteInfo = {
             yay_rolls: votingObj##yay_rolls,
             nay_rolls: votingObj##nay_rolls,
             pass_rolls: votingObj##pass_rolls,
@@ -207,7 +207,7 @@ let getProposalInfoThunk =
         proposalStats
         |> Array.map(proposal => {
              let proposalObj = proposal |> Obj.magic;
-             let newProposal: MainType.proposalInfo = {
+             let newProposal: DashboardStore.proposalInfo = {
                count_operation_group_hash:
                  proposalObj##count_operation_group_hash,
                proposal: proposalObj##proposal,
@@ -263,7 +263,7 @@ let getBlockInfoThunk =
       fun
       | [res1, res2, res3, res4, res5, res6, res7] => {
           let newTransInfoObj = res2 |> Obj.magic;
-          let newTranInfo: MainType.transInfo = {
+          let newTranInfo: DashboardStore.transInfo = {
             countOriginatedContracts:
               newTransInfoObj##count_originated_contracts,
             countAmount: newTransInfoObj##count_amount,
@@ -275,7 +275,7 @@ let getBlockInfoThunk =
           let bakersObj = res6 |> Obj.magic;
           let marketObj = res7 |> Obj.magic;
 
-          let newBlockInfo: MainType.blockInfo = {
+          let newBlockInfo: DashboardStore.blockInfo = {
             blockCount: (res1 |> Obj.magic)##count_hash,
             fundraiserCount: newFundraiser##count_kind,
             totalFundraiserCount: newTotalFundraiser##count_kind,
