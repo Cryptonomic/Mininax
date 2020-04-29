@@ -69,12 +69,34 @@ let make = () => {
 
   React.useEffect0(() => {
     switch (url.path) {
-    | [network, entity, id] => goToPage(network, entity, id)
-    | [network] => goToNetwork(network)
-    | _ => goToMainPage()
+    | [network, _, _]
+    | [network] =>
+      let selectedIndex =
+        configs
+        |> Js.Array.findIndex((conf: MainType.config) =>
+             conf.network === network
+           );
+      dispatch(Init(selectedIndex));
+    | _ => dispatch(Init(0))
     };
     None;
   });
+
+  React.useEffect1(
+    () => {
+      switch (state.inited) {
+      | 0 => ()
+      | _ =>
+        switch (url.path) {
+        | [network, entity, id] => goToPage(network, entity, id)
+        | [network] => goToNetwork(network)
+        | _ => goToMainPage(configs[selectedConfig].network)
+        }
+      };
+      None;
+    },
+    [|state.inited, state.selectedConfig|],
+  );
 
   <ReactIntl.IntlProvider>
     <ContextProvider value={state.selectedConfig}>
@@ -84,7 +106,11 @@ let make = () => {
         onKeyPress>
         <div className=Style.container1>
           <div className=Style.header>
-            <div className=Style.headerTitle onClick={_ => goToMainPage()}>
+            <div
+              className=Style.headerTitle
+              onClick={_ =>
+                goToMainPage(configs[state.selectedConfig].network)
+              }>
               {ReasonReact.string("MININAX")}
             </div>
           </div>

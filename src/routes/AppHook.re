@@ -6,6 +6,7 @@ let selector = (state: MainType.state) => state.selectedConfig;
 module Make = (()) => {
   let dispatch = AppStore.useDispatch();
   let selectedConfig = AppStore.useSelector(selector);
+
   let getProposalsInfo = (metaCycle: int) =>
     ApiCall.getProposalInfoThunk(
       ~metaCycle,
@@ -27,7 +28,7 @@ module Make = (()) => {
         | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );
 
-  let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
+  let getBlockInfo = (block: ConseiljsType.tezosBlock) => {
     ApiCall.getBlockInfoThunk(
       ~metaCycle=block##meta_cycle,
       ~timestamp=block##timestamp,
@@ -38,10 +39,11 @@ module Make = (()) => {
           dispatch(SetLastBlock(block, blockinfo, transinfo))
         | _ => dispatch(SetError(ErrMessage.noAvailable)),
     );
+  };
 
   let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
     dispatch(SetLoading);
-    let callback = result =>
+    let callback = result => {
       switch (result) {
       | Ok((block, lastBlock)) =>
         switch (isRoute, isMain, level) {
@@ -76,6 +78,7 @@ module Make = (()) => {
         }
       | Error(err) => dispatch(SetError(err))
       };
+    };
     ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig]);
   };
 
@@ -145,9 +148,8 @@ module Make = (()) => {
     ();
   };
 
-  let goToMainPage = () => {
-    getMainPage();
-    ReasonReactRouter.push("/" ++ configs[selectedConfig].network);
+  let goToMainPage = network => {
+    ReasonReactRouter.push("/" ++ network);
   };
 
   let goToNetwork = network => {
@@ -157,11 +159,8 @@ module Make = (()) => {
            conf.network === network
          );
     switch (selectedIndex) {
-    | (-1) => goToMainPage()
-    | _ =>
-      dispatch(ChangeNetwork(selectedIndex));
-      //   setSelectedConfig(_old => selectedIndex);
-      getMainPage();
+    | (-1) => goToMainPage(network)
+    | _ => getMainPage()
     };
   };
 
@@ -173,18 +172,18 @@ module Make = (()) => {
          );
     let isNumber = id |> Utils.isNumber;
     switch (selectedIndex) {
-    | (-1) => goToMainPage()
+    | (-1) => goToMainPage(network)
+    | index when index != selectedConfig =>
+      dispatch(ChangeNetwork(selectedIndex))
     | _ =>
-      dispatch(ChangeNetwork(selectedIndex));
-      //   setSelectedConfig(_old => selectedIndex);
       switch (entity, isNumber) {
       | ("blocks", false) => getBlock(id, false, false, 0)
       | ("blocks", true) =>
         getHashByLevel(id |> int_of_string, ~isMain=false)
       | ("accounts", false) => getAccount(id, false)
       | ("operations", false) => getOperation(id, false)
-      | _ => goToMainPage()
-      };
+      | _ => goToMainPage(network)
+      }
     };
   };
 
@@ -238,10 +237,9 @@ module Make = (()) => {
   };
 
   let onChangeNetwork = (index: int) =>
-    if (selectedConfig !== index) {
+    if (selectedConfig != index) {
       dispatch(ChangeNetwork(index));
-      //   setSelectedConfig(_old => index);
-      goToMainPage();
+      goToMainPage(configs[index].network);
     } else {
       dispatch(OpenNetwork(false));
     };

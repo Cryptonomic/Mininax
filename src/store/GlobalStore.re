@@ -1,6 +1,7 @@
 open MainType;
 
 let initState = {
+  inited: 0,
   entity: "",
   id: "",
   isLoading: false,
@@ -39,6 +40,7 @@ let initState = {
 
 let globalReducer = (state, action) =>
   switch (action) {
+  | Init(selectedConfig) => {...state, inited: 1, selectedConfig}
   | SetId(id) => {...state, id}
   | SetLoading => {...state, isLoading: true}
   | ChangeNetwork(config) => {
