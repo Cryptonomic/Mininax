@@ -68,6 +68,7 @@ let make = () => {
     );
 
   React.useEffect0(() => {
+    Js.log(url.path);
     switch (url.path) {
     | [network, entity, id] => goToPage(network, entity, id)
     | [network] => goToNetwork(network)

@@ -110,266 +110,284 @@ let make = (~onSearch, ~changeLevel) => {
 
   <div className=DashboardStyles.container>
     <div className=DashboardStyles.mainContainer>
-      <div className=DashboardStyles.leftContainer>
-        <div className={DashboardStyles.leftTopContainer(theme)}>
-          {ReasonReact.string("Greetings! The Tezos ")}
-          <div className={DashboardStyles.networkContent(theme)}>
-            {ReasonReact.string(network)}
-          </div>
-          {ReasonReact.string(" is now in cycle ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {intl
-             ->Intl.formatNumber(float_of_int(items##meta_cycle))
-             ->React.string}
-          </div>
-          <br />
-          {ReasonReact.string("Within this cycle, ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {ReasonReact.string(
-               intl->Intl.formatNumber(float_of_int(blockinfo.blockCount))
-               ++ " of "
-               ++ intl->Intl.formatNumber(float_of_int(blocksPerCycle)),
-             )}
-          </div>
-          {ReasonReact.string(" blocks ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {ReasonReact.string(
-               "(" ++ Js.Float.toString(percentBaked) ++ "%)",
-             )}
-          </div>
-          {ReasonReact.string(" have been baked.")}
-          <br />
-          {ReasonReact.string("The latest block ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {ReasonReact.string(items##hash)}
-            <CopyContent isReverse=true hash=items##hash />
-          </div>
-          {ReasonReact.string(" at level ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {intl
-             ->Intl.formatNumber(float_of_int(items##level))
-             ->React.string}
-          </div>
-          {ReasonReact.string(" was baked by ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {ReasonReact.string(items##baker)}
-            <CopyContent isReverse=true hash=items##baker />
-          </div>
-          {ReasonReact.string(" at ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {ReasonReact.string(latestBlockTime)}
-          </div>
-          {ReasonReact.string(" on ")}
-          <div className={DashboardStyles.content1(theme)}>
-            {ReasonReact.string(latestBlockDate)}
-          </div>
-          {ReasonReact.string(".")}
-        </div>
-        <div className={DashboardStyles.leftBottomContainer(theme)}>
-          {ReasonReact.string("In the past day there have been ")}
-          <div className={DashboardStyles.content3(theme)}>
-            {intl
-             ->Intl.formatNumber(float_of_string(transinfo.countAmount))
-             ->React.string}
-          </div>
-          {ReasonReact.string(" transactions for a total of ")}
-          <div className={DashboardStyles.content3(theme)}>
-            {ReasonReact.string(transactions_total_xtz ++ " XTZ")}
-          </div>
-          {ReasonReact.string(" while ")}
-          <div className={DashboardStyles.content3(theme)}>
-            {intl
-             ->Intl.formatNumber(
-                 float_of_string(transinfo.countOriginatedContracts),
-               )
-             ->React.string}
-          </div>
-          {ReasonReact.string(" accounts were originated and ")}
-          <div className={DashboardStyles.content3(theme)}>
-            {intl
-             ->Intl.formatNumber(float_of_string(blockinfo.fundraiserCount))
-             ->React.string}
-          </div>
-          {ReasonReact.string(
-             " fundraiser accounts were activated. A total of ",
-           )}
-          <div className={DashboardStyles.content3(theme)}>
-            {ReasonReact.string(sumFee ++ " XTZ")}
-          </div>
-          {ReasonReact.string(" in fees have been paid out and ")}
-          <div className={DashboardStyles.content3(theme)}>
-            {ReasonReact.string(consumedGas)}
-          </div>
-          {ReasonReact.string(" gas has been consumed. There have been ")}
-          <div className={DashboardStyles.content3(theme)}>
-            {ReasonReact.string(
-               intl->Intl.formatNumber(
-                 float_of_string(blockinfo.totalFundraiserCount),
-               )
-               ++ " of 30,317",
-             )}
-          </div>
-          {ReasonReact.string(" fundraiser accounts ")}
-          <div className={DashboardStyles.content2(theme)}>
-            {ReasonReact.string(
-               "(" ++ Js.Float.toString(fundraiserPercent) ++ "%)",
-             )}
-          </div>
-          {ReasonReact.string("  activated so far.")}
-        </div>
-      </div>
-      <div className=DashboardStyles.rightContainer>
-        <div className={DashboardStyles.rightTopContainer(theme)}>
-          {ReasonReact.string("We are currently in the ")}
-          <div className={DashboardStyles.networkContent(theme)}>
-            {ReasonReact.string(rightTitle)}
-          </div>
-          {ReasonReact.string(" phase of the governance process.")}
-        </div>
-        <div className={DashboardStyles.rightMdContainer(theme)}>
-          <div> {ReasonReact.string(proposalsTitle)} </div>
-          {switch (periodKind) {
-           | "proposal" =>
-             <div className=DashboardStyles.rightMdMainContainer>
-               {proposals
-                |> Array.mapi((index, pr: DashboardStore.proposalInfo) => {
-                     let lastTxt =
-                       if (index === Js.Array.length(proposals) - 1) {
-                         " votes.";
-                       } else {
-                         " votes and ";
-                       };
-                     <div key={string_of_int(index)}>
-                       <div className={DashboardStyles.content2(theme)}>
-                         {ReasonReact.string(pr.proposal)}
-                         <CopyContent isReverse=false hash={pr.proposal} />
-                       </div>
-                       <br />
-                       {ReasonReact.string("with ")}
-                       <div className={DashboardStyles.content3(theme)}>
-                         {intl
-                          ->Intl.formatNumber(
-                              float_of_string(pr.count_operation_group_hash),
-                            )
-                          ->React.string}
-                       </div>
-                       {ReasonReact.string(lastTxt)}
-                     </div>;
-                   })
-                |> ReasonReact.array}
-             </div>
-           | "testing" =>
-             <div className=DashboardStyles.rightMdMainContainer>
-               <div className={DashboardStyles.content2(theme)}>
-                 {ReasonReact.string(items##active_proposal)}
-                 <CopyContent isReverse=false hash=items##active_proposal />
-               </div>
-             </div>
-           | "testing_vote"
-           | "promotion_vote" =>
-             <div className=DashboardStyles.rightMdMainContainer>
-               <div className={DashboardStyles.content2(theme)}>
-                 {ReasonReact.string(items##active_proposal)}
-                 <CopyContent isReverse=false hash=items##active_proposal />
-               </div>
-               <br />
-               <div className={DashboardStyles.content3(theme)}>
-                 {intl
-                  ->Intl.formatNumber(float_of_int(voteinfo.yay_rolls))
-                  ->React.string}
-               </div>
-               {ReasonReact.string(" rolls have been cast for, ")}
-               <div className={DashboardStyles.content3(theme)}>
-                 {intl
-                  ->Intl.formatNumber(float_of_int(voteinfo.nay_rolls))
-                  ->React.string}
-               </div>
-               {ReasonReact.string(" against and ")}
-               <div className={DashboardStyles.content3(theme)}>
-                 {intl
-                  ->Intl.formatNumber(float_of_int(voteinfo.pass_rolls))
-                  ->React.string}
-               </div>
-               {ReasonReact.string(" have passed.")}
-               <div className={DashboardStyles.content3(theme)}>
-                 {ReasonReact.string(Js.Float.toString(percentYay) ++ "%")}
-               </div>
-               {ReasonReact.string(
-                  " of commited rolls were in favor of the proposal, ",
-                )}
-               {percentYay < 90.0
-                  ? ReasonReact.string("not ") : ReasonReact.null}
-               {ReasonReact.string(
-                  "exceeding the supermajority requirement of 80%.",
-                )}
-             </div>
-           | _ => ReasonReact.null
-           }}
-        </div>
-        <div className={DashboardStyles.rightBottomContainer(theme)}>
-          /*{ReasonReact.string("There are ")}
+      // Block info
+
+        <div className=DashboardStyles.leftContainer>
+          <div className={DashboardStyles.leftTopContainer(theme)}>
+            {ReasonReact.string("Greetings! The Tezos ")}
             <div className={DashboardStyles.networkContent(theme)}>
+              {ReasonReact.string(network)}
+            </div>
+            {ReasonReact.string(" is now in cycle ")}
+            <div className={DashboardStyles.content1(theme)}>
               {intl
-               ->Intl.formatNumber(float_of_string(blockinfo.num_bakers))
+               ->Intl.formatNumber(float_of_int(items##meta_cycle))
                ->React.string}
             </div>
-            {ReasonReact.string(" active bakers. A total of ")}*/
-
-            {ReasonReact.string("A total of ")}
-            <div className={DashboardStyles.networkContent(theme)}>
-              {ReasonReact.string(tez_staked ++ " XTZ")}
-            </div>
-            {ReasonReact.string(" out of ")}
-            <div className={DashboardStyles.networkContent(theme)}>
-              {ReasonReact.string(total_tez ++ " XTZ")}
-            </div>
-            {ReasonReact.string(" or ")}
-            <div className={DashboardStyles.networkContent(theme)}>
+            <br />
+            {ReasonReact.string("Within this cycle, ")}
+            <div className={DashboardStyles.content1(theme)}>
               {ReasonReact.string(
-                 "(" ++ Js.Float.toString(percent_staked) ++ "%)",
+                 intl->Intl.formatNumber(float_of_int(blockinfo.blockCount))
+                 ++ " of "
+                 ++ intl->Intl.formatNumber(float_of_int(blocksPerCycle)),
                )}
             </div>
-            {ReasonReact.string(" of TEZ, is being staked right now.")}
-          </div>
-        <div className=DashboardStyles.rightSearchConainer>
-          <div className=DashboardStyles.levelLabelContainer>
-            <button
-              className={DashboardStyles.levelBtn(theme)}
-              onClick={_ => changeLevel(items##level - 1)}>
-              {ReasonReact.string("<")}
-            </button>
-            <div className={DashboardStyles.levelLabel(theme)}>
+            {ReasonReact.string(" blocks ")}
+            <div className={DashboardStyles.content1(theme)}>
+              {ReasonReact.string(
+                 "(" ++ Js.Float.toString(percentBaked) ++ "%)",
+               )}
+            </div>
+            {ReasonReact.string(" have been baked.")}
+            <br />
+            {ReasonReact.string("The latest block ")}
+            <div className={DashboardStyles.content1(theme)}>
+              {ReasonReact.string(items##hash)}
+              <CopyContent isReverse=true hash=items##hash />
+            </div>
+            {ReasonReact.string(" at level ")}
+            <div className={DashboardStyles.content1(theme)}>
               {intl
                ->Intl.formatNumber(float_of_int(items##level))
                ->React.string}
             </div>
-            <button
-              className={DashboardStyles.levelBtn(theme)}
-              onClick={_ => changeLevel(items##level + 1)}>
-              {ReasonReact.string(">")}
-            </button>
+            {ReasonReact.string(" was baked by ")}
+            <div className={DashboardStyles.content1(theme)}>
+              {ReasonReact.string(items##baker)}
+              <CopyContent isReverse=true hash=items##baker />
+            </div>
+            {ReasonReact.string(" at ")}
+            <div className={DashboardStyles.content1(theme)}>
+              {ReasonReact.string(latestBlockTime)}
+            </div>
+            {ReasonReact.string(" on ")}
+            <div className={DashboardStyles.content1(theme)}>
+              {ReasonReact.string(latestBlockDate)}
+            </div>
+            {ReasonReact.string(".")}
           </div>
-          <input
-            value=searchVal
-            onChange={event =>
-              setSearchVal(ReactEvent.Form.target(event)##value)
-            }
-            onKeyDown={event =>
-              switch (event |> ReactEvent.Keyboard.which) {
-              | 13 => onSearchBlock()
-              | _ => ignore()
-              }
-            }
-            className={DashboardStyles.input(theme)}
-            placeholder="Show stats for block ID or level"
-          />
-          <button
-            className={DashboardStyles.searhBtn(theme)} onClick={_ => onSearchBlock()}>
-            <img src=searchSvg />
-          </button>
+          <div className={DashboardStyles.leftBottomContainer(theme)}>
+            {ReasonReact.string("In the past day there have been ")}
+            <div className={DashboardStyles.content3(theme)}>
+              {intl
+               ->Intl.formatNumber(float_of_string(transinfo.countAmount))
+               ->React.string}
+            </div>
+            {ReasonReact.string(" transactions for a total of ")}
+            <div className={DashboardStyles.content3(theme)}>
+              {ReasonReact.string(transactions_total_xtz ++ " XTZ")}
+            </div>
+            {ReasonReact.string(" while ")}
+            <div className={DashboardStyles.content3(theme)}>
+              {intl
+               ->Intl.formatNumber(
+                   float_of_string(transinfo.countOriginatedContracts),
+                 )
+               ->React.string}
+            </div>
+            {ReasonReact.string(" accounts were originated and ")}
+            <div className={DashboardStyles.content3(theme)}>
+              {intl
+               ->Intl.formatNumber(
+                   float_of_string(blockinfo.fundraiserCount),
+                 )
+               ->React.string}
+            </div>
+            {ReasonReact.string(
+               " fundraiser accounts were activated. A total of ",
+             )}
+            <div className={DashboardStyles.content3(theme)}>
+              {ReasonReact.string(sumFee ++ " XTZ")}
+            </div>
+            {ReasonReact.string(" in fees have been paid out and ")}
+            <div className={DashboardStyles.content3(theme)}>
+              {ReasonReact.string(consumedGas)}
+            </div>
+            {ReasonReact.string(" gas has been consumed. There have been ")}
+            <div className={DashboardStyles.content3(theme)}>
+              {ReasonReact.string(
+                 intl->Intl.formatNumber(
+                   float_of_string(blockinfo.totalFundraiserCount),
+                 )
+                 ++ " of 30,317",
+               )}
+            </div>
+            {ReasonReact.string(" fundraiser accounts ")}
+            <div className={DashboardStyles.content2(theme)}>
+              {ReasonReact.string(
+                 "(" ++ Js.Float.toString(fundraiserPercent) ++ "%)",
+               )}
+            </div>
+            {ReasonReact.string("  activated so far.")}
+          </div>
         </div>
+        <div className=DashboardStyles.rightContainer>
+          // governance process
+
+            <div className={DashboardStyles.rightTopContainer(theme)}>
+              {ReasonReact.string("We are currently in the ")}
+              <div className={DashboardStyles.networkContent(theme)}>
+                {ReasonReact.string(rightTitle)}
+              </div>
+              {ReasonReact.string(" phase of the governance process.")}
+            </div>
+            <div className={DashboardStyles.rightMdContainer(theme)}>
+              <div> {ReasonReact.string(proposalsTitle)} </div>
+              {switch (periodKind) {
+               | "proposal" =>
+                 <div className=DashboardStyles.rightMdMainContainer>
+                   {proposals
+                    |> Array.mapi((index, pr: DashboardStore.proposalInfo) => {
+                         let lastTxt =
+                           if (index === Js.Array.length(proposals) - 1) {
+                             " votes.";
+                           } else {
+                             " votes and ";
+                           };
+                         <div key={string_of_int(index)}>
+                           <div className={DashboardStyles.content2(theme)}>
+                             {ReasonReact.string(pr.proposal)}
+                             <CopyContent isReverse=false hash={pr.proposal} />
+                           </div>
+                           <br />
+                           {ReasonReact.string("with ")}
+                           <div className={DashboardStyles.content3(theme)}>
+                             {intl
+                              ->Intl.formatNumber(
+                                  float_of_string(
+                                    pr.count_operation_group_hash,
+                                  ),
+                                )
+                              ->React.string}
+                           </div>
+                           {ReasonReact.string(lastTxt)}
+                         </div>;
+                       })
+                    |> ReasonReact.array}
+                 </div>
+               | "testing" =>
+                 <div className=DashboardStyles.rightMdMainContainer>
+                   <div className={DashboardStyles.content2(theme)}>
+                     {ReasonReact.string(items##active_proposal)}
+                     <CopyContent
+                       isReverse=false
+                       hash=items##active_proposal
+                     />
+                   </div>
+                 </div>
+               | "testing_vote"
+               | "promotion_vote" =>
+                 <div className=DashboardStyles.rightMdMainContainer>
+                   <div className={DashboardStyles.content2(theme)}>
+                     {ReasonReact.string(items##active_proposal)}
+                     <CopyContent
+                       isReverse=false
+                       hash=items##active_proposal
+                     />
+                   </div>
+                   <br />
+                   <div className={DashboardStyles.content3(theme)}>
+                     {intl
+                      ->Intl.formatNumber(float_of_int(voteinfo.yay_rolls))
+                      ->React.string}
+                   </div>
+                   {ReasonReact.string(" rolls have been cast for, ")}
+                   <div className={DashboardStyles.content3(theme)}>
+                     {intl
+                      ->Intl.formatNumber(float_of_int(voteinfo.nay_rolls))
+                      ->React.string}
+                   </div>
+                   {ReasonReact.string(" against and ")}
+                   <div className={DashboardStyles.content3(theme)}>
+                     {intl
+                      ->Intl.formatNumber(float_of_int(voteinfo.pass_rolls))
+                      ->React.string}
+                   </div>
+                   {ReasonReact.string(" have passed.")}
+                   <div className={DashboardStyles.content3(theme)}>
+                     {ReasonReact.string(
+                        Js.Float.toString(percentYay) ++ "%",
+                      )}
+                   </div>
+                   {ReasonReact.string(
+                      " of commited rolls were in favor of the proposal, ",
+                    )}
+                   {percentYay < 90.0
+                      ? ReasonReact.string("not ") : ReasonReact.null}
+                   {ReasonReact.string(
+                      "exceeding the supermajority requirement of 80%.",
+                    )}
+                 </div>
+               | _ => ReasonReact.null
+               }}
+            </div>
+            // All Tezos / bakers
+            <div className={DashboardStyles.rightBottomContainer(theme)}>
+              /*{ReasonReact.string("There are ")}
+                <div className={DashboardStyles.networkContent(theme)}>
+                  {intl
+                   ->Intl.formatNumber(float_of_string(blockinfo.num_bakers))
+                   ->React.string}
+                </div>
+                {ReasonReact.string(" active bakers. A total of ")}*/
+
+                {ReasonReact.string("A total of ")}
+                <div className={DashboardStyles.networkContent(theme)}>
+                  {ReasonReact.string(tez_staked ++ " XTZ")}
+                </div>
+                {ReasonReact.string(" out of ")}
+                <div className={DashboardStyles.networkContent(theme)}>
+                  {ReasonReact.string(total_tez ++ " XTZ")}
+                </div>
+                {ReasonReact.string(" or ")}
+                <div className={DashboardStyles.networkContent(theme)}>
+                  {ReasonReact.string(
+                     "(" ++ Js.Float.toString(percent_staked) ++ "%)",
+                   )}
+                </div>
+                {ReasonReact.string(" of TEZ, is being staked right now.")}
+              </div>
+            <div className=DashboardStyles.rightSearchConainer>
+              <div className=DashboardStyles.levelLabelContainer>
+                <button
+                  className={DashboardStyles.levelBtn(theme)}
+                  onClick={_ => changeLevel(items##level - 1)}>
+                  {ReasonReact.string("<")}
+                </button>
+                <div className={DashboardStyles.levelLabel(theme)}>
+                  {intl
+                   ->Intl.formatNumber(float_of_int(items##level))
+                   ->React.string}
+                </div>
+                <button
+                  className={DashboardStyles.levelBtn(theme)}
+                  onClick={_ => changeLevel(items##level + 1)}>
+                  {ReasonReact.string(">")}
+                </button>
+              </div>
+              <input
+                value=searchVal
+                onChange={event =>
+                  setSearchVal(ReactEvent.Form.target(event)##value)
+                }
+                onKeyDown={event =>
+                  switch (event |> ReactEvent.Keyboard.which) {
+                  | 13 => onSearchBlock()
+                  | _ => ignore()
+                  }
+                }
+                className={DashboardStyles.input(theme)}
+                placeholder="Show stats for block ID or level"
+              />
+              <button
+                className={DashboardStyles.searhBtn(theme)}
+                onClick={_ => onSearchBlock()}>
+                <img src=searchSvg />
+              </button>
+            </div>
+          </div>
       </div>
-    </div>
     <div className=DashboardStyles.footContainer>
       <div
         className={DashboardStyles.itemContainer(theme)}
