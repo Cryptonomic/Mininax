@@ -1,8 +1,8 @@
 <!-- saved from url=(0092)https://cryptonomic.tech/_matrix/media/r0/download/cryptonomic.tech/iMTLWSuCVJbIoqrjaBHKRXdl -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-   <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
-        integrity="sha384-eSd4aru4A1k5ejohBE9T8uPo4P1TT6TTdnuO71HrrNr0pmZaF+C5/YQyYv0JNqhV"
-        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/cryptonomic/conseiljs/dist-web/conseiljs.min.js"
+            integrity="sha384-Qadw6i0MoBdfDPGWqub65ZsMLMlYOcVVgxHKkhSqi2qfE0Ij2Za4r/wpGORh7HBn"
+            crossorigin="anonymous"></script>
 
     </script>
 
@@ -27,7 +27,7 @@
 
      async function getMarketCap() {
 	 let balanceQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-	 balanceQuery = conseiljs.ConseilQueryBuilder.addFields(balanceQuery, 'balance', 'block_id');
+	 balanceQuery = conseiljs.ConseilQueryBuilder.addFields(balanceQuery, 'balance');
 
 	 balanceQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(balanceQuery, 'balance', 'sum');
 	 const totalTez = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'accounts', balanceQuery);
@@ -48,6 +48,7 @@
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addFields(fundraiserQuery, 'kind');
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'kind', conseiljs.ConseilOperator.EQ, ['activate_account'], false);
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addPredicate(fundraiserQuery, 'timestamp', conseiljs.ConseilOperator.BEFORE, [timestamp], false);
+
 	 fundraiserQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(fundraiserQuery, 'kind', 'count');
 	 const fundraiserAccounts = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'operations', fundraiserQuery);
 
@@ -96,6 +97,7 @@
 	 updateBlock(blockid)
 	 updateNetworkStats(blockid)
 	 updateTransactionStats(blockid);
+	 updateBakerStats(blockid);
 	 updateFundraiserStats(blockid);
 	 updateFeesStats(blockid);
 	 updateGovernanceStats(blockid)
@@ -123,20 +125,29 @@
      }
 
      async function updateBakerStats(blockid) {
-	 let bakerQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-	 bakerQuery = conseiljs.ConseilQueryBuilder.addFields(bakerQuery, 'pkh', 'staking_balance');
-	 bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'deactivated', conseiljs.ConseilOperator.EQ, ['false'], false);
-	 bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'block_id', conseiljs.ConseilOperator.EQ, [blockid], false);
-	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'pkh', 'count');
-	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'staking_balance', 'sum');
-	 const numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', bakerQuery);
+	 const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
 
-	 const totalTez = await getMarketCap();
+	 let output = ''
+	 if (blockid == block.hash) {
+	     const totalTez = await getMarketCap();
+	     console.log(totalTez)
+	     let bakerQuery = conseiljs.ConseilQueryBuilder.blankQuery();
+	     bakerQuery = conseiljs.ConseilQueryBuilder.addFields(bakerQuery, 'pkh', 'staking_balance');
+	     bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'deactivated', conseiljs.ConseilOperator.EQ, ['false'], false);
+	     bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'pkh', 'count');
+	     bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'staking_balance', 'sum');
+	     const numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', bakerQuery);
 
-	 document.getElementById("num_bakers").innerHTML = numBakers[0].count_pkh;
-	 document.getElementById("tez_staked").innerHTML = convertFromUtezToTez(numBakers[0].sum_staking_balance).toFixed(2);
-	 document.getElementById("total_tez").innerHTML = convertFromUtezToTez(totalTez).toFixed(2);
-	 document.getElementById("percent_staked").innerHTML = Math.round((numBakers[0].sum_staking_balance/totalTez)*100);
+	     const count_bakers  = numBakers[0].count_pkh;
+	     const tez_staked = convertFromUtezToTez(numBakers[0].sum_staking_balance).toFixed(2);
+	     const total_tez = convertFromUtezToTez(totalTez).toFixed(2);
+	     const percent_staked = Math.round((numBakers[0].sum_staking_balance/totalTez)*100);
+
+	     
+	     output = `There are ${emphasize(count_bakers)} active bakers. A total of ${emphasize(tez_staked)} out of ${emphasize(total_tez)} <br> 
+	     i.e ${emphasize(percent_staked)} % is being staked right now.`
+	 }
+	 document.getElementById("baker_info").innerHTML = output
      }
      
 
@@ -415,20 +426,10 @@
      }
 
      async function initializeBakerStats() {
-	 let bakerQuery = conseiljs.ConseilQueryBuilder.blankQuery();
-
+	 const block = await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network)
+	 const headHash = block.hash
+	 updateBakerStats(headHash)
      }
-
-     async function updateAccount(accountid) {
-	 const account = await conseiljs.TezosConseilClient.getAccount(conseilServer, network, accountid)
-	 document.getElementById("account_address").innerHTML = account.account_id
-	 document.getElementById("account_last_updated").innerHTML = account.block_id
-	 document.getElementById("account_balance").innerHTML = convertFromUtezToTez(account.balance)
-	 document.getElementById("account_manager").innerHTML = account.manager
-	 document.getElementById("account_script").innerHTML = account.script
-	 document.getElementById("account_storage").innerHTML = account.storage
-     }
-
 
      /* ==========================================================
 	The following functions get the stats for the previous day 
@@ -719,7 +720,7 @@
 	 updateFundraiserStats(headHash)
 	 updateFeesStats(headHash)
 	 updateGovernanceStats(headHash)
-	 initializeBakerStats();
+	 updateBakerStats(headHash);
      }
 
 
@@ -883,7 +884,7 @@
     
     
     <h3> Baker Info </h3>
-    There are <strong id="num_bakers">____</strong> active bakers. A total of <strong id="tez_staked">____</strong> out of <strong id="total_tez"></strong> <br>
-    i.e <strong id="percent_staked"> </strong> % is being staked right now.
+    <p id="baker_info">
+    </p>
 </body>
 </html>
