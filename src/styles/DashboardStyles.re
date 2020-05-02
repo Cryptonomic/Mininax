@@ -54,6 +54,7 @@ let mainContainer =
       "(max-width: 1500px)",
       [flexDirection(`column), alignItems(`center)],
     ),
+    selector("& p", [0 |> px |> margin]),
   ]);
 
 let leftContainer = style([width(px(725))]);
