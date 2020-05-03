@@ -312,7 +312,9 @@ let getLastDayTransactions =
   ->Future.flatMap(
       fun
       | Some(value) =>
-        MainType.CountedTransactions24h(value) |> toOption |> Future.value
+        DashboardStore.CountedTransactions24h(value)
+        |> toOption
+        |> Future.value
       | _ => None |> Future.value,
     );
 
@@ -337,7 +339,7 @@ let getLastDayZeroPriorityBlocks =
   ->Future.flatMap(
       fun
       | Some(value) =>
-        MainType.CountedZeroPriorityBlocksLevels24h(value)
+        DashboardStore.CountedZeroPriorityBlocksLevels24h(value)
         |> toOption
         |> Future.value
       | _ => None |> Future.value,
@@ -361,7 +363,7 @@ let getLastDayBakersWithOutput =
   ->Future.flatMap(
       fun
       | Some(value) =>
-        MainType.CountedBakers24h(value) |> toOption |> Future.value
+        DashboardStore.CountedBakers24h(value) |> toOption |> Future.value
       | _ => None |> Future.value,
     );
 
@@ -410,7 +412,10 @@ let getLastDayOriginationAndReveal =
     )
   ->Future.flatMap(value => {
       let (countContracts, countOriginations) = value;
-      MainType.CountOriginationAndReveal(countContracts, countOriginations)
+      DashboardStore.CountOriginationAndReveal(
+        countContracts,
+        countOriginations,
+      )
       |> toOption
       |> Future.value;
     });
@@ -433,7 +438,7 @@ let getLastDayStorageDelta =
   ->Future.flatMap(
       fun
       | Some(value) =>
-        MainType.GetStorageDelta24h(value) |> toOption |> Future.value
+        DashboardStore.GetStorageDelta24h(value) |> toOption |> Future.value
       | _ => None |> Future.value,
     );
 
@@ -455,7 +460,7 @@ let getTop3Bakers = (~config: MainType.config) =>
   ->Future.flatMap(
       fun
       | Some(value) =>
-        MainType.GetTop3Bakers(value) |> toOption |> Future.value
+        DashboardStore.GetTop3Bakers(value) |> toOption |> Future.value
       | _ => None |> Future.value,
     );
 
@@ -477,14 +482,14 @@ let getExtraOtherTotals =
   ->Future.map(
       List.map(
         fun
-        | Some(MainType.CountedTransactions24h(value)) =>
+        | Some(DashboardStore.CountedTransactions24h(value)) =>
           Js.log2("Counted transactions", value)
-        | Some(MainType.CountedZeroPriorityBlocksLevels24h(value)) =>
+        | Some(DashboardStore.CountedZeroPriorityBlocksLevels24h(value)) =>
           Js.log2("Counted zero priority blocks levels", value)
-        | Some(MainType.CountedBakers24h(value)) =>
+        | Some(DashboardStore.CountedBakers24h(value)) =>
           Js.log2("Counted bakers with output", value)
         | Some(
-            MainType.CountOriginationAndReveal(
+            DashboardStore.CountOriginationAndReveal(
               countContracts,
               countOriginations,
             ),
@@ -494,9 +499,9 @@ let getExtraOtherTotals =
             countContracts,
             countOriginations,
           )
-        | Some(MainType.GetTop3Bakers(value)) =>
+        | Some(DashboardStore.GetTop3Bakers(value)) =>
           Js.log2("top 3 bakers", value)
-        | Some(MainType.GetStorageDelta24h(value)) =>
+        | Some(DashboardStore.GetStorageDelta24h(value)) =>
           Js.log2("storage delta", value)
         | _ => Js.log("unknown value"),
       ),

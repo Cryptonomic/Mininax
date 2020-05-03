@@ -36,3 +36,23 @@ let dateTimeFormatOptions =
     ~timeZoneName=`short,
     (),
   );
+
+let optionToString =
+  fun
+  | Some(x) => x
+  | None => "";
+
+let optionToInt =
+  fun
+  | Some(x) => x
+  | None => 0;
+
+let optionToFloat =
+  fun
+  | Some(x) => x
+  | None => 0.;
+
+let optionToArray =
+  fun
+  | Some(x) => x
+  | None => [||];

@@ -4,29 +4,47 @@ open ReactIntl;
 let str = ReasonReact.string;
 let selector = (state: GlobalStore.globalState) => (
   state.dashboardState.lastBlock,
-  state.dashboardState.voteinfo,
-  state.dashboardState.proposalsInfo,
+  state.dashboardState.governanceProcessInfo,
 );
 
 [@react.component]
 let make = () => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
-  let (items, voteinfo, proposals) = Store.useSelector(selector);
+  let (block, gp) = Store.useSelector(selector);
 
-  let sumYayNay = float_of_int(voteinfo.yay_rolls + voteinfo.nay_rolls);
   let percentYay =
-    Js.Math.round(float_of_int(voteinfo.yay_rolls) /. sumYayNay *. 100.0);
-  let periodKind = items##period_kind;
+    switch (gp.yayRolls, gp.nayRolls) {
+    | (Some(yay_rolls), Some(nay_rolls)) =>
+      Js.Math.round(
+        float_of_int(yay_rolls)
+        /. float_of_int(yay_rolls + nay_rolls)
+        *. 100.0,
+      )
+      |> Helpers.toOption
+    | _ => None
+    };
 
   let (rightTitle, proposalsTitle) =
-    switch (periodKind, proposals |> Array.length) {
-    | ("proposal", 0) => ("PROPOSAL", "There are no active proposals.")
-    | ("proposal", 1) => ("PROPOSAL", "The active proposal is:")
-    | ("proposal", _) => ("PROPOSAL", "The active proposals are:")
-    | ("testing", _) => ("TESTING", "The active proposal is:")
-    | ("testing_vote", _) => ("TESTING VOTE", "The active proposal is:")
-    | ("promotion_vote", _) => ("PROMOTION VOTE", "The active proposal is:")
+    switch (block.period_kind, gp.proposals) {
+    | (Some("proposal"), Some(arr)) when arr |> Array.length == 1 => (
+        "PROPOSAL",
+        "There are no active proposals.",
+      )
+    | (Some("proposal"), Some(arr)) when arr |> Array.length == 1 => (
+        "PROPOSAL",
+        "The active proposal is:",
+      )
+    | (Some("proposal"), _) => ("PROPOSAL", "The active proposals are:")
+    | (Some("testing"), _) => ("TESTING", "The active proposal is:")
+    | (Some("testing_vote"), _) => (
+        "TESTING VOTE",
+        "The active proposal is:",
+      )
+    | (Some("promotion_vote"), _) => (
+        "PROMOTION VOTE",
+        "The active proposal is:",
+      )
     | _ => ("", "")
     };
 
@@ -42,75 +60,105 @@ let make = () => {
     </div>
     <div className={DashboardStyles.rightMdContainer(theme)}>
       <p> {proposalsTitle |> str} </p>
-      {switch (periodKind) {
-       | "proposal" =>
-         <div className=DashboardStyles.rightMdMainContainer>
-           {proposals
-            |> Array.mapi((index, pr: DashboardStore.proposalInfo) => {
-                 let lastTxt =
-                   if (index == Js.Array.length(proposals) - 1) {
-                     " votes.";
-                   } else {
-                     " votes and ";
-                   };
-                 <div key={string_of_int(index)}>
-                   <TextWithCopy
-                     className={DashboardStyles.content2(theme)}
-                     value={pr.proposal}
-                   />
-                   <p>
-                     {"with " |> str}
-                     <span className={DashboardStyles.content3(theme)}>
-                       {intl->Intl.formatNumber(
-                          float_of_string(pr.count_operation_group_hash),
-                        )
-                        |> str}
-                     </span>
-                     {lastTxt |> str}
-                   </p>
-                 </div>;
-               })
-            |> ReasonReact.array}
-         </div>
-       | "testing" =>
-         <div className=DashboardStyles.rightMdMainContainer>
-           <TextWithCopy
-             className={DashboardStyles.content2(theme)}
-             value=items##active_proposal
-           />
-         </div>
-       | "testing_vote"
-       | "promotion_vote" =>
-         <div className=DashboardStyles.rightMdMainContainer>
-           <p>
+      {switch (block.period_kind) {
+       | Some("proposal") =>
+         <IfOption validator={gp.proposals}>
+           <div className=DashboardStyles.rightMdMainContainer>
+             {gp.proposals
+              |> Helpers.optionToArray
+              |> Array.mapi((index, pr: DashboardStore.proposalInfo) => {
+                   let lastTxt =
+                     if (index
+                         == Js.Array.length(
+                              Helpers.optionToArray(gp.proposals),
+                            )
+                         - 1) {
+                       " votes.";
+                     } else {
+                       " votes and ";
+                     };
+                   <div key={string_of_int(index)}>
+                     <TextWithCopy
+                       className={DashboardStyles.content2(theme)}
+                       value={pr.proposal}
+                     />
+                     <p>
+                       {"with " |> str}
+                       <span className={DashboardStyles.content3(theme)}>
+                         {intl->Intl.formatNumber(
+                            float_of_string(pr.count_operation_group_hash),
+                          )
+                          |> str}
+                       </span>
+                       {lastTxt |> str}
+                     </p>
+                   </div>;
+                 })
+              |> ReasonReact.array}
+           </div>
+         </IfOption>
+       | Some("testing") =>
+         <IfOption validator={block.active_proposal}>
+           <div className=DashboardStyles.rightMdMainContainer>
              <TextWithCopy
                className={DashboardStyles.content2(theme)}
-               value=items##active_proposal
+               value={block.active_proposal |> Helpers.optionToString}
              />
-             <span className={DashboardStyles.content3(theme)}>
-               {intl
-                ->Intl.formatNumber(float_of_int(voteinfo.yay_rolls))
-                ->str}
-             </span>
-             {" rolls have been cast for, " |> str}
-             <span className={DashboardStyles.content3(theme)}>
-               {intl
-                ->Intl.formatNumber(float_of_int(voteinfo.nay_rolls))
-                ->str}
-             </span>
-             {" against and " |> str}
-             <span className={DashboardStyles.content3(theme)}>
-               {intl
-                ->Intl.formatNumber(float_of_int(voteinfo.pass_rolls))
-                ->str}
-             </span>
-             {" have passed." |> str}
-             <span className={DashboardStyles.content3(theme)}>
-               {Js.Float.toString(percentYay) ++ "%" |> str}
-             </span>
-             {" of commited rolls were in favor of the proposal, " |> str}
-             <If validator={percentYay < 90.0}> {"not " |> str} </If>
-             {"exceeding the supermajority requirement of 80%." |> str}
+           </div>
+         </IfOption>
+       | Some("testing_vote")
+       | Some("promotion_vote") =>
+         <div className=DashboardStyles.rightMdMainContainer>
+           <p>
+             <IfOption validator={block.active_proposal}>
+               <TextWithCopy
+                 className={DashboardStyles.content2(theme)}
+                 value={block.active_proposal |> Helpers.optionToString}
+               />
+             </IfOption>
+             <IfOption validator={gp.yayRolls}>
+               <span className={DashboardStyles.content3(theme)}>
+                 {intl
+                  ->Intl.formatNumber(
+                      float_of_int(Helpers.optionToInt(gp.yayRolls)),
+                    )
+                  ->str}
+               </span>
+               {" rolls have been cast for, " |> str}
+             </IfOption>
+             <IfOption validator={gp.nayRolls}>
+               <span className={DashboardStyles.content3(theme)}>
+                 {intl
+                  ->Intl.formatNumber(
+                      float_of_int(Helpers.optionToInt(gp.nayRolls)),
+                    )
+                  ->str}
+               </span>
+               {" against" |> str}
+             </IfOption>
+             <IfOption validator={gp.passRolls}>
+               {" and " |> str}
+               <span className={DashboardStyles.content3(theme)}>
+                 {intl
+                  ->Intl.formatNumber(
+                      float_of_int(Helpers.optionToInt(gp.passRolls)),
+                    )
+                  ->str}
+               </span>
+               {" have passed." |> str}
+             </IfOption>
+             <IfOption validator=percentYay>
+               <span className={DashboardStyles.content3(theme)}>
+                 {Js.Float.toString(Helpers.optionToFloat(percentYay))
+                  ++ "%"
+                  |> str}
+               </span>
+               {" of commited rolls were in favor of the proposal, " |> str}
+               <If validator={Helpers.optionToFloat(percentYay) < 90.0}>
+                 {"not " |> str}
+               </If>
+               {"exceeding the supermajority requirement of 80%." |> str}
+             </IfOption>
            </p>
          </div>
        | _ => ReasonReact.null

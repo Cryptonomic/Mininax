@@ -38,11 +38,22 @@ module Make = (()) => {
       ~callback=
         fun
         | Some((blockinfo, transinfo)) => {
+            Js.log(block);
+            Js.log(block |> Decode.json_of_magic |> Decode.parseLatestBlock);
             dispatch(
               DashboardAction(SetLastBlock(block, blockinfo, transinfo)),
+              // DashboardAction(Set)
             );
             dispatch(AppAction(SetLoaded));
           }
         | _ => dispatch(AppAction(SetError(ErrMessage.noAvailable))),
     );
 };
+
+type otherTotals =
+  | CountedTransactions24h(int)
+  | CountedZeroPriorityBlocksLevels24h(int)
+  | CountedBakers24h(int)
+  | CountOriginationAndReveal(option(int), option(int))
+  | GetTop3Bakers(array(baker))
+  | GetStorageDelta24h(storageDelta);

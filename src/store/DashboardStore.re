@@ -28,65 +28,148 @@ type proposalInfo = {
   proposal: string,
 };
 
+type blocksInfo = {blockCount: option(int)};
+type blockInfoChunk =
+  | BlockCount(int)
+  | BlockInfoFailed;
+let initBlockInfo = {blockCount: None};
+
+type totalsInfo = {
+  countAmount: option(int),
+  sumAmount: option(int),
+  countOriginatedContracts: option(int),
+  fundraiserCount: option(int),
+  sumFee: option(int),
+  sumConsumedGas: option(int),
+  totalFundraiserCount: option(int),
+};
+type totalsInfoChunk =
+  | CountAmount(int)
+  | SumAmount(int)
+  | CountOriginatedContracts(int)
+  | FundraiserCount(int)
+  | SumFee(int)
+  | SumConsumedGas(int)
+  | TotalFundraiserCount(int)
+  | TotalInfoFailed;
+let initTotalsInfo = {
+  countAmount: None,
+  sumAmount: None,
+  countOriginatedContracts: None,
+  fundraiserCount: None,
+  sumFee: None,
+  sumConsumedGas: None,
+  totalFundraiserCount: None,
+};
+
+type governanceProcessInfo = {
+  proposals: option(array(proposalInfo)),
+  yayRolls: option(int),
+  nayRolls: option(int),
+  passRolls: option(int),
+  proposal_hash: option(string),
+  current_expected_quorum: option(int),
+};
+type governanceProcessInfoChunk =
+  | Proposals(array(proposalInfo))
+  | YayRolls(int)
+  | NayRolls(int)
+  | PassRolls(int)
+  | Proposal_hash(string)
+  | Current_expected_quorum(int)
+  | GovernanceProcessInfoFailed;
+let initGovernanceProcessInfo = {
+  proposals: None,
+  yayRolls: None,
+  nayRolls: None,
+  passRolls: None,
+  proposal_hash: None,
+  current_expected_quorum: None,
+};
+
+type bakersInfo = {
+  bakersSumStakingBalance: option(float),
+  totalTez: option(float),
+};
+type bakersInfoChunk =
+  | BakersSumStakingBalance(float)
+  | TotalTez(float)
+  | BakersInfoFailed;
+let intBakersInfo = {bakersSumStakingBalance: None, totalTez: None};
+
+// type state = {
+//   lastBlock: option(MainType.tezosBlock),
+//   blocksInfo: transInfo,
+//   blockinfo: blockInfo,
+//   voteinfo: voteInfo,
+//   proposalsInfo: array(proposalInfo),
+// };
 type state = {
-  lastBlock: ConseiljsType.tezosBlock,
-  transinfo: transInfo,
-  blockinfo: blockInfo,
-  voteinfo: voteInfo,
-  proposalsInfo: array(proposalInfo),
+  loading: bool,
+  lastBlock: MainType.tezosBlock,
+  blocksInfo,
+  totalsInfo,
+  governanceProcessInfo,
+  bakersInfo,
+};
+
+let initState = {
+  loading: true,
+  lastBlock: MainType.initTezosBlock,
+  blocksInfo: initBlockInfo,
+  totalsInfo: initTotalsInfo,
+  governanceProcessInfo: initGovernanceProcessInfo,
+  bakersInfo: intBakersInfo,
+};
+
+type baker = {
+  countAccountId: string,
+  sumBalance: int,
+  delegateValue: string,
+};
+
+type storageDelta = {
+  sumFee: int,
+  sumPaid_storage_size_diff: int,
+  sumConsumed_gas: int,
+  countOperationGroupHash: string,
 };
 
 // type action =
-//   | SetBlockInfo(int)
-//   | SetTotalsInfo(int)
-//   | SetGovernanceProcess(int)
-//   | SetBackerInfo(int);
+//   | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
+//   | SetProposals(array(proposalInfo))
+//   | SetVoteInfo(voteInfo);
 
-let initState = {
-  lastBlock: Js.Obj.empty(),
-  transinfo: {
-    countOriginatedContracts: "0",
-    countAmount: "0",
-    sumAmount: 0,
-  },
-  blockinfo: {
-    blockCount: 0,
-    fundraiserCount: "0",
-    totalFundraiserCount: "0",
-    sum_fee: 0,
-    sum_consumed_gas: 0,
-    num_bakers: "0",
-    bakers_sum_staking_balance: 0.0,
-    totalTez: 0.0,
-  },
-  voteinfo: {
-    yay_rolls: 0,
-    nay_rolls: 0,
-    pass_rolls: 0,
-    proposal_hash: "",
-    current_expected_quorum: 0,
-  },
-  proposalsInfo: [||],
-};
+type otherTotals =
+  | CountedTransactions24h(int)
+  | CountedZeroPriorityBlocksLevels24h(int)
+  | CountedBakers24h(int)
+  | CountOriginationAndReveal(option(int), option(int))
+  | GetTop3Bakers(array(baker))
+  | GetStorageDelta24h(storageDelta);
 
 type action =
-  | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
-  | SetProposals(array(proposalInfo))
-  | SetVoteInfo(voteInfo);
+  | SetLastBlock(MainType.tezosBlock)
+  | SetBlockInfo(blocksInfo)
+  | SetTotalsInfo(totalsInfo)
+  | SetGovernanceProcess(governanceProcessInfo)
+  | SetBackerInfo(bakersInfo)
+  | Loaded;
 
 let reducer = (state, action) =>
   switch (action) {
-  // | SetBlockInfo(int) => store
-  // | SetTotalsInfo(int) => store
-  // | SetGovernanceProcess(int) => store
-  // | SetBackerInfo(int) => store
-  //////////////////////////////////////////
-  | SetLastBlock(lastBlock, blockinfo, transinfo) => {
+  | SetLastBlock(lastBlock) => {...state, lastBlock}
+  | SetBlockInfo(blocksInfo) => {...state, blocksInfo}
+  | SetTotalsInfo(totalsInfo) => {...state, totalsInfo}
+  | SetGovernanceProcess(governanceProcessInfo) => {
       ...state,
-      lastBlock,
-      transinfo,
-      blockinfo,
+      governanceProcessInfo,
     }
-  | SetProposals(proposalsInfo) => {...state, proposalsInfo}
-  | SetVoteInfo(voteinfo) => {...state, voteinfo}
-  };
+  | SetBackerInfo(bakersInfo) => {...state, bakersInfo}
+  | Loaded => {...state, loading: false}
+  } /* | SetVoteInfo(voteinfo) => {...state, voteinfo*/ /*     transinfo*/ /*   */ /* | SetProposals(proposalsInfo) => {...state, proposalsInfo*/ /*     blockinfo*/;
+
+//////////////////////////////////////////
+// | SetLastBlock(lastBlock, blockinfo, transinfo) => {
+//     ...state,
+//     lastBlock,
