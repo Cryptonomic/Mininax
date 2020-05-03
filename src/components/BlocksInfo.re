@@ -2,6 +2,7 @@ open Configs;
 open ReactIntl;
 open GlobalStore;
 open MomentRe;
+open DashboardStyles;
 
 let str = ReasonReact.string;
 let selector = (state: GlobalStore.globalState) => (
@@ -38,15 +39,13 @@ let make = () => {
     | None => (None, None)
     };
 
-  <div className={DashboardStyles.leftTopContainer(theme)}>
+  <div className={leftTopContainer(theme)}>
     <p>
       {"Greetings! The Tezos " |> str}
-      <span className={DashboardStyles.networkContent(theme)}>
-        {network |> str}
-      </span>
+      <span className={networkContent(theme)}> {network |> str} </span>
       <IfOption validator={block.meta_cycle}>
         {" is now in cycle " |> str}
-        <span className={DashboardStyles.content1(theme)}>
+        <span className={content1(theme)}>
           {intl
            ->Intl.formatNumber(
                float_of_int(Helpers.optionToInt(block.meta_cycle)),
@@ -59,7 +58,7 @@ let make = () => {
     <IfOption validator={blockinfo.blockCount}>
       <p>
         {"Within this cycle, " |> str}
-        <span className={DashboardStyles.content1(theme)}>
+        <span className={content1(theme)}>
           {intl->Intl.formatNumber(
              float_of_int(Helpers.optionToInt(blockinfo.blockCount)),
            )
@@ -68,7 +67,7 @@ let make = () => {
            |> str}
         </span>
         {" blocks " |> str}
-        <span className={DashboardStyles.content1(theme)}>
+        <span className={content1(theme)}>
           {"("
            ++ percentBaked(Helpers.optionToInt(blockinfo.blockCount))
            ++ "%)"
@@ -78,45 +77,43 @@ let make = () => {
       </p>
     </IfOption>
     <IfOption validator={block.hash}>
-      <p>
-        {"The latest block " |> str}
+      <p className=inline> {"The latest block " |> str} </p>
+      <TextWithCopy
+        className={content1(theme)}
+        value={Helpers.optionToString(block.hash)}
+        isReverse=true
+      />
+      <IfOption validator={block.level}>
+        <p className=inline> {" at level " |> str} </p>
+        <span className={content1(theme)}>
+          {intl
+           ->Intl.formatNumber(
+               float_of_int(Helpers.optionToInt(block.level)),
+             )
+           ->str}
+        </span>
+      </IfOption>
+      <IfOption validator={block.baker}>
+        <p className=inline> {" was baked by " |> str} </p>
         <TextWithCopy
-          className={DashboardStyles.content1(theme)}
-          value={Helpers.optionToString(block.hash)}
+          className={content1(theme)}
+          value={Helpers.optionToString(block.baker)}
           isReverse=true
         />
-        <IfOption validator={block.level}>
-          {" at level " |> str}
-          <span className={DashboardStyles.content1(theme)}>
-            {intl
-             ->Intl.formatNumber(
-                 float_of_int(Helpers.optionToInt(block.level)),
-               )
-             ->str}
-          </span>
-        </IfOption>
-        <IfOption validator={block.baker}>
-          {" was baked by " |> str}
-          <TextWithCopy
-            className={DashboardStyles.content1(theme)}
-            value={Helpers.optionToString(block.baker)}
-            isReverse=true
-          />
-        </IfOption>
-        <IfOption validator=latestBlockTime>
-          {" at " |> str}
-          <span className={DashboardStyles.content1(theme)}>
-            {latestBlockTime |> Helpers.optionToString |> str}
-          </span>
-        </IfOption>
-        <IfOption validator=latestBlockDate>
-          {" on " |> str}
-          <span className={DashboardStyles.content1(theme)}>
-            {latestBlockDate |> Helpers.optionToString |> str}
-          </span>
-        </IfOption>
-        {"." |> str}
-      </p>
+      </IfOption>
+      <IfOption validator=latestBlockTime>
+        <p className=inline> {" at " |> str} </p>
+        <span className={content1(theme)}>
+          {latestBlockTime |> Helpers.optionToString |> str}
+        </span>
+      </IfOption>
+      <IfOption validator=latestBlockDate>
+        <p className=inline> {" on " |> str} </p>
+        <span className={content1(theme)}>
+          {latestBlockDate |> Helpers.optionToString |> str}
+        </span>
+      </IfOption>
+      <p className=inline> {"." |> str} </p>
     </IfOption>
   </div>;
 };

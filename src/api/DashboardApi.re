@@ -32,13 +32,6 @@ let getNumBlocks =
 
 let getBlockInfoThunk =
     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
-  Future.all([
-    // ApiCall.getForQueryApi(
-    //   ~query=Queries.getQueryForNumBlocks(metaCycle, timestamp),
-    //   ~field="blocks",
-    //   ~config,
-    // ),
-    getNumBlocks(~metaCycle, ~timestamp, ~config),
-  ])
+  Future.all([getNumBlocks(~metaCycle, ~timestamp, ~config)])
   ->Future.map(reduceBlockInfo)
   ->Future.get(callback);

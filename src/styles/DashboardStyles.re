@@ -233,3 +233,5 @@ let searhBtn = index =>
     backgroundColor(hex(Themes.themes[index].searchBgColor)),
     borderWidth(px(0)),
   ]);
+
+let inline = style([`inline |> display]);

@@ -167,9 +167,4 @@ let reducer = (state, action) =>
     }
   | SetBackerInfo(bakersInfo) => {...state, bakersInfo}
   | Loaded => {...state, loading: false}
-  } /* | SetVoteInfo(voteinfo) => {...state, voteinfo*/ /*     transinfo*/ /*   */ /* | SetProposals(proposalsInfo) => {...state, proposalsInfo*/ /*     blockinfo*/;
-
-//////////////////////////////////////////
-// | SetLastBlock(lastBlock, blockinfo, transinfo) => {
-//     ...state,
-//     lastBlock,
+  };

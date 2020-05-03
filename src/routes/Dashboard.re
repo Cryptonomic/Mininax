@@ -16,15 +16,24 @@ let make = (~onSearch, ~changeLevel) => {
   let network = configs[theme].network;
   let items = Store.useSelector(selector);
 
-  let gotoLastBlock = () => {
-    let url = Utils.makeUrl(~network, ~entity="blocks", ~id=items##hash);
-    ReasonReactRouter.push(url);
-  };
+  let gotoLastBlock = () =>
+    switch (items.hash) {
+    | Some(value) =>
+      let url = Utils.makeUrl(~network, ~entity="blocks", ~id=value);
+      ReasonReactRouter.push(url);
+    | None => ()
+    };
+
   let gotoLastOperations = () => {
-    let query = Queries.getQueryForBlockLink(items##hash);
-    let displayName = Utils.getDisplayName(configs[theme]);
-    Utils.openSharedUrl(query, displayName, "operations");
+    switch (items.hash) {
+    | Some(value) =>
+      let query = Queries.getQueryForBlockLink(value);
+      let displayName = Utils.getDisplayName(configs[theme]);
+      Utils.openSharedUrl(query, displayName, "operations");
+    | None => ()
+    };
   };
+
   let gotoBlocksArronax = () => {
     let query = Queries.getQueryForBlocksTab();
     let displayName = Utils.getDisplayName(configs[theme]);
@@ -35,54 +44,65 @@ let make = (~onSearch, ~changeLevel) => {
       onSearch(searchVal);
     };
 
+  let onChangeLevel = _ =>
+    switch (items.level) {
+    | Some(value) => changeLevel(value - 1)
+    | None => ()
+    };
+
   <div className=DashboardStyles.container>
     <div className=DashboardStyles.mainContainer>
-      <div className=DashboardStyles.leftContainer>
-        <BlocksInfo />
-        // <TotalsInfo />
-      </div>
+      <div className=DashboardStyles.leftContainer> <BlocksInfo /> </div>
+      // <TotalsInfo />
       <div className=DashboardStyles.rightContainer>
         // <GovernanceProcessInfo />
         // <BakersInfo />
-        <div className=DashboardStyles.rightSearchConainer>
-          <div className=DashboardStyles.levelLabelContainer>
+
+          <div className=DashboardStyles.rightSearchConainer>
+            <IfOption validator={items.level}>
+              <div className=DashboardStyles.levelLabelContainer>
+                <button
+                  className={DashboardStyles.levelBtn(theme)}
+                  onClick=onChangeLevel>
+                  {ReasonReact.string("<")}
+                </button>
+                <div className={DashboardStyles.levelLabel(theme)}>
+                  {intl
+                   ->Intl.formatNumber(
+                       float_of_int(Helpers.optionToInt(items.level)),
+                     )
+                   ->React.string}
+                </div>
+                <button
+                  className={DashboardStyles.levelBtn(theme)}
+                  onClick={_ =>
+                    changeLevel(Helpers.optionToInt(items.level) + 1)
+                  }>
+                  {ReasonReact.string(">")}
+                </button>
+              </div>
+            </IfOption>
+            <input
+              value=searchVal
+              onChange={event =>
+                setSearchVal(ReactEvent.Form.target(event)##value)
+              }
+              onKeyDown={event =>
+                switch (event |> ReactEvent.Keyboard.which) {
+                | 13 => onSearchBlock()
+                | _ => ignore()
+                }
+              }
+              className={DashboardStyles.input(theme)}
+              placeholder="Show stats for block ID or level"
+            />
             <button
-              className={DashboardStyles.levelBtn(theme)}
-              onClick={_ => changeLevel(items##level - 1)}>
-              {ReasonReact.string("<")}
-            </button>
-            <div className={DashboardStyles.levelLabel(theme)}>
-              {intl
-               ->Intl.formatNumber(float_of_int(items##level))
-               ->React.string}
-            </div>
-            <button
-              className={DashboardStyles.levelBtn(theme)}
-              onClick={_ => changeLevel(items##level + 1)}>
-              {ReasonReact.string(">")}
+              className={DashboardStyles.searhBtn(theme)}
+              onClick={_ => onSearchBlock()}>
+              <img src=searchSvg />
             </button>
           </div>
-          <input
-            value=searchVal
-            onChange={event =>
-              setSearchVal(ReactEvent.Form.target(event)##value)
-            }
-            onKeyDown={event =>
-              switch (event |> ReactEvent.Keyboard.which) {
-              | 13 => onSearchBlock()
-              | _ => ignore()
-              }
-            }
-            className={DashboardStyles.input(theme)}
-            placeholder="Show stats for block ID or level"
-          />
-          <button
-            className={DashboardStyles.searhBtn(theme)}
-            onClick={_ => onSearchBlock()}>
-            <img src=searchSvg />
-          </button>
         </div>
-      </div>
     </div>
     <div className=DashboardStyles.footContainer>
       <div

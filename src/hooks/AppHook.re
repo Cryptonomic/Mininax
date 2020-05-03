@@ -41,15 +41,17 @@ module Make = (()) => {
         | _ =>
           dispatch(AppAction(SetBlock(block, "", true)));
           switch (lastBlock##period_kind) {
-          | "proposal" => UseDashboard.getProposalsInfo(lastBlock##meta_cycle)
+          // | "proposal" => UseDashboard.getProposalsInfo(lastBlock##meta_cycle)
           | "testing" => ()
           | _ =>
-            UseDashboard.getVoteInfo(
-              lastBlock##hash,
-              lastBlock##active_proposal,
-            )
+            // UseDashboard.getVoteInfo(
+            //   lastBlock##hash,
+            //   lastBlock##active_proposal,
+            // )
+            ()
           };
           UseDashboard.getBlockInfo(lastBlock);
+          ();
         }
       | Error(err) => dispatch(AppAction(SetError(err)))
       };
