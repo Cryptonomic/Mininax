@@ -28,11 +28,15 @@ type proposalInfo = {
   proposal: option(string),
 };
 
-type blocksInfo = {blockCount: option(int)};
+type blocksInfo = {
+  blockCount: option(int),
+  zeroPriorityBlocks: option(int),
+};
 type blockInfoChunk =
   | BlockCount(int)
+  | CountedZeroPriorityBlocksLevels(option(int))
   | BlockInfoFailed;
-let initBlockInfo = {blockCount: None};
+let initBlockInfo = {blockCount: None, zeroPriorityBlocks: None};
 
 type amountAndContracts = {
   countAmount: option(int),

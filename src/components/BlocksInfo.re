@@ -56,7 +56,7 @@ let make = () => {
       </IfOption>
     </p>
     <IfOption validator={blockinfo.blockCount}>
-      <p>
+      <p className=inline>
         {"Within this cycle, " |> str}
         <span className={content1(theme)}>
           {intl->Intl.formatNumber(
@@ -74,6 +74,18 @@ let make = () => {
            |> str}
         </span>
         {" have been baked." |> str}
+      </p>
+    </IfOption>
+    <IfOption validator={blockinfo.zeroPriorityBlocks}>
+      <p>
+        {" In the past day there have been " |> str}
+        <span className={content1(theme)}>
+          {intl->Intl.formatNumber(
+             float_of_int(Helpers.optionToInt(blockinfo.zeroPriorityBlocks)),
+           )
+           |> str}
+        </span>
+        {" zero priority blocks." |> str}
       </p>
     </IfOption>
     <IfOption validator={block.hash}>

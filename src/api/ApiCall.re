@@ -154,32 +154,6 @@ let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
       | _ => None |> Future.value,
     );
 
-let getLastDayZeroPriorityBlocks =
-    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="blocks")
-  ->applyQuery(
-      ~query=Queries.getQueryForZeroPriorityBlocksLast24(startDate, endDate),
-    )
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok(value) when value |> Array.length > 0 =>
-        value[0]
-        |> Decode.json_of_magic
-        |> Decode.countedZeroPriorityBlocksLevels
-        |> toOption
-      | _ => None,
-    )
-  ->Future.flatMap(
-      fun
-      | Some(value) =>
-        DashboardStore.CountedZeroPriorityBlocksLevels24h(value)
-        |> toOption
-        |> Future.value
-      | _ => None |> Future.value,
-    );
 
 let getLastDayBakersWithOutput =
     (~startDate: float, ~endDate: float, ~config: MainType.config) =>
@@ -309,7 +283,7 @@ let getExtraOtherTotals =
     |> MomentRe.Moment.valueOf;
   Future.all([
     // getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
-    getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
+    // getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
     getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
     getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
     getTop3Bakers(~config),

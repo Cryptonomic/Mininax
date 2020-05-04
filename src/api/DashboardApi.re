@@ -8,7 +8,11 @@ module Fold = {
       (accumulative, current) =>
         switch (current) {
         | BlockInfoFailed => accumulative
-        | BlockCount(value) => {blockCount: Some(value)}
+        | BlockCount(value) => {...accumulative, blockCount: Some(value)}
+        | CountedZeroPriorityBlocksLevels(zeroPriorityBlocks) => {
+            ...accumulative,
+            zeroPriorityBlocks,
+          }
         },
       initBlockInfo,
     );
@@ -269,6 +273,32 @@ module Calls = {
         | Some(value) => CountedTransactions(Some(value)) |> Future.value
         | _ => TotalInfoFailed |> Future.value,
       );
+
+  let getLastDayZeroPriorityBlocks =
+      (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="blocks")
+    ->applyQuery(
+        ~query=
+          Queries.getQueryForZeroPriorityBlocksLast24(startDate, endDate),
+      )
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(value) when value |> Array.length > 0 =>
+          value[0]
+          |> Decode.json_of_magic
+          |> Decode.countedZeroPriorityBlocksLevels
+          |> toOption
+        | _ => None,
+      )
+    ->Future.flatMap(
+        fun
+        | Some(value) =>
+          CountedZeroPriorityBlocksLevels(Some(value)) |> Future.value
+        | _ => BlockInfoFailed |> Future.value,
+      );
 };
 
 module Thunk = {
@@ -281,10 +311,19 @@ module Thunk = {
         ~metaCycle: int,
         ~timestamp: float,
         ~config: MainType.config,
-      ) =>
-    Future.all([getNumBlocks(~metaCycle, ~timestamp, ~config)])
+      ) => {
+    let startDate =
+      timestamp
+      |> MomentRe.momentWithTimestampMS
+      |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
+      |> MomentRe.Moment.valueOf;
+    Future.all([
+      getNumBlocks(~metaCycle, ~timestamp, ~config),
+      getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
+    ])
     ->Future.map(reduceBlockInfo)
     ->Future.get(callback);
+  };
 
   let getTotalsInfoThunk =
       (~callback, ~timestamp: float, ~config: MainType.config) => {
