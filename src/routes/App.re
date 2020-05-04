@@ -74,14 +74,14 @@ let make = () => {
     | [network] => goToNetwork(network)
     | _ => goToMainPage()
     };
-    ApiCall.getExtraOtherTotals(
-      ~config=configs[state.selectedConfig],
-      ~timestamp={
-        Js.Date.make() |> Js.Date.getTime;
-      },
-      ~callback=_ =>
-      Js.log("<------Finish getting other extra------>")
-    );
+    // ApiCall.getExtraOtherTotals(
+    //   ~config=configs[state.selectedConfig],
+    //   ~timestamp={
+    //     Js.Date.make() |> Js.Date.getTime;
+    //   },
+    //   ~callback=_ =>
+    //   Js.log("<------Finish getting other extra------>")
+    // );
     None;
   });
 

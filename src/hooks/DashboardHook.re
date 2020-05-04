@@ -1,6 +1,8 @@
 open GlobalStore;
 open DashboardStore;
 open Configs;
+open DashboardApi.Thunk;
+
 let selector = (state: GlobalStore.globalState) =>
   state.appState.selectedConfig;
 module Make = (()) => {
@@ -31,7 +33,7 @@ module Make = (()) => {
   //   );
 
   let getProposalsInfo = (block: ConseiljsType.tezosBlock) =>
-    DashboardApi.getProposalsInfoThunk(
+    getProposalsInfoThunk(
       ~config=configs[selectedConfig],
       ~metaCycle=block##meta_cycle,
       ~callback=value => {
@@ -39,7 +41,7 @@ module Make = (()) => {
     });
 
   let getGovernanceProcessInfo = (block: ConseiljsType.tezosBlock) =>
-    DashboardApi.getGovernanceProcessInfoThunk(
+    getGovernanceProcessInfoThunk(
       ~config=configs[selectedConfig],
       ~hash=block##hash,
       ~active_proposal=block##active_proposal,
@@ -48,7 +50,7 @@ module Make = (()) => {
     });
 
   let getTotalsInfo = (block: ConseiljsType.tezosBlock) =>
-    DashboardApi.getTotalsInfoThunk(
+    getTotalsInfoThunk(
       ~timestamp=block##timestamp,
       ~config=configs[selectedConfig],
       ~callback=value =>
@@ -56,13 +58,12 @@ module Make = (()) => {
     );
 
   let getBakersInfo = () =>
-    DashboardApi.getBakersInfoThunk(
-      ~config=configs[selectedConfig], ~callback=value =>
+    getBakersInfoThunk(~config=configs[selectedConfig], ~callback=value =>
       dispatch(DashboardAction(SetBackerInfo(value)))
     );
 
   let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
-    DashboardApi.getBlockInfoThunk(
+    getBlockInfoThunk(
       ~metaCycle=block##meta_cycle,
       ~timestamp=block##timestamp,
       ~config=configs[selectedConfig],

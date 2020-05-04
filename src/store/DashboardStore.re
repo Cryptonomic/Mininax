@@ -44,6 +44,7 @@ type totalsInfo = {
   countAmount: option(int),
   sumAmount: option(int),
   countOriginatedContracts: option(int),
+  countTransactions: option(int),
   fundraiserCount: option(int),
   sumFee: option(int),
   sumConsumedGas: option(int),
@@ -54,11 +55,13 @@ type totalsInfoChunk =
   | FundraiserCount(option(int))
   | SumFeeAndGas(option(int), option(int))
   | TotalFundraiserCount(option(int))
+  | CountedTransactions(option(int))
   | TotalInfoFailed;
 let initTotalsInfo = {
   countAmount: None,
   sumAmount: None,
   countOriginatedContracts: None,
+  countTransactions: None,
   fundraiserCount: None,
   sumFee: None,
   sumConsumedGas: None,

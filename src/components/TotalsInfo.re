@@ -50,16 +50,29 @@ let make = () => {
     | None => None
     };
 
+  Js.log2("TEST", info);
+
   <div className={DashboardStyles.leftBottomContainer(theme)}>
     <p>
       {"In the past day there have been " |> str}
+      <IfOption validator={info.countTransactions}>
+        <span className={DashboardStyles.content3(theme)}>
+          {intl
+           ->Intl.formatNumber(
+               float_of_int(optionToInt(info.countTransactions)),
+             )
+           ->str}
+        </span>
+        {" transactions " |> str}
+      </IfOption>
       <IfOption validator={info.countAmount}>
+        {" and " |> str}
         <span className={DashboardStyles.content3(theme)}>
           {intl
            ->Intl.formatNumber(float_of_int(optionToInt(info.countAmount)))
            ->str}
         </span>
-        {" transactions" |> str}
+        {" contract invocations" |> str}
       </IfOption>
       <IfOption validator=transactions_total_xtz>
         {" for a total of " |> str}
