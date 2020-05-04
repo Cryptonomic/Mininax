@@ -30,7 +30,15 @@ module Make = (()) => {
   //       | _ => dispatch(AppAction(SetError(ErrMessage.noAvailable))),
   //   );
 
-  let getTotalsInfo = 
+  let getTotalsInfo = (block: ConseiljsType.tezosBlock) =>
+    DashboardApi.getTotalsInfoThunk(
+      ~timestamp=block##timestamp,
+      ~config=configs[selectedConfig],
+      ~callback=value => {
+        Js.log2("getTotalsInfo", value);
+        dispatch(DashboardAction(SetTotalsInfo(value)));
+      },
+    );
 
   let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
     DashboardApi.getBlockInfoThunk(

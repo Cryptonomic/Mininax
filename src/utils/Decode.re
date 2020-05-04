@@ -136,3 +136,49 @@ let parseLatestBlock = (json): MainType.tezosBlock =>
     validation_pass:
       json |> field("validation_pass", nullable(int)) |> Js.nullToOption,
   };
+
+let log = value => {
+  Js.log2("*************", value);
+  value;
+};
+
+let parseAmountAndContracts = (json): amountAndContracts => {
+  Js.log(json);
+  let value =
+    Json.Decode.{
+      sumAmount: json |> field("sum_amount", int) |> log |> Helpers.toOption,
+      countAmount:
+        json
+        |> field("count_amount", string)
+        |> log
+        |> int_of_string
+        |> Helpers.toOption,
+      countOriginatedContracts:
+        json
+        |> field("count_originated_contracts", string)
+        |> log
+        |> int_of_string
+        |> Helpers.toOption,
+    };
+  Js.log2(">>>>>>>>>>>>", value);
+  value;
+};
+
+let parseFundraiserStats = json => {
+  json
+  |> Json.Decode.field("count_kind", Json.Decode.string)
+  |> int_of_string
+  |> Helpers.toOption;
+};
+
+let parseFundraiserActivated = json =>
+  json
+  |> Json.Decode.field("count_kind", Json.Decode.string)
+  |> int_of_string
+  |> Helpers.toOption;
+
+let parseSumFeeAndGas = json =>
+  Json.Decode.(
+    json |> field("sum_fee", nullable(int)) |> Js.nullToOption,
+    json |> field("sum_consumed_gas", nullable(int)) |> Js.nullToOption,
+  );

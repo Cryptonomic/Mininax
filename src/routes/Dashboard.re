@@ -52,8 +52,10 @@ let make = (~onSearch, ~changeLevel) => {
 
   <div className=DashboardStyles.container>
     <div className=DashboardStyles.mainContainer>
-      <div className=DashboardStyles.leftContainer> <BlocksInfo /> </div>
-      // <TotalsInfo />
+      <div className=DashboardStyles.leftContainer>
+        <BlocksInfo />
+        <TotalsInfo />
+      </div>
       <div className=DashboardStyles.rightContainer>
         // <GovernanceProcessInfo />
         // <BakersInfo />

@@ -34,6 +34,12 @@ type blockInfoChunk =
   | BlockInfoFailed;
 let initBlockInfo = {blockCount: None};
 
+type amountAndContracts = {
+  countAmount: option(int),
+  sumAmount: option(int),
+  countOriginatedContracts: option(int),
+};
+
 type totalsInfo = {
   countAmount: option(int),
   sumAmount: option(int),
@@ -44,13 +50,10 @@ type totalsInfo = {
   totalFundraiserCount: option(int),
 };
 type totalsInfoChunk =
-  | CountAmount(int)
-  | SumAmount(int)
-  | CountOriginatedContracts(int)
-  | FundraiserCount(int)
-  | SumFee(int)
-  | SumConsumedGas(int)
-  | TotalFundraiserCount(int)
+  | AmountAndContracts(amountAndContracts)
+  | FundraiserCount(option(int))
+  | SumFeeAndGas(option(int), option(int))
+  | TotalFundraiserCount(option(int))
   | TotalInfoFailed;
 let initTotalsInfo = {
   countAmount: None,

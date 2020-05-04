@@ -13,6 +13,7 @@ let make = () => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
   let info = Store.useSelector(selector);
+  Js.log2("info", info);
   let transactions_total_xtz =
     switch (info.sumAmount) {
     | Some(value) =>
@@ -69,14 +70,16 @@ let make = () => {
         {" while " |> str}
       </IfOption>
       <IfOption validator={info.countOriginatedContracts}>
-        <span className={DashboardStyles.content3(theme)}>
-          {intl
-           ->Intl.formatNumber(
-               float_of_int(optionToInt(info.countOriginatedContracts)),
-             )
-           ->str}
-        </span>
-        {" accounts were originated and " |> str}
+        <If validator={info.countOriginatedContracts |> optionToInt > 0}>
+          <span className={DashboardStyles.content3(theme)}>
+            {intl
+             ->Intl.formatNumber(
+                 float_of_int(optionToInt(info.countOriginatedContracts)),
+               )
+             ->str}
+          </span>
+          {" accounts were originated and " |> str}
+        </If>
       </IfOption>
       <IfOption validator={info.fundraiserCount}>
         <span className={DashboardStyles.content3(theme)}>

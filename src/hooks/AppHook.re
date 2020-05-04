@@ -50,6 +50,8 @@ module Make = (()) => {
             // )
             ()
           };
+          Js.log("----------running getTotalsInfo");
+          UseDashboard.getTotalsInfo(lastBlock);
           UseDashboard.getBlockInfo(lastBlock);
           ();
         }
