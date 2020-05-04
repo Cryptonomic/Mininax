@@ -152,6 +152,21 @@ let reduceGevernanceInfo =
     initGovernanceProcessInfo,
   );
 
+let reduceBakersInfo =
+  List.fold_left(
+    (accumulative, current) => {
+      switch (current) {
+      | BakersInfoFailed => accumulative
+      | BakersSumStakingBalance(bakersSumStakingBalance) => {
+          ...accumulative,
+          bakersSumStakingBalance,
+        }
+      | TotalTez(totalTez) => {...accumulative, totalTez}
+      }
+    },
+    intBakersInfo,
+  );
+
 let getQuorumInfo = (~hash: string, ~config: MainType.config) =>
   ApiCall.getForQueryApi(
     ~query=Queries.getQueryForQuorum(hash),
@@ -186,6 +201,41 @@ let getVoteInfo =
       fun
       | Some(vInfo) => VoteInfo(vInfo) |> Future.value
       | _ => GovernanceProcessInfoFailed |> Future.value,
+    );
+
+let getSumStakingBalance = (~config) =>
+  ApiCall.getForQueryApi(
+    ~query=Queries.getQueryForBakerStats(),
+    ~field="delegates",
+    ~config,
+  )
+  ->Future.map(
+      fun
+      | Some(value) =>
+        value |> json_of_magic |> parseSumStakingBalance |> toOption
+      | None => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) => BakersSumStakingBalance(value) |> Future.value
+      | _ => BakersInfoFailed |> Future.value,
+    );
+
+let getSumTez = (~config) =>
+  ApiCall.getForQueryApi(
+    ~query=Queries.getQueryForMarketCap(),
+    ~field="accounts",
+    ~config,
+  )
+  ->Future.map(
+      fun
+      | Some(value) => value |> json_of_magic |> parseSumTez |> toOption
+      | None => None,
+    )
+  ->Future.flatMap(
+      fun
+      | Some(value) => TotalTez(value) |> Future.value
+      | _ => BakersInfoFailed |> Future.value,
     );
 
 let getBlockInfoThunk =
@@ -233,4 +283,9 @@ let getGovernanceProcessInfoThunk =
     getVoteInfo(~hash, ~active_proposal, ~config),
   ])
   ->Future.map(reduceGevernanceInfo)
+  ->Future.get(callback);
+
+let getBakersInfoThunk = (~callback, ~config: MainType.config) =>
+  Future.all([getSumStakingBalance(~config), getSumTez(~config)])
+  ->Future.map(reduceBakersInfo)
   ->Future.get(callback);

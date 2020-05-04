@@ -43,10 +43,12 @@ module Make = (()) => {
           switch (lastBlock##period_kind) {
           | "proposal" => UseDashboard.getProposalsInfo(lastBlock)
           | "testing" => ()
+          // TODO have to test
           | _ => UseDashboard.getGovernanceProcessInfo(lastBlock)
           };
-          Js.log("----------running getTotalsInfo");
+          // TODO should run them together for set loaded in the same time
           UseDashboard.getTotalsInfo(lastBlock);
+          UseDashboard.getBakersInfo();
           UseDashboard.getBlockInfo(lastBlock);
           ();
         }

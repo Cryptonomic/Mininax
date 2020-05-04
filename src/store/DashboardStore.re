@@ -95,8 +95,8 @@ type bakersInfo = {
   totalTez: option(float),
 };
 type bakersInfoChunk =
-  | BakersSumStakingBalance(float)
-  | TotalTez(float)
+  | BakersSumStakingBalance(option(float))
+  | TotalTez(option(float))
   | BakersInfoFailed;
 let intBakersInfo = {bakersSumStakingBalance: None, totalTez: None};
 

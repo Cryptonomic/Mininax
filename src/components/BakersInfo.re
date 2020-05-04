@@ -67,7 +67,6 @@ let make = () => {
             {"(" ++ Helpers.optionToString(percent_staked) ++ "%)" |> str}
           </span>
           {" of TEZ, is being staked right now." |> str}
-          {"." |> str}
         </p>
       </IfOption>
     </div>;

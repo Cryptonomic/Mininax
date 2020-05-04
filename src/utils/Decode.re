@@ -194,3 +194,16 @@ let parseVoteInfo = (json): voteInfo =>
     passRolls: json |> field("pass_rolls", int) |> Helpers.toOption,
     proposalHash: json |> field("proposal_hash", string) |> Helpers.toOption,
   };
+
+let parseSumStakingBalance = json =>
+  Json.Decode.(
+    json
+    |> field("sum_staking_balance", int)
+    |> float_of_int
+    |> Helpers.toOption
+  );
+
+let parseSumTez = json =>
+  Json.Decode.(
+    json |> field("sum_balance", int) |> float_of_int |> Helpers.toOption
+  );

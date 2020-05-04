@@ -222,16 +222,6 @@ let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
 //       ~field="operations",
 //       ~config,
 //     ),
-//     getForQueryApi(
-//       ~query=Queries.getQueryForBakerStats(),
-//       ~field="delegates",
-//       ~config,
-//     ),
-//     getForQueryApi(
-//       ~query=Queries.getQueryForMarketCap(),
-//       ~field="accounts",
-//       ~config,
-//     ),
 //   ])
 //   ->Future.map(
 //       fun

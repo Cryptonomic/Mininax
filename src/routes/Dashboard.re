@@ -39,6 +39,7 @@ let make = (~onSearch, ~changeLevel) => {
     let displayName = Utils.getDisplayName(configs[theme]);
     Utils.openSharedUrl(query, displayName, "blocks");
   };
+
   let onSearchBlock = () =>
     if (searchVal != "") {
       onSearch(searchVal);
@@ -58,7 +59,7 @@ let make = (~onSearch, ~changeLevel) => {
       </div>
       <div className=DashboardStyles.rightContainer>
         <GovernanceProcessInfo />
-        // <BakersInfo />
+        <BakersInfo />
         <div className=DashboardStyles.rightSearchConainer>
           <IfOption validator={items.level}>
             <div className=DashboardStyles.levelLabelContainer>

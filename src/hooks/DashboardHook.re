@@ -55,6 +55,12 @@ module Make = (()) => {
       dispatch(DashboardAction(SetTotalsInfo(value)))
     );
 
+  let getBakersInfo = () =>
+    DashboardApi.getBakersInfoThunk(
+      ~config=configs[selectedConfig], ~callback=value =>
+      dispatch(DashboardAction(SetBackerInfo(value)))
+    );
+
   let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
     DashboardApi.getBlockInfoThunk(
       ~metaCycle=block##meta_cycle,
