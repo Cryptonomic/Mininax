@@ -5,13 +5,14 @@ let str = ReasonReact.string;
 let selector = (state: GlobalStore.globalState) => (
   state.dashboardState.lastBlock,
   state.dashboardState.governanceProcessInfo,
+  state.dashboardState.proposalsInfo,
 );
 
 [@react.component]
 let make = () => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
-  let (block, gp) = Store.useSelector(selector);
+  let (block, gp, proposals) = Store.useSelector(selector);
 
   let percentYay =
     switch (gp.yayRolls, gp.nayRolls) {
@@ -26,8 +27,8 @@ let make = () => {
     };
 
   let (rightTitle, proposalsTitle) =
-    switch (block.period_kind, gp.proposals) {
-    | (Some("proposal"), Some(arr)) when arr |> Array.length == 1 => (
+    switch (block.period_kind, proposals) {
+    | (Some("proposal"), Some(arr)) when arr |> Array.length == 0 => (
         "PROPOSAL",
         "There are no active proposals.",
       )
@@ -62,31 +63,33 @@ let make = () => {
       <p> {proposalsTitle |> str} </p>
       {switch (block.period_kind) {
        | Some("proposal") =>
-         <IfOption validator={gp.proposals}>
+         <IfOption validator=proposals>
            <div className=DashboardStyles.rightMdMainContainer>
-             {gp.proposals
+             {proposals
               |> Helpers.optionToArray
               |> Array.mapi((index, pr: DashboardStore.proposalInfo) => {
                    let lastTxt =
                      if (index
-                         == Js.Array.length(
-                              Helpers.optionToArray(gp.proposals),
-                            )
+                         == Js.Array.length(Helpers.optionToArray(proposals))
                          - 1) {
                        " votes.";
                      } else {
                        " votes and ";
                      };
                    <div key={string_of_int(index)}>
-                     <TextWithCopy
-                       className={DashboardStyles.content2(theme)}
-                       value={pr.proposal}
-                     />
+                     <IfOption validator={pr.proposal}>
+                       <TextWithCopy
+                         className={DashboardStyles.content2(theme)}
+                         value={pr.proposal |> Helpers.optionToString}
+                       />
+                       <p className=DashboardStyles.inline>
+                         {"with " |> str}
+                       </p>
+                     </IfOption>
                      <p>
-                       {"with " |> str}
                        <span className={DashboardStyles.content3(theme)}>
                          {intl->Intl.formatNumber(
-                            float_of_string(pr.count_operation_group_hash),
+                            float_of_int(pr.count_operation_group_hash),
                           )
                           |> str}
                        </span>

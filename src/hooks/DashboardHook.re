@@ -30,14 +30,29 @@ module Make = (()) => {
   //       | _ => dispatch(AppAction(SetError(ErrMessage.noAvailable))),
   //   );
 
+  let getProposalsInfo = (block: ConseiljsType.tezosBlock) =>
+    DashboardApi.getProposalsInfoThunk(
+      ~config=configs[selectedConfig],
+      ~metaCycle=block##meta_cycle,
+      ~callback=value => {
+      dispatch(DashboardAction(SetProposalInfo(value)))
+    });
+
+  let getGovernanceProcessInfo = (block: ConseiljsType.tezosBlock) =>
+    DashboardApi.getGovernanceProcessInfoThunk(
+      ~config=configs[selectedConfig],
+      ~hash=block##hash,
+      ~active_proposal=block##active_proposal,
+      ~callback=value => {
+      dispatch(DashboardAction(SetGovernanceProcess(value)))
+    });
+
   let getTotalsInfo = (block: ConseiljsType.tezosBlock) =>
     DashboardApi.getTotalsInfoThunk(
       ~timestamp=block##timestamp,
       ~config=configs[selectedConfig],
-      ~callback=value => {
-        Js.log2("getTotalsInfo", value);
-        dispatch(DashboardAction(SetTotalsInfo(value)));
-      },
+      ~callback=value =>
+      dispatch(DashboardAction(SetTotalsInfo(value)))
     );
 
   let getBlockInfo = (block: ConseiljsType.tezosBlock) =>

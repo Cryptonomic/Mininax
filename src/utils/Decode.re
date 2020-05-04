@@ -137,32 +137,20 @@ let parseLatestBlock = (json): MainType.tezosBlock =>
       json |> field("validation_pass", nullable(int)) |> Js.nullToOption,
   };
 
-let log = value => {
-  Js.log2("*************", value);
-  value;
-};
-
-let parseAmountAndContracts = (json): amountAndContracts => {
-  Js.log(json);
-  let value =
-    Json.Decode.{
-      sumAmount: json |> field("sum_amount", int) |> log |> Helpers.toOption,
-      countAmount:
-        json
-        |> field("count_amount", string)
-        |> log
-        |> int_of_string
-        |> Helpers.toOption,
-      countOriginatedContracts:
-        json
-        |> field("count_originated_contracts", string)
-        |> log
-        |> int_of_string
-        |> Helpers.toOption,
-    };
-  Js.log2(">>>>>>>>>>>>", value);
-  value;
-};
+let parseAmountAndContracts = (json): amountAndContracts =>
+  Json.Decode.{
+    sumAmount: json |> field("sum_amount", int) |> Helpers.toOption,
+    countAmount:
+      json
+      |> field("count_amount", string)
+      |> int_of_string
+      |> Helpers.toOption,
+    countOriginatedContracts:
+      json
+      |> field("count_originated_contracts", string)
+      |> int_of_string
+      |> Helpers.toOption,
+  };
 
 let parseFundraiserStats = json => {
   json
@@ -182,3 +170,27 @@ let parseSumFeeAndGas = json =>
     json |> field("sum_fee", nullable(int)) |> Js.nullToOption,
     json |> field("sum_consumed_gas", nullable(int)) |> Js.nullToOption,
   );
+
+let parseProposalInfo = json =>
+  Json.Decode.{
+    count_operation_group_hash:
+      json |> field("count_operation_group_hash", string) |> int_of_string,
+    proposal: json |> field("proposal", nullable(string)) |> Js.nullToOption,
+  };
+
+let parseProposalsInfo = json => json |> Json.Decode.array(parseProposalInfo);
+
+// TODO should be tested
+let parseQuorumInfo = json =>
+  Json.Decode.(
+    json |> field("current_expected_quorum", string) |> int_of_string
+  );
+
+// TODO should be tested
+let parseVoteInfo = (json): voteInfo =>
+  Json.Decode.{
+    yayRolls: json |> field("yay_rolls", int) |> Helpers.toOption,
+    nayRolls: json |> field("nay_rolls", int) |> Helpers.toOption,
+    passRolls: json |> field("pass_rolls", int) |> Helpers.toOption,
+    proposalHash: json |> field("proposal_hash", string) |> Helpers.toOption,
+  };

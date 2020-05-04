@@ -1,31 +1,31 @@
-type transInfo = {
-  countOriginatedContracts: string,
-  countAmount: string,
-  sumAmount: int,
-};
+// type transInfo = {
+//   countOriginatedContracts: string,
+//   countAmount: string,
+//   sumAmount: int,
+// };
 
-type voteInfo = {
-  yay_rolls: int,
-  nay_rolls: int,
-  pass_rolls: int,
-  proposal_hash: string,
-  current_expected_quorum: int,
-};
+// type voteInfo = {
+//   yay_rolls: int,
+//   nay_rolls: int,
+//   pass_rolls: int,
+//   proposal_hash: string,
+//   current_expected_quorum: int,
+// };
 
-type blockInfo = {
-  blockCount: int,
-  fundraiserCount: string,
-  totalFundraiserCount: string,
-  sum_fee: int,
-  sum_consumed_gas: int,
-  num_bakers: string,
-  bakers_sum_staking_balance: float,
-  totalTez: float,
-};
+// type blockInfo = {
+//   blockCount: int,
+//   fundraiserCount: string,
+//   totalFundraiserCount: string,
+//   sum_fee: int,
+//   sum_consumed_gas: int,
+//   num_bakers: string,
+//   bakers_sum_staking_balance: float,
+//   totalTez: float,
+// };
 
 type proposalInfo = {
-  count_operation_group_hash: string,
-  proposal: string,
+  count_operation_group_hash: int,
+  proposal: option(string),
 };
 
 type blocksInfo = {blockCount: option(int)};
@@ -66,28 +66,28 @@ let initTotalsInfo = {
 };
 
 type governanceProcessInfo = {
-  proposals: option(array(proposalInfo)),
   yayRolls: option(int),
   nayRolls: option(int),
   passRolls: option(int),
-  proposal_hash: option(string),
-  current_expected_quorum: option(int),
+  proposalHash: option(string),
+  currentExpectedQuorum: option(int),
+};
+type voteInfo = {
+  yayRolls: option(int),
+  nayRolls: option(int),
+  passRolls: option(int),
+  proposalHash: option(string),
 };
 type governanceProcessInfoChunk =
-  | Proposals(array(proposalInfo))
-  | YayRolls(int)
-  | NayRolls(int)
-  | PassRolls(int)
-  | Proposal_hash(string)
-  | Current_expected_quorum(int)
+  | VoteInfo(voteInfo)
+  | CurrentExpectedQuorum(option(int))
   | GovernanceProcessInfoFailed;
 let initGovernanceProcessInfo = {
-  proposals: None,
   yayRolls: None,
   nayRolls: None,
   passRolls: None,
-  proposal_hash: None,
-  current_expected_quorum: None,
+  proposalHash: None,
+  currentExpectedQuorum: None,
 };
 
 type bakersInfo = {
@@ -100,18 +100,12 @@ type bakersInfoChunk =
   | BakersInfoFailed;
 let intBakersInfo = {bakersSumStakingBalance: None, totalTez: None};
 
-// type state = {
-//   lastBlock: option(MainType.tezosBlock),
-//   blocksInfo: transInfo,
-//   blockinfo: blockInfo,
-//   voteinfo: voteInfo,
-//   proposalsInfo: array(proposalInfo),
-// };
 type state = {
   loading: bool,
   lastBlock: MainType.tezosBlock,
   blocksInfo,
   totalsInfo,
+  proposalsInfo: option(array(proposalInfo)),
   governanceProcessInfo,
   bakersInfo,
 };
@@ -122,6 +116,7 @@ let initState = {
   blocksInfo: initBlockInfo,
   totalsInfo: initTotalsInfo,
   governanceProcessInfo: initGovernanceProcessInfo,
+  proposalsInfo: None,
   bakersInfo: intBakersInfo,
 };
 
@@ -157,6 +152,7 @@ type action =
   | SetTotalsInfo(totalsInfo)
   | SetGovernanceProcess(governanceProcessInfo)
   | SetBackerInfo(bakersInfo)
+  | SetProposalInfo(option(array(proposalInfo)))
   | Loaded;
 
 let reducer = (state, action) =>
@@ -169,5 +165,6 @@ let reducer = (state, action) =>
       governanceProcessInfo,
     }
   | SetBackerInfo(bakersInfo) => {...state, bakersInfo}
+  | SetProposalInfo(proposalsInfo) => {...state, proposalsInfo}
   | Loaded => {...state, loading: false}
   };

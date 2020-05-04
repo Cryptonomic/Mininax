@@ -13,7 +13,6 @@ let make = () => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
   let info = Store.useSelector(selector);
-  Js.log2("info", info);
   let transactions_total_xtz =
     switch (info.sumAmount) {
     | Some(value) =>

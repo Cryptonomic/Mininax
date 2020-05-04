@@ -41,14 +41,9 @@ module Make = (()) => {
         | _ =>
           dispatch(AppAction(SetBlock(block, "", true)));
           switch (lastBlock##period_kind) {
-          // | "proposal" => UseDashboard.getProposalsInfo(lastBlock##meta_cycle)
+          | "proposal" => UseDashboard.getProposalsInfo(lastBlock)
           | "testing" => ()
-          | _ =>
-            // UseDashboard.getVoteInfo(
-            //   lastBlock##hash,
-            //   lastBlock##active_proposal,
-            // )
-            ()
+          | _ => UseDashboard.getGovernanceProcessInfo(lastBlock)
           };
           Js.log("----------running getTotalsInfo");
           UseDashboard.getTotalsInfo(lastBlock);

@@ -154,142 +154,116 @@ let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
       | _ => None |> Future.value,
     );
 
-let getVoteInfoThunk =
-    (
-      ~callback,
-      ~hash: string,
-      ~active_proposal: string,
-      ~config: MainType.config,
-    ) =>
-  Js.Promise.all2((
-    getForQueryApi(
-      ~query=Queries.getQueryForQuorum(hash),
-      ~field="blocks",
-      ~config,
-    )
-    |> FutureJs.toPromise,
-    getForQueryApi(
-      ~query=Queries.getQueryForVotingStats(hash, active_proposal),
-      ~field="governance",
-      ~config,
-    )
-    |> FutureJs.toPromise,
-  ))
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok((Some(quorumStat), Some(votingStat))) => {
-          let quorumObj = quorumStat |> Obj.magic;
-          let votingObj = votingStat |> Obj.magic;
-          let votinfo: DashboardStore.voteInfo = {
-            yay_rolls: votingObj##yay_rolls,
-            nay_rolls: votingObj##nay_rolls,
-            pass_rolls: votingObj##pass_rolls,
-            proposal_hash: votingObj##proposal_hash,
-            current_expected_quorum: quorumObj##current_expected_quorum,
-          };
-          Some(votinfo);
-        }
-      | _ => None,
-    )
-  ->Future.get(callback);
+// let getVoteInfoThunk =
+//     (
+//       ~callback,
+//       ~hash: string,
+//       ~active_proposal: string,
+//       ~config: MainType.config,
+//     ) =>
+//   Js.Promise.all2((
+//     getForQueryApi(
+//       ~query=Queries.getQueryForQuorum(hash),
+//       ~field="blocks",
+//       ~config,
+//     )
+//     |> FutureJs.toPromise,
+//     getForQueryApi(
+//       ~query=Queries.getQueryForVotingStats(hash, active_proposal),
+//       ~field="governance",
+//       ~config,
+//     )
+//     |> FutureJs.toPromise,
+//   ))
+//   ->FutureJs.fromPromise(_err => None)
+//   ->Future.map(
+//       fun
+//       | Ok((Some(quorumStat), Some(votingStat))) => {
+//           let quorumObj = quorumStat |> Obj.magic;
+//           let votingObj = votingStat |> Obj.magic;
+//           let votinfo = {
+//             yay_rolls: votingObj##yay_rolls,
+//             nay_rolls: votingObj##nay_rolls,
+//             pass_rolls: votingObj##pass_rolls,
+//             proposal_hash: votingObj##proposal_hash,
+//             current_expected_quorum: quorumObj##current_expected_quorum,
+//           };
+//           Some(votinfo);
+//         }
+//       | _ => None,
+//     )
+//   ->Future.get(callback);
 
-let getProposalInfoThunk =
-    (~callback, ~metaCycle: int, ~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="operations")
-  ->applyQuery(~query=Queries.getQueryForProposalInfo(metaCycle))
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok(proposalStats) when proposalStats |> Array.length > 0 =>
-        proposalStats
-        |> Array.map(proposal => {
-             let proposalObj = proposal |> Obj.magic;
-             let newProposal: DashboardStore.proposalInfo = {
-               count_operation_group_hash:
-                 proposalObj##count_operation_group_hash,
-               proposal: proposalObj##proposal,
-             };
-             newProposal;
-           })
-        |> toOption
-      | Ok(_) => Some([||])
-      | _err => None,
-    )
-  ->Future.get(callback);
+// let getBlockInfoThunk =
+//     (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
+//   Future.all([
+//     getForQueryApi(
+//       ~query=Queries.getQueryForNumBlocks(metaCycle, timestamp),
+//       ~field="blocks",
+//       ~config,
+//     ),
+//     getForQueryApi(
+//       ~query=Queries.getQueryForTransactionStats(timestamp),
+//       ~field="operations",
+//       ~config,
+//     ),
+//     getForQueryApi(
+//       ~query=Queries.getQueryForFundraiserStats(timestamp),
+//       ~field="operations",
+//       ~config,
+//     ),
+//     getForQueryApi(
+//       ~query=Queries.getQueryForTotalFundraiserActivated(),
+//       ~field="operations",
+//       ~config,
+//     ),
+//     getForQueryApi(
+//       ~query=Queries.getQueryForFeesStats(timestamp),
+//       ~field="operations",
+//       ~config,
+//     ),
+//     getForQueryApi(
+//       ~query=Queries.getQueryForBakerStats(),
+//       ~field="delegates",
+//       ~config,
+//     ),
+//     getForQueryApi(
+//       ~query=Queries.getQueryForMarketCap(),
+//       ~field="accounts",
+//       ~config,
+//     ),
+//   ])
+//   ->Future.map(
+//       fun
+//       | [res1, res2, res3, res4, res5, res6, res7] => {
+//           let newTransInfoObj = res2 |> Obj.magic;
+//           let newTranInfo: DashboardStore.transInfo = {
+//             countOriginatedContracts:
+//               newTransInfoObj##count_originated_contracts,
+//             countAmount: newTransInfoObj##count_amount,
+//             sumAmount: newTransInfoObj##sum_amount,
+//           };
+//           let newFundraiser = res3 |> Obj.magic;
+//           let newTotalFundraiser = res4 |> Obj.magic;
+//           let feesObj = res5 |> Obj.magic;
+//           let bakersObj = res6 |> Obj.magic;
+//           let marketObj = res7 |> Obj.magic;
 
-let getBlockInfoThunk =
-    (~callback, ~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
-  Future.all([
-    getForQueryApi(
-      ~query=Queries.getQueryForNumBlocks(metaCycle, timestamp),
-      ~field="blocks",
-      ~config,
-    ),
-    getForQueryApi(
-      ~query=Queries.getQueryForTransactionStats(timestamp),
-      ~field="operations",
-      ~config,
-    ),
-    getForQueryApi(
-      ~query=Queries.getQueryForFundraiserStats(timestamp),
-      ~field="operations",
-      ~config,
-    ),
-    getForQueryApi(
-      ~query=Queries.getQueryForTotalFundraiserActivated(),
-      ~field="operations",
-      ~config,
-    ),
-    getForQueryApi(
-      ~query=Queries.getQueryForFeesStats(timestamp),
-      ~field="operations",
-      ~config,
-    ),
-    getForQueryApi(
-      ~query=Queries.getQueryForBakerStats(),
-      ~field="delegates",
-      ~config,
-    ),
-    getForQueryApi(
-      ~query=Queries.getQueryForMarketCap(),
-      ~field="accounts",
-      ~config,
-    ),
-  ])
-  ->Future.map(
-      fun
-      | [res1, res2, res3, res4, res5, res6, res7] => {
-          let newTransInfoObj = res2 |> Obj.magic;
-          let newTranInfo: DashboardStore.transInfo = {
-            countOriginatedContracts:
-              newTransInfoObj##count_originated_contracts,
-            countAmount: newTransInfoObj##count_amount,
-            sumAmount: newTransInfoObj##sum_amount,
-          };
-          let newFundraiser = res3 |> Obj.magic;
-          let newTotalFundraiser = res4 |> Obj.magic;
-          let feesObj = res5 |> Obj.magic;
-          let bakersObj = res6 |> Obj.magic;
-          let marketObj = res7 |> Obj.magic;
-
-          let newBlockInfo: DashboardStore.blockInfo = {
-            blockCount: (res1 |> Obj.magic)##count_hash,
-            fundraiserCount: newFundraiser##count_kind,
-            totalFundraiserCount: newTotalFundraiser##count_kind,
-            sum_fee: feesObj##sum_fee,
-            sum_consumed_gas: feesObj##sum_consumed_gas,
-            num_bakers: bakersObj##count_pkh,
-            bakers_sum_staking_balance: bakersObj##sum_staking_balance,
-            totalTez: marketObj##sum_balance,
-          };
-          Some((newBlockInfo, newTranInfo));
-        }
-      | _ => None,
-    )
-  ->Future.get(callback);
+//           let newBlockInfo: DashboardStore.blockInfo = {
+//             blockCount: (res1 |> Obj.magic)##count_hash,
+//             fundraiserCount: newFundraiser##count_kind,
+//             totalFundraiserCount: newTotalFundraiser##count_kind,
+//             sum_fee: feesObj##sum_fee,
+//             sum_consumed_gas: feesObj##sum_consumed_gas,
+//             num_bakers: bakersObj##count_pkh,
+//             bakers_sum_staking_balance: bakersObj##sum_staking_balance,
+//             totalTez: marketObj##sum_balance,
+//           };
+//           Some((newBlockInfo, newTranInfo));
+//         }
+//       | _ => None,
+//     )
+//   ->Future.get(callback);
 
 let getLastDayTransactions =
     (~startDate: float, ~endDate: float, ~config: MainType.config) =>
