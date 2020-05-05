@@ -13,6 +13,10 @@ module Fold = {
             ...accumulative,
             zeroPriorityBlocks,
           }
+        | CountedBakers(bakersWithOutput) => {
+            ...accumulative,
+            bakersWithOutput,
+          }
         },
       initBlockInfo,
     );
@@ -299,6 +303,27 @@ module Calls = {
           CountedZeroPriorityBlocksLevels(Some(value)) |> Future.value
         | _ => BlockInfoFailed |> Future.value,
       );
+
+  let getLastDayBakersWithOutput =
+      (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="blocks")
+    ->applyQuery(
+        ~query=Queries.getQueryForBakersWithOutput(startDate, endDate),
+      )
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(value) when value |> Array.length > 0 =>
+          value[0] |> Decode.json_of_magic |> Decode.countedBaker |> toOption
+        | _ => None,
+      )
+    ->Future.flatMap(
+        fun
+        | Some(value) => CountedBakers(Some(value)) |> Future.value
+        | _ => BlockInfoFailed |> Future.value,
+      );
 };
 
 module Thunk = {
@@ -320,6 +345,7 @@ module Thunk = {
     Future.all([
       getNumBlocks(~metaCycle, ~timestamp, ~config),
       getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
+      getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
     ])
     ->Future.map(reduceBlockInfo)
     ->Future.get(callback);

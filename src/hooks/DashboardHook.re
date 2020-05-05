@@ -32,6 +32,8 @@ module Make = (()) => {
   //       | _ => dispatch(AppAction(SetError(ErrMessage.noAvailable))),
   //   );
 
+  // TODO for last 24h timestamp should be made from current date and not from block timestamp
+
   let getProposalsInfo = (block: ConseiljsType.tezosBlock) =>
     getProposalsInfoThunk(
       ~config=configs[selectedConfig],
@@ -49,9 +51,9 @@ module Make = (()) => {
       dispatch(DashboardAction(SetGovernanceProcess(value)))
     });
 
-  let getTotalsInfo = (block: ConseiljsType.tezosBlock) =>
+  let getTotalsInfo = () =>
     getTotalsInfoThunk(
-      ~timestamp=block##timestamp,
+      ~timestamp=Js.Date.make() |> Js.Date.getTime,
       ~config=configs[selectedConfig],
       ~callback=value =>
       dispatch(DashboardAction(SetTotalsInfo(value)))
@@ -65,7 +67,7 @@ module Make = (()) => {
   let getBlockInfo = (block: ConseiljsType.tezosBlock) =>
     getBlockInfoThunk(
       ~metaCycle=block##meta_cycle,
-      ~timestamp=block##timestamp,
+      ~timestamp=Js.Date.make() |> Js.Date.getTime,
       ~config=configs[selectedConfig],
       ~callback=value => {
         dispatch(
