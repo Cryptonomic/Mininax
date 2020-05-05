@@ -70,8 +70,7 @@ let parseBaker = json =>
 let getStorageDelta = json =>
   Json.Decode.{
     sumFee: json |> field("sum_fee", int),
-    storageDelta:
-      json |> field("sum_paid_storage_size_diff", int),
+    storageDelta: json |> field("sum_paid_storage_size_diff", int),
     sumConsumedGas: json |> field("sum_consumed_gas", int),
     countOperationGroupHash:
       json |> field("count_operation_group_hash", string),
@@ -207,3 +206,10 @@ let parseSumTez = json =>
   Json.Decode.(
     json |> field("sum_balance", int) |> float_of_int |> Helpers.toOption
   );
+
+let parseLatestGovernance = json =>
+  Json.Decode.{
+    votingPeriod: json |> field("voting_period", int),
+    cycle: json |> field("cycle", int),
+    blockHash: json |> field("block_hash", string),
+  };

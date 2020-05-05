@@ -1,18 +1,20 @@
 open GlobalStore;
 open ReactIntl;
+open DashboardStyles;
 
 let str = ReasonReact.string;
 let selector = (state: GlobalStore.globalState) => (
   state.dashboardState.lastBlock,
   state.dashboardState.governanceProcessInfo,
   state.dashboardState.proposalsInfo,
+  state.dashboardState.latestGovernance,
 );
 
 [@react.component]
 let make = () => {
   let theme = React.useContext(ContextProvider.themeContext);
   let intl = ReactIntl.useIntl();
-  let (block, gp, proposals) = Store.useSelector(selector);
+  let (block, gp, proposals, latestGovernance) = Store.useSelector(selector);
 
   let percentYay =
     switch (gp.yayRolls, gp.nayRolls) {
@@ -24,6 +26,12 @@ let make = () => {
       )
       |> Helpers.toOption
     | _ => None
+    };
+
+  let governanceCycle =
+    switch (latestGovernance) {
+    | Some(value) => value.cycle * 16 / 400 |> Helpers.toOption
+    | None => None
     };
 
   let (rightTitle, proposalsTitle) =
@@ -51,13 +59,28 @@ let make = () => {
 
   <>
     <div className={DashboardStyles.rightTopContainer(theme)}>
-      <p>
+      <p className=inline>
         {"We are currently in the " |> str}
         <span className={DashboardStyles.networkContent(theme)}>
           {rightTitle |> str}
         </span>
-        {" phase of the governance process." |> str}
       </p>
+      <IfElseOption validator=governanceCycle>
+        (
+          <>
+            {" phase of the governance process, that is in " |> str}
+            <span className={content1(theme)}>
+              {intl->Intl.formatNumber(
+                 float_of_int(Helpers.optionToInt(governanceCycle)),
+               )
+               ++ "/16"
+               |> str}
+            </span>
+            {" cycle." |> str}
+          </>,
+          <> {" phase of the governance process." |> str} </>,
+        )
+      </IfElseOption>
     </div>
     <div className={DashboardStyles.rightMdContainer(theme)}>
       <p> {proposalsTitle |> str} </p>

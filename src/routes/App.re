@@ -73,17 +73,12 @@ let make = () => {
     );
 
   React.useEffect0(() => {
-    Js.log(url.path);
     switch (url.path) {
     | [network, entity, id] => goToPage(network, entity, id)
     | [network] => goToNetwork(network)
     | _ => goToMainPage()
     };
-    let interval =
-      Js.Global.setInterval(
-        () => {getMainPage()},
-        600000,
-      );
+    let interval = Js.Global.setInterval(() => {getMainPage()}, 600000);
     Some(() => {Js.Global.clearInterval(interval)});
   });
 

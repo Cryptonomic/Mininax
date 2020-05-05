@@ -81,4 +81,11 @@ module Make = (()) => {
         dispatch(AppAction(SetLoaded));
       },
     );
+
+  let getTheLatestGovernanceInfo = () => {
+    DashboardApi.Calls.getTheLatestGovernance(~config=configs[selectedConfig])
+    ->Future.get(value =>
+        dispatch(DashboardAction(SetLatestGovernance(value)))
+      );
+  };
 };

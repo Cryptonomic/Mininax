@@ -54,7 +54,7 @@ let make = () => {
       {ReasonReact.string(" active bakers. A total of ")}*/
 
       <IfOption validator=tez_staked>
-        <p>
+        <p className=inline>
           {"A total of " |> str}
           <span className={networkContent(theme)}>
             {Helpers.optionToString(tez_staked) ++ " XTZ" |> str}
@@ -71,7 +71,7 @@ let make = () => {
         </p>
       </IfOption>
       <IfOption validator={bakersInfo.top3Bakers}>
-        <p> {"Top 3 bakers at the moment are:" |> str} </p>
+        <p className=inline> {" Top 3 bakers at the moment are:" |> str} </p>
         {bakersInfo.top3Bakers
          |> Helpers.optionToArray
          |> Array.map((baker: DashboardStore.baker) =>

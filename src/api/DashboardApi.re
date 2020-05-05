@@ -154,24 +154,6 @@ module Calls = {
         | _ => TotalInfoFailed |> Future.value,
       );
 
-  // let getFundraiserActivated = (~config) =>
-  //   ApiCall.getForQueryApi(
-  //     ~query=Queries.getQueryForTotalFundraiserActivated(),
-  //     ~field="operations",
-  //     ~config,
-  //   )
-  //   ->Future.map(
-  //       fun
-  //       | Some(value) =>
-  //         value |> json_of_magic |> parseFundraiserActivated |> toOption
-  //       | None => None,
-  //     )
-  //   ->Future.flatMap(
-  //       fun
-  //       | Some(value) => TotalFundraiserCount(value) |> Future.value
-  //       | _ => TotalInfoFailed |> Future.value,
-  //     );
-
   let getQuorumInfo = (~hash: string, ~config: MainType.config) =>
     ApiCall.getForQueryApi(
       ~query=Queries.getQueryForQuorum(hash),
@@ -398,16 +380,31 @@ module Calls = {
     ->Future.map(
         fun
         | Ok(value) when value |> Array.length > 0 =>
-          value[0]
-          |> Decode.json_of_magic
-          |> Decode.getStorageDelta
-          |> toOption
+          value[0] |> json_of_magic |> getStorageDelta |> toOption
         | _ => None,
       )
     ->Future.flatMap(
         fun
         | Some(value) => SumFeeGasDelta(value) |> Future.value
         | _ => TotalInfoFailed |> Future.value,
+      );
+
+  let getTheLatestGovernance = (~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="governance")
+    ->applyQuery(~query=Queries.getQueryForTheLatestGovernance())
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(value) when value |> Array.length > 0 =>
+          value[0] |> json_of_magic |> parseLatestGovernance |> toOption
+        | _ => None,
+      )
+    ->Future.flatMap(
+        fun
+        | Some(value) => Some(value) |> Future.value
+        | _ => None |> Future.value,
       );
 };
 

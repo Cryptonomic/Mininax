@@ -27,6 +27,12 @@ type storageDelta = {
   countOperationGroupHash: string,
 };
 
+type latestGovernance = {
+  votingPeriod: int,
+  cycle: int,
+  blockHash: string,
+};
+
 type blocksInfo = {
   blockCount: option(int),
   zeroPriorityBlocks: option(int),
@@ -132,6 +138,7 @@ type state = {
   totalsInfo,
   proposalsInfo: option(array(proposalInfo)),
   governanceProcessInfo,
+  latestGovernance: option(latestGovernance),
   bakersInfo,
 };
 
@@ -142,21 +149,9 @@ let initState = {
   totalsInfo: initTotalsInfo,
   governanceProcessInfo: initGovernanceProcessInfo,
   proposalsInfo: None,
+  latestGovernance: None,
   bakersInfo: intBakersInfo,
 };
-
-// type action =
-//   | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
-//   | SetProposals(array(proposalInfo))
-//   | SetVoteInfo(voteInfo);
-
-type otherTotals =
-  | CountedTransactions24h(int)
-  | CountedZeroPriorityBlocksLevels24h(int)
-  | CountedBakers24h(int)
-  | CountOriginationAndReveal(option(int), option(int))
-  | GetTop3Bakers(array(baker))
-  | GetStorageDelta24h(storageDelta);
 
 type action =
   | SetLastBlock(MainType.tezosBlock)
@@ -165,6 +160,7 @@ type action =
   | SetGovernanceProcess(governanceProcessInfo)
   | SetBackerInfo(bakersInfo)
   | SetProposalInfo(option(array(proposalInfo)))
+  | SetLatestGovernance(option(latestGovernance))
   | Loaded;
 
 let reducer = (state, action) =>
@@ -178,5 +174,6 @@ let reducer = (state, action) =>
     }
   | SetBackerInfo(bakersInfo) => {...state, bakersInfo}
   | SetProposalInfo(proposalsInfo) => {...state, proposalsInfo}
+  | SetLatestGovernance(latestGovernance) => {...state, latestGovernance}
   | Loaded => {...state, loading: false}
   };

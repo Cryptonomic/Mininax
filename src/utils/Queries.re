@@ -498,3 +498,9 @@ let getQueryForStorageDeltaLastDay = (startDate: float, endDate: float) =>
       ~aggType=ConseiljsType.COUNT,
     )
   ->setLimit(1000);
+
+let getQueryForTheLatestGovernance = () =>
+  blankQuery()
+  ->addFields(["voting_period", "cycle", "block_hash"])
+  ->addOrdering("voting_period", ConseiljsType.DESC)
+  ->setLimit(1);
