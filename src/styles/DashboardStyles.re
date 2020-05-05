@@ -188,7 +188,7 @@ let input = index =>
   style([
     height(px(31)),
     minWidth(px(200)),
-    borderRadius(px(10)),
+    // borderRadius(px(2)),
     padding4(~top=px(7), ~bottom=px(5), ~left=px(31), ~right=px(20)),
     color(black),
     fontSize(px(18)),
@@ -228,10 +228,10 @@ let searhBtn = index =>
     height(px(31)),
     width(px(44)),
     marginLeft(px(16)),
-    borderRadius(px(10)),
     outline(px(0), none, transparent),
     backgroundColor(hex(Themes.themes[index].searchBgColor)),
     borderWidth(px(0)),
+    cursor(`pointer),
   ]);
 
 let inline = style([`inline |> display]);

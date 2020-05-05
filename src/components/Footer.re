@@ -16,7 +16,6 @@ module Styles = {
     style([
       height(px(60)),
       width(px(800)),
-      borderRadius(px(10)),
       padding4(~top=px(20), ~bottom=px(20), ~left=px(24), ~right=px(24)),
       color(black),
       fontSize(px(18)),
@@ -55,10 +54,10 @@ module Styles = {
       height(px(60)),
       width(px(60)),
       marginLeft(px(15)),
-      borderRadius(px(10)),
       outline(px(0), none, transparent),
       backgroundColor(hex(themes[index].searchBgColor)),
       borderWidth(px(0)),
+      cursor(`pointer),
     ]);
   let cryptoImg =
     style([
