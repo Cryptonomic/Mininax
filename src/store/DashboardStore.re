@@ -22,8 +22,8 @@ type baker = {
 
 type storageDelta = {
   sumFee: int,
-  sumPaid_storage_size_diff: int,
-  sumConsumed_gas: int,
+  storageDelta: int,
+  sumConsumedGas: int,
   countOperationGroupHash: string,
 };
 
@@ -57,6 +57,7 @@ type totalsInfo = {
   fundraiserCount: option(int),
   sumFee: option(int),
   sumConsumedGas: option(int),
+  storageDelta: option(int),
   totalFundraiserCount: option(int),
   reveals: option(int),
   contractDeployed: option(int),
@@ -64,7 +65,7 @@ type totalsInfo = {
 type totalsInfoChunk =
   | AmountAndContracts(amountAndContracts)
   | FundraiserCount(option(int))
-  | SumFeeAndGas(option(int), option(int))
+  | SumFeeGasDelta(storageDelta)
   | TotalFundraiserCount(option(int))
   | CountedTransactions(option(int))
   | ActivationOriginationReveal(activationOriginationReveal)
@@ -77,6 +78,7 @@ let initTotalsInfo = {
   fundraiserCount: None,
   sumFee: None,
   sumConsumedGas: None,
+  storageDelta: None,
   totalFundraiserCount: None,
   reveals: None,
   contractDeployed: None,

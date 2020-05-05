@@ -70,9 +70,9 @@ let parseBaker = json =>
 let getStorageDelta = json =>
   Json.Decode.{
     sumFee: json |> field("sum_fee", int),
-    sumPaid_storage_size_diff:
+    storageDelta:
       json |> field("sum_paid_storage_size_diff", int),
-    sumConsumed_gas: json |> field("sum_consumed_gas", int),
+    sumConsumedGas: json |> field("sum_consumed_gas", int),
     countOperationGroupHash:
       json |> field("count_operation_group_hash", string),
   };

@@ -114,7 +114,7 @@ let make = () => {
            ->Intl.formatNumber(float_of_int(optionToInt(info.reveals)))
            ->str}
         </span>
-        {" accounts were revealed" |> str}
+        {" were revealed" |> str}
       </IfOption>
       <IfOption validator={info.reveals}>
         {" and " |> str}
@@ -163,6 +163,16 @@ let make = () => {
            |> str}
         </span>
         {"  activated so far." |> str}
+      </IfOption>
+      <IfOption validator={info.storageDelta}>
+        {" The last 24 h storage delta is " |> str}
+        <span className={DashboardStyles.content3(theme)}>
+          {intl->Intl.formatNumber(
+             float_of_int(optionToInt(info.storageDelta)),
+           )
+           |> str}
+        </span>
+        {"." |> str}
       </IfOption>
     </p>
   </div>;

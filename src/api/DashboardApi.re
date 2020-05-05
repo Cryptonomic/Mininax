@@ -40,10 +40,11 @@ module Fold = {
             ...accumulative,
             totalFundraiserCount,
           }
-        | SumFeeAndGas(sumFee, sumConsumedGas) => {
+        | SumFeeGasDelta(value) => {
             ...accumulative,
-            sumFee,
-            sumConsumedGas,
+            sumFee: value.sumFee |> toOption,
+            sumConsumedGas: value.sumConsumedGas |> toOption,
+            storageDelta: value.storageDelta |> toOption,
           }
         | CountedTransactions(countTransactions) => {
             ...accumulative,
@@ -170,25 +171,6 @@ module Calls = {
   //       | Some(value) => TotalFundraiserCount(value) |> Future.value
   //       | _ => TotalInfoFailed |> Future.value,
   //     );
-
-  let getSumFeeAndGas = (~timestamp, ~config) =>
-    ApiCall.getForQueryApi(
-      ~query=Queries.getQueryForFeesStats(timestamp),
-      ~field="operations",
-      ~config,
-    )
-    ->Future.map(
-        fun
-        | Some(value) =>
-          value |> json_of_magic |> parseSumFeeAndGas |> toOption
-        | None => None,
-      )
-    ->Future.flatMap(
-        fun
-        | Some((sumFee, sumGas)) =>
-          SumFeeAndGas(sumFee, sumGas) |> Future.value
-        | _ => TotalInfoFailed |> Future.value,
-      );
 
   let getQuorumInfo = (~hash: string, ~config: MainType.config) =>
     ApiCall.getForQueryApi(
@@ -403,6 +385,30 @@ module Calls = {
         | Some(value) => Top3Bakers(Some(value)) |> Future.value
         | _ => BakersInfoFailed |> Future.value,
       );
+
+  let getLastDayStorageDeltaSumFeeAndGas =
+      (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="operations")
+    ->applyQuery(
+        ~query=Queries.getQueryForStorageDeltaLastDay(startDate, endDate),
+      )
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(value) when value |> Array.length > 0 =>
+          value[0]
+          |> Decode.json_of_magic
+          |> Decode.getStorageDelta
+          |> toOption
+        | _ => None,
+      )
+    ->Future.flatMap(
+        fun
+        | Some(value) => SumFeeGasDelta(value) |> Future.value
+        | _ => TotalInfoFailed |> Future.value,
+      );
 };
 
 module Thunk = {
@@ -440,8 +446,11 @@ module Thunk = {
     Future.all([
       getAmountAndContracts(~timestamp, ~config),
       getFundraiserStats(~timestamp, ~config),
-      // getFundraiserActivated(~config),
-      getSumFeeAndGas(~timestamp, ~config),
+      getLastDayStorageDeltaSumFeeAndGas(
+        ~startDate,
+        ~endDate=timestamp,
+        ~config,
+      ),
       getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
       getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
     ])
