@@ -179,27 +179,6 @@ let getLastDayStorageDelta =
       | _ => None |> Future.value,
     );
 
-let getTop3Bakers = (~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="accounts")
-  ->applyQuery(~query=Queries.getQueryForTop3BakersLastDay())
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok(value) when value |> Array.length > 0 =>
-        value
-        |> Decode.json_of_magic
-        |> Json.Decode.array(Decode.getBaker)
-        |> toOption
-      | _ => None,
-    )
-  ->Future.flatMap(
-      fun
-      | Some(value) =>
-        DashboardStore.GetTop3Bakers(value) |> toOption |> Future.value
-      | _ => None |> Future.value,
-    );
 
 let getExtraOtherTotals =
     (~callback, ~timestamp: float, ~config: MainType.config) => {
@@ -213,7 +192,7 @@ let getExtraOtherTotals =
     // getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
     // getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
     // getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
-    getTop3Bakers(~config),
+    // getTop3Bakers(~config),
     getLastDayStorageDelta(~startDate, ~endDate=timestamp, ~config),
   ])
   ->Future.map(

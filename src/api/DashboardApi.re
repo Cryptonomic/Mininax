@@ -90,6 +90,7 @@ module Fold = {
             ...accumulative,
             bakersSumStakingBalance,
           }
+        | Top3Bakers(top3Bakers) => {...accumulative, top3Bakers}
         | TotalTez(totalTez) => {...accumulative, totalTez}
         }
       },
@@ -345,8 +346,8 @@ module Calls = {
         fun
         | Ok(value) when value |> Array.length > 0 =>
           value
-          |> Decode.json_of_magic
-          |> Json.Decode.array(Decode.countOriginationsAndReveals)
+          |> json_of_magic
+          |> Json.Decode.array(countOriginationsAndReveals)
           |> toOption
         | _ => None,
       )
@@ -355,17 +356,17 @@ module Calls = {
         | Some(value) => {
             value
             |> Array.fold_left(
-                 (accu, curr: Decode.originationAndReveals) => {
+                 (accu, curr: originationAndReveals) => {
                    switch (curr.kind, curr.status) {
-                   | (Decode.Reveal, Decode.Applied) => {
+                   | (Reveal, Applied) => {
                        ...accu,
                        reveal: curr.countOperation |> toOption,
                      }
-                   | (Decode.Origination, Decode.Applied) => {
+                   | (Origination, Applied) => {
                        ...accu,
                        contractDeployed: curr.countOperation |> toOption,
                      }
-                   | (Decode.ActivateAccount, _) => {
+                   | (ActivateAccount, _) => {
                        ...accu,
                        activatedFundraiserCount:
                          curr.countOperation |> toOption,
@@ -383,6 +384,24 @@ module Calls = {
         fun
         | Some(value) => ActivationOriginationReveal(value) |> Future.value
         | None => TotalInfoFailed |> Future.value,
+      );
+
+  let getTop3Bakers = (~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="accounts")
+    ->applyQuery(~query=Queries.getQueryForTop3BakersLastDay())
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(value) when value |> Array.length > 0 =>
+          value |> json_of_magic |> Json.Decode.array(parseBaker) |> toOption
+        | _ => None,
+      )
+    ->Future.flatMap(
+        fun
+        | Some(value) => Top3Bakers(Some(value)) |> Future.value
+        | _ => BakersInfoFailed |> Future.value,
       );
 };
 
@@ -461,7 +480,11 @@ module Thunk = {
     ->Future.get(callback);
 
   let getBakersInfoThunk = (~callback, ~config: MainType.config) =>
-    Future.all([getSumStakingBalance(~config), getSumTez(~config)])
+    Future.all([
+      getSumStakingBalance(~config),
+      getTop3Bakers(~config),
+      getSumTez(~config),
+    ])
     ->Future.map(reduceBakersInfo)
     ->Future.get(callback);
 };

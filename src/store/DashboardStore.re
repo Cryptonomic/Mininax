@@ -14,6 +14,19 @@ let intActivationOriginationReveal = {
   activatedFundraiserCount: None,
 };
 
+type baker = {
+  countAccountId: string,
+  sumBalance: int,
+  delegateValue: string,
+};
+
+type storageDelta = {
+  sumFee: int,
+  sumPaid_storage_size_diff: int,
+  sumConsumed_gas: int,
+  countOperationGroupHash: string,
+};
+
 type blocksInfo = {
   blockCount: option(int),
   zeroPriorityBlocks: option(int),
@@ -96,13 +109,19 @@ let initGovernanceProcessInfo = {
 
 type bakersInfo = {
   bakersSumStakingBalance: option(float),
+  top3Bakers: option(array(baker)),
   totalTez: option(float),
 };
 type bakersInfoChunk =
   | BakersSumStakingBalance(option(float))
+  | Top3Bakers(option(array(baker)))
   | TotalTez(option(float))
   | BakersInfoFailed;
-let intBakersInfo = {bakersSumStakingBalance: None, totalTez: None};
+let intBakersInfo = {
+  bakersSumStakingBalance: None,
+  top3Bakers: None,
+  totalTez: None,
+};
 
 type state = {
   loading: bool,
@@ -122,19 +141,6 @@ let initState = {
   governanceProcessInfo: initGovernanceProcessInfo,
   proposalsInfo: None,
   bakersInfo: intBakersInfo,
-};
-
-type baker = {
-  countAccountId: string,
-  sumBalance: int,
-  delegateValue: string,
-};
-
-type storageDelta = {
-  sumFee: int,
-  sumPaid_storage_size_diff: int,
-  sumConsumed_gas: int,
-  countOperationGroupHash: string,
 };
 
 // type action =

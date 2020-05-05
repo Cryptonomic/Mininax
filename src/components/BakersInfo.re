@@ -1,5 +1,6 @@
 open ReactIntl;
 open GlobalStore;
+open DashboardStyles;
 
 let str = ReasonReact.string;
 let numFormatOptions = numberFormatOptions(~maximumFractionDigits=2, ());
@@ -43,7 +44,7 @@ let make = () => {
     | _ => None
     };
 
-  <div className={DashboardStyles.rightBottomContainer(theme)}>
+  <div className={rightBottomContainer(theme)}>
     /*{ReasonReact.string("There are ")}
       <div className={DashboardStyles.networkContent(theme)}>
         {intl
@@ -55,19 +56,43 @@ let make = () => {
       <IfOption validator=tez_staked>
         <p>
           {"A total of " |> str}
-          <span className={DashboardStyles.networkContent(theme)}>
+          <span className={networkContent(theme)}>
             {Helpers.optionToString(tez_staked) ++ " XTZ" |> str}
           </span>
           {" out of " |> str}
-          <span className={DashboardStyles.networkContent(theme)}>
+          <span className={networkContent(theme)}>
             {Helpers.optionToString(total_tez) ++ " XTZ" |> str}
           </span>
           {" or " |> str}
-          <span className={DashboardStyles.networkContent(theme)}>
+          <span className={networkContent(theme)}>
             {"(" ++ Helpers.optionToString(percent_staked) ++ "%)" |> str}
           </span>
           {" of TEZ, is being staked right now." |> str}
         </p>
+      </IfOption>
+      <IfOption validator={bakersInfo.top3Bakers}>
+        <p> {"Top 3 bakers at the moment are:" |> str} </p>
+        {bakersInfo.top3Bakers
+         |> Helpers.optionToArray
+         |> Array.map((baker: DashboardStore.baker) =>
+              <>
+                <TextWithCopy
+                  className={content1(theme)}
+                  value={baker.delegateValue}
+                  isReverse=true
+                />
+                // <p>
+                //   {intl->Intl.formatNumberWithOptions(
+                //      Utils.convertFromUtezfToTez(
+                //        baker.sumBalance |> float_of_int,
+                //      ),
+                //      numFormatOptions,
+                //    )
+                //    |> str}
+                // </p>
+              </>
+            )
+         |> ReasonReact.array}
       </IfOption>
     </div>;
 };

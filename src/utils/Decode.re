@@ -60,7 +60,7 @@ let countOriginationsAndReveals = json =>
       ),
   };
 
-let getBaker = json =>
+let parseBaker = json =>
   Json.Decode.{
     countAccountId: json |> field("count_account_id", string),
     sumBalance: json |> field("sum_balance", int),
