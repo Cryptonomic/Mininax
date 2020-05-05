@@ -28,17 +28,22 @@ module Style = {
   let header =
     style([
       padding4(~top=px(0), ~bottom=px(30), ~left=px(10), ~right=px(10)),
+      display(flexBox),
+      alignItems(`flexEnd),
     ]);
   let headerTitle =
     style([
       fontFamily(`custom("'Arcade', sans-serif")),
       fontSize(px(60)),
       color(white),
-      lineHeight(px(35)),
+      lineHeight(px(30)),
       letterSpacing(px(3)),
       cursor(`pointer),
       display(inlineBlock),
     ]);
+
+  let subTitle =
+    merge([headerTitle, style([marginLeft(px(20)), fontSize(px(40))])]);
 };
 
 [@react.component]
@@ -95,6 +100,18 @@ let make = () => {
           <div className=Style.header>
             <div className=Style.headerTitle onClick={_ => goToMainPage()}>
               {ReasonReact.string("MININAX")}
+            </div>
+            <div
+              className=Style.subTitle
+              onClick={_ => Utils.open_("https://arronax.io", "_blank")}>
+              {ReasonReact.string("ARRONAX")}
+            </div>
+            <div
+              className=Style.subTitle
+              onClick={_ =>
+                Utils.open_("http://cryptonomic.tech/galleon.html", "_blank")
+              }>
+              {ReasonReact.string("GALLEAON")}
             </div>
           </div>
           <Router />
