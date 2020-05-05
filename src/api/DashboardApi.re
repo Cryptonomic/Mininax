@@ -49,6 +49,12 @@ module Fold = {
             ...accumulative,
             countTransactions,
           }
+        | ActivationOriginationReveal(value) => {
+            ...accumulative,
+            fundraiserCount: value.activatedFundraiserCount,
+            reveals: value.reveal,
+            contractDeployed: value.contractDeployed,
+          }
         }
       },
       initTotalsInfo,
@@ -146,23 +152,23 @@ module Calls = {
         | _ => TotalInfoFailed |> Future.value,
       );
 
-  let getFundraiserActivated = (~config) =>
-    ApiCall.getForQueryApi(
-      ~query=Queries.getQueryForTotalFundraiserActivated(),
-      ~field="operations",
-      ~config,
-    )
-    ->Future.map(
-        fun
-        | Some(value) =>
-          value |> json_of_magic |> parseFundraiserActivated |> toOption
-        | None => None,
-      )
-    ->Future.flatMap(
-        fun
-        | Some(value) => TotalFundraiserCount(value) |> Future.value
-        | _ => TotalInfoFailed |> Future.value,
-      );
+  // let getFundraiserActivated = (~config) =>
+  //   ApiCall.getForQueryApi(
+  //     ~query=Queries.getQueryForTotalFundraiserActivated(),
+  //     ~field="operations",
+  //     ~config,
+  //   )
+  //   ->Future.map(
+  //       fun
+  //       | Some(value) =>
+  //         value |> json_of_magic |> parseFundraiserActivated |> toOption
+  //       | None => None,
+  //     )
+  //   ->Future.flatMap(
+  //       fun
+  //       | Some(value) => TotalFundraiserCount(value) |> Future.value
+  //       | _ => TotalInfoFailed |> Future.value,
+  //     );
 
   let getSumFeeAndGas = (~timestamp, ~config) =>
     ApiCall.getForQueryApi(
@@ -324,6 +330,60 @@ module Calls = {
         | Some(value) => CountedBakers(Some(value)) |> Future.value
         | _ => BlockInfoFailed |> Future.value,
       );
+
+  let getLastDayOriginationAndReveal =
+      (~startDate: float, ~endDate: float, ~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="operations")
+    ->applyQuery(
+        ~query=
+          Queries.getQueryForOriginationAndRevealLastDay(startDate, endDate),
+      )
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(value) when value |> Array.length > 0 =>
+          value
+          |> Decode.json_of_magic
+          |> Json.Decode.array(Decode.countOriginationsAndReveals)
+          |> toOption
+        | _ => None,
+      )
+    ->Future.map(
+        fun
+        | Some(value) => {
+            value
+            |> Array.fold_left(
+                 (accu, curr: Decode.originationAndReveals) => {
+                   switch (curr.kind, curr.status) {
+                   | (Decode.Reveal, Decode.Applied) => {
+                       ...accu,
+                       reveal: curr.countOperation |> toOption,
+                     }
+                   | (Decode.Origination, Decode.Applied) => {
+                       ...accu,
+                       contractDeployed: curr.countOperation |> toOption,
+                     }
+                   | (Decode.ActivateAccount, _) => {
+                       ...accu,
+                       activatedFundraiserCount:
+                         curr.countOperation |> toOption,
+                     }
+                   | _ => accu
+                   }
+                 },
+                 intActivationOriginationReveal,
+               )
+            |> toOption;
+          }
+        | _ => None,
+      )
+    ->Future.flatMap(
+        fun
+        | Some(value) => ActivationOriginationReveal(value) |> Future.value
+        | None => TotalInfoFailed |> Future.value,
+      );
 };
 
 module Thunk = {
@@ -361,9 +421,10 @@ module Thunk = {
     Future.all([
       getAmountAndContracts(~timestamp, ~config),
       getFundraiserStats(~timestamp, ~config),
-      getFundraiserActivated(~config),
+      // getFundraiserActivated(~config),
       getSumFeeAndGas(~timestamp, ~config),
       getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
+      getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
     ])
     ->Future.map(reduceTotalsInfo)
     ->Future.get(callback);

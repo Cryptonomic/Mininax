@@ -1,31 +1,17 @@
-// type transInfo = {
-//   countOriginatedContracts: string,
-//   countAmount: string,
-//   sumAmount: int,
-// };
-
-// type voteInfo = {
-//   yay_rolls: int,
-//   nay_rolls: int,
-//   pass_rolls: int,
-//   proposal_hash: string,
-//   current_expected_quorum: int,
-// };
-
-// type blockInfo = {
-//   blockCount: int,
-//   fundraiserCount: string,
-//   totalFundraiserCount: string,
-//   sum_fee: int,
-//   sum_consumed_gas: int,
-//   num_bakers: string,
-//   bakers_sum_staking_balance: float,
-//   totalTez: float,
-// };
-
 type proposalInfo = {
   count_operation_group_hash: int,
   proposal: option(string),
+};
+
+type activationOriginationReveal = {
+  reveal: option(int),
+  contractDeployed: option(int),
+  activatedFundraiserCount: option(int),
+};
+let intActivationOriginationReveal = {
+  reveal: None,
+  contractDeployed: None,
+  activatedFundraiserCount: None,
 };
 
 type blocksInfo = {
@@ -59,6 +45,8 @@ type totalsInfo = {
   sumFee: option(int),
   sumConsumedGas: option(int),
   totalFundraiserCount: option(int),
+  reveals: option(int),
+  contractDeployed: option(int),
 };
 type totalsInfoChunk =
   | AmountAndContracts(amountAndContracts)
@@ -66,6 +54,7 @@ type totalsInfoChunk =
   | SumFeeAndGas(option(int), option(int))
   | TotalFundraiserCount(option(int))
   | CountedTransactions(option(int))
+  | ActivationOriginationReveal(activationOriginationReveal)
   | TotalInfoFailed;
 let initTotalsInfo = {
   countAmount: None,
@@ -76,6 +65,8 @@ let initTotalsInfo = {
   sumFee: None,
   sumConsumedGas: None,
   totalFundraiserCount: None,
+  reveals: None,
+  contractDeployed: None,
 };
 
 type governanceProcessInfo = {

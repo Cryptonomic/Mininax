@@ -47,7 +47,7 @@ module Make = (()) => {
           | _ => UseDashboard.getGovernanceProcessInfo(lastBlock)
           };
           // TODO should run them together for set loaded in the same time
-          UseDashboard.getTotalsInfo(lastBlock);
+          UseDashboard.getTotalsInfo();
           UseDashboard.getBakersInfo();
           UseDashboard.getBlockInfo(lastBlock);
           ();

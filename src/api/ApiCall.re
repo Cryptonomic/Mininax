@@ -156,58 +156,6 @@ let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
 
 
 
-let getLastDayOriginationAndReveal =
-    (~startDate: float, ~endDate: float, ~config: MainType.config) =>
-  ConseiljsRe.ConseilDataClient.executeEntityQuery
-  ->applyTuple3(~tuple=Utils.getInfo(config))
-  ->applyField(~field="operations")
-  ->applyQuery(
-      ~query=
-        Queries.getQueryForOriginationAndRevealLastDay(startDate, endDate),
-    )
-  ->FutureJs.fromPromise(_err => None)
-  ->Future.map(
-      fun
-      | Ok(value) when value |> Array.length > 0 =>
-        value
-        |> Decode.json_of_magic
-        |> Json.Decode.array(Decode.countOriginationsAndReveals)
-        |> toOption
-      | _ => None,
-    )
-  ->Future.map(
-      fun
-      | Some(value) => {
-          value
-          |> Array.fold_left(
-               (accu, curr: Decode.originationAndReveals) => {
-                 let (countContracts, countOrigination) = accu;
-                 switch (curr.kind, curr.status) {
-                 | (Decode.Reveal, _) => (
-                     curr.countOperation |> toOption,
-                     countOrigination,
-                   )
-                 | (Decode.Origination, Decode.Applied) => (
-                     countContracts,
-                     curr.countOperation |> toOption,
-                   )
-                 | _ => accu
-                 };
-               },
-               (None, None),
-             );
-        }
-      | _ => (None, None),
-    )
-  ->Future.flatMap(value => {
-      let (countContracts, countOriginations) = value;
-      DashboardStore.CountOriginationAndReveal(
-        countContracts,
-        countOriginations,
-      )
-      |> toOption
-      |> Future.value;
-    });
 
 let getLastDayStorageDelta =
     (~startDate: float, ~endDate: float, ~config: MainType.config) =>
@@ -264,7 +212,7 @@ let getExtraOtherTotals =
     // getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
     // getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
     // getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
-    getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
+    // getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
     getTop3Bakers(~config),
     getLastDayStorageDelta(~startDate, ~endDate=timestamp, ~config),
   ])

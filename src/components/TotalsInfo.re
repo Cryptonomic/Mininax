@@ -1,6 +1,7 @@
 open GlobalStore;
 open ReactIntl;
 open Helpers;
+open Configs;
 
 let str = ReasonReact.string;
 let selector = (state: GlobalStore.globalState) =>
@@ -11,6 +12,7 @@ let numFormatOptions = numberFormatOptions(~maximumFractionDigits=2, ());
 [@react.component]
 let make = () => {
   let theme = React.useContext(ContextProvider.themeContext);
+  let network = configs[theme].network;
   let intl = ReactIntl.useIntl();
   let info = Store.useSelector(selector);
   let transactions_total_xtz =
@@ -90,7 +92,7 @@ let make = () => {
                )
              ->str}
           </span>
-          {" accounts were originated and " |> str}
+          {" accounts were originated, " |> str}
         </If>
       </IfOption>
       <IfOption validator={info.fundraiserCount}>
@@ -101,7 +103,32 @@ let make = () => {
              )
            ->str}
         </span>
-        {" fundraiser accounts were activated." |> str}
+        <IfElse validator={network == "mainnet"}>
+          (" fundraiser " |> str, " faucet " |> str)
+        </IfElse>
+        {"accounts were activated, " |> str}
+      </IfOption>
+      <IfOption validator={info.reveals}>
+        <span className={DashboardStyles.content3(theme)}>
+          {intl
+           ->Intl.formatNumber(float_of_int(optionToInt(info.reveals)))
+           ->str}
+        </span>
+        {" accounts were revealed" |> str}
+      </IfOption>
+      <IfOption validator={info.reveals}>
+        {" and " |> str}
+        <span className={DashboardStyles.content3(theme)}>
+          {intl
+           ->Intl.formatNumber(
+               float_of_int(optionToInt(info.contractDeployed)),
+             )
+           ->str}
+        </span>
+        <IfElse validator={optionToInt(info.contractDeployed) > 1}>
+          (" contracts were" |> str, " contract was" |> str)
+        </IfElse>
+        {" deployed." |> str}
       </IfOption>
       <IfOption validator=sumFee>
         {" A total of " |> str}
@@ -125,7 +152,10 @@ let make = () => {
            ++ " of 30,317"
            |> str}
         </span>
-        {" fundraiser accounts " |> str}
+        <IfElse validator={network == "mainnet"}>
+          (" fundraiser " |> str, " faucet " |> str)
+        </IfElse>
+        {"accounts " |> str}
         <span className={DashboardStyles.content2(theme)}>
           {"("
            ++ Js.Float.toString(optionToFloat(fundraiserPercent))
