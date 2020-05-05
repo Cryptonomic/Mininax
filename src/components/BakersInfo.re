@@ -75,22 +75,13 @@ let make = () => {
         {bakersInfo.top3Bakers
          |> Helpers.optionToArray
          |> Array.map((baker: DashboardStore.baker) =>
-              <>
+              <div key={baker.countAccountId}>
                 <TextWithCopy
                   className={content1(theme)}
                   value={baker.delegateValue}
                   isReverse=true
                 />
-                // <p>
-                //   {intl->Intl.formatNumberWithOptions(
-                //      Utils.convertFromUtezfToTez(
-                //        baker.sumBalance |> float_of_int,
-                //      ),
-                //      numFormatOptions,
-                //    )
-                //    |> str}
-                // </p>
-              </>
+              </div>
             )
          |> ReasonReact.array}
       </IfOption>

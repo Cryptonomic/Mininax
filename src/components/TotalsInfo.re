@@ -52,8 +52,6 @@ let make = () => {
     | None => None
     };
 
-  Js.log2("TEST", info);
-
   <div className={DashboardStyles.leftBottomContainer(theme)}>
     <p>
       {"In the past day there have been " |> str}
