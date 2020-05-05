@@ -44,10 +44,8 @@ let make = () => {
   let consumedGas =
     switch (info.sumConsumedGas) {
     | Some(value) =>
-      intl->Intl.formatNumberWithOptions(
-        Utils.convertFromUtezToTez(value),
-        numFormatOptions,
-      )
+      intl->Intl.formatNumber(Utils.convertFromUtezToTez(value))
+      // compactFormat,
       |> toOption
     | None => None
     };
