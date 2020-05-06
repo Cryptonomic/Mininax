@@ -125,9 +125,9 @@ module Make = (()) => {
     ();
   };
 
-  let goToMainPage = () => {
-    getMainPage();
-    ReasonReactRouter.push("/" ++ configs[selectedConfig].network);
+  let goToMainPage = network => {
+    Js.log("Go to main page");
+    ReasonReactRouter.push("/" ++ network);
   };
 
   let goToNetwork = network => {
@@ -137,7 +137,7 @@ module Make = (()) => {
            conf.network === network
          );
     switch (selectedIndex) {
-    | (-1) => goToMainPage()
+    | (-1) => goToMainPage(network)
     | _ =>
       dispatch(AppAction(ChangeNetwork(selectedIndex)));
       //   setSelectedConfig(_old => selectedIndex);
@@ -153,7 +153,9 @@ module Make = (()) => {
          );
     let isNumber = id |> Utils.isNumber;
     switch (selectedIndex) {
-    | (-1) => goToMainPage()
+    | (-1) => goToMainPage(network)
+    | index when index != selectedConfig =>
+      dispatch(AppAction(ChangeNetwork(selectedIndex)))
     | _ =>
       dispatch(AppAction(ChangeNetwork(selectedIndex)));
       //   setSelectedConfig(_old => selectedIndex);
@@ -163,7 +165,7 @@ module Make = (()) => {
         getHashByLevel(id |> int_of_string, ~isMain=false)
       | ("accounts", false) => getAccount(id, false)
       | ("operations", false) => getOperation(id, false)
-      | _ => goToMainPage()
+      | _ => goToMainPage(network)
       };
     };
   };
@@ -221,7 +223,7 @@ module Make = (()) => {
     if (selectedConfig !== index) {
       dispatch(AppAction(ChangeNetwork(index)));
       //   setSelectedConfig(_old => index);
-      goToMainPage();
+      goToMainPage(configs[index].network);
     } else {
       dispatch(AppAction(OpenNetwork(false)));
     };

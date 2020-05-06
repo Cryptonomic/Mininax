@@ -17,7 +17,7 @@ let make = () => {
       {switch (url.path) {
        | [_, "accounts", _] =>
          <Account items={state.account} goToDetail=onSearchById />
-       | [_, "operations", _] =>
+       | [_, "operations", _] when state.operation |> Array.length > 0 =>
          <Operation items={state.operation} goToDetail=onSearchById />
        | [_, "blocks", _] =>
          <Block

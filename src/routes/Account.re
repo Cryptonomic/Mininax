@@ -7,10 +7,8 @@ let make = (~items, ~goToDetail) => {
     Js.log2("level", level);
     ();
   };
-  let (id, _) =
-    React.useState(() => Utils.getValueFromDict(items, "account_id"));
-  let (displayName, _) =
-    React.useState(() => Utils.getDisplayName(configs[theme]));
+  let id = Utils.getValueFromDict(items, "account_id");
+  let displayName = Utils.getDisplayName(configs[theme]);
 
   let onOpenAccountSends = _ev =>
     Queries.getQueryForAccountSends(id)

@@ -329,9 +329,9 @@ let getQueryForProposalInfo = (cycle: int) =>
       ~aggrSetType=`Int([|cycle|]),
     )
   ->labelAddPredicate(
-      ~field="proposal",
+      ~field="kind",
       ~type_=ConseiljsType.ISNULL,
-      ~aggrSetType=`Str([|""|]),
+      ~aggrSetType=`Str([|"proposals"|]),
     )
   ->labelAddAggregationFunction(
       ~field="operation_group_hash",

@@ -1,4 +1,5 @@
 type state = {
+  inited: int,
   entity: string,
   id: string,
   isLoading: bool,
@@ -12,6 +13,7 @@ type state = {
 };
 
 type action =
+  | Init(int)
   | SetId(string)
   | SetLoading
   | SetLoaded
@@ -25,6 +27,7 @@ type action =
   | OpenNetwork(bool);
 
 let initState = {
+  inited: 0,
   entity: "",
   id: "",
   isLoading: false,
@@ -71,5 +74,6 @@ let reducer = (state, action) =>
       id,
       isLoading: false,
     }
+  | Init(selectedConfig) => {...state, selectedConfig, inited: 1}
   | OpenNetwork(status) => {...state, isOpenNetworkSelector: status}
   };
