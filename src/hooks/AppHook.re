@@ -126,6 +126,7 @@ module Make = (()) => {
   };
 
   let goToMainPage = network => {
+      getMainPage();
     Js.log("Go to main page");
     ReasonReactRouter.push("/" ++ network);
   };
