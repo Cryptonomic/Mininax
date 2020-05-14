@@ -4,12 +4,12 @@ module Style = {
   open Css;
   let mainContainer = style([flex(`num(1.)), marginBottom(px(57))]);
 };
-let selector = state => state;
+let selector = state => state.appState;
 
 [@react.component]
 let make = () => {
   let url = ReasonReactRouter.useUrl();
-  let state = AppStore.useSelector(selector);
+  let state = Store.useSelector(selector);
   module UseApp =
     AppHook.Make({});
   UseApp.(
@@ -27,11 +27,6 @@ let make = () => {
          />
        | _ =>
          <Dashboard
-           items={state.lastBlock}
-           blockinfo={state.blockinfo}
-           transinfo={state.transinfo}
-           voteinfo={state.voteinfo}
-           proposals={state.proposals}
            onSearch=onSearchMain
            changeLevel={getHashByLevel(~isMain=true)}
          />

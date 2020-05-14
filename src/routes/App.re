@@ -3,7 +3,7 @@ external activeElement: Dom.element = "activeElement";
 open GlobalStore;
 open Configs;
 
-let selector = state => state;
+let selector = state => state.appState;
 
 module Style = {
   open Css;
@@ -28,23 +28,28 @@ module Style = {
   let header =
     style([
       padding4(~top=px(0), ~bottom=px(30), ~left=px(10), ~right=px(10)),
+      display(flexBox),
+      alignItems(`flexEnd),
     ]);
   let headerTitle =
     style([
       fontFamily(`custom("'Arcade', sans-serif")),
       fontSize(px(60)),
       color(white),
-      lineHeight(px(35)),
+      lineHeight(px(30)),
       letterSpacing(px(3)),
       cursor(`pointer),
       display(inlineBlock),
     ]);
+
+  let subTitle =
+    merge([headerTitle, style([marginLeft(px(20)), fontSize(px(40))])]);
 };
 
 [@react.component]
 let make = () => {
   let url = ReasonReactRouter.useUrl();
-  let state = AppStore.useSelector(selector);
+  let state = GlobalStore.Store.useSelector(selector);
   let (footerRef, setFooterRef) =
     React.useState(() => (None: option(Dom.element)));
   let changeFooterRef = ref => {
@@ -76,10 +81,11 @@ let make = () => {
         |> Js.Array.findIndex((conf: MainType.config) =>
              conf.network === network
            );
-      dispatch(Init(selectedIndex));
-    | _ => dispatch(Init(0))
+      dispatch(AppAction(Init(selectedIndex)));
+    | _ => dispatch(AppAction(Init(0)))
     };
-    None;
+    let interval = Js.Global.setInterval(() => {getMainPage()}, 600000);
+    Some(() => {Js.Global.clearInterval(interval)});
   });
 
   React.useEffect1(
@@ -113,6 +119,18 @@ let make = () => {
               }>
               {ReasonReact.string("MININAX")}
             </div>
+            <div
+              className=Style.subTitle
+              onClick={_ => Utils.open_("https://arronax.io", "_blank")}>
+              {ReasonReact.string("ARRONAX")}
+            </div>
+            <div
+              className=Style.subTitle
+              onClick={_ =>
+                Utils.open_("http://cryptonomic.tech/galleon.html", "_blank")
+              }>
+              {ReasonReact.string("GALLEAON")}
+            </div>
           </div>
           <Router />
           <Footer
@@ -121,17 +139,22 @@ let make = () => {
             setRef=changeFooterRef
             changeId=onChangeId
             onSearch={_ => onSearchById(state.id)}
-            onOpenNetworkSelector={_ => dispatch(OpenNetwork(true))}
+            onOpenNetworkSelector={_ =>
+              dispatch(AppAction(OpenNetwork(true)))
+            }
           />
           <If validator={state.isLoading}> <Loader /> </If>
           <If validator={state.isError}>
-            <Error error={state.error} onTry={_ => dispatch(RemoveError)} />
+            <Error
+              error={state.error}
+              onTry={_ => dispatch(AppAction(RemoveError))}
+            />
           </If>
           <If validator={state.isOpenNetworkSelector}>
             <NetworkSelector
               selectedIndex={state.selectedConfig}
               onChange=onChangeNetwork
-              onCancel={_ => dispatch(OpenNetwork(false))}
+              onCancel={_ => dispatch(AppAction(OpenNetwork(false)))}
             />
           </If>
         </div>

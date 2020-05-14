@@ -12,6 +12,15 @@ let labelAddPredicate =
     ) =>
   addPredicate(query, field, type_, aggrSetType, false);
 
+let labelAddPredicateInverse =
+    (
+      query: ConseiljsType.conseilQuery,
+      ~field: string,
+      ~type_: ConseiljsType.conseilOperator,
+      ~aggrSetType: ConseiljsType.aggrSetType,
+    ) =>
+  addPredicate(query, field, type_, aggrSetType, true);
+
 let labelAddAggregationFunction =
     (
       query: ConseiljsType.conseilQuery,
@@ -372,3 +381,126 @@ let getQueryForBlocksTab = () =>
       "priority",
     ])
   ->setLimit(1000);
+
+let getQueryForLastDayTransactions = (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields(["operation_group_hash"])
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"transaction"|]),
+    )
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddAggregationFunction(
+      ~field="operation_group_hash",
+      ~aggType=ConseiljsType.COUNT,
+    )
+  ->setLimit(1000);
+
+let getQueryForZeroPriorityBlocksLast24 = (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields(["priority", "level"])
+  ->labelAddPredicate(
+      ~field="priority",
+      ~type_=ConseiljsType.EQ,
+      ~aggrSetType=`Str([|"0"|]),
+    )
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddAggregationFunction(~field="level", ~aggType=ConseiljsType.COUNT)
+  ->setLimit(1000);
+
+let getQueryForBakersWithOutput = (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields(["level", "baker"])
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddPredicate(
+      ~field="level",
+      ~type_=ConseiljsType.GT,
+      ~aggrSetType=`Int([|0|]),
+    )
+  ->labelAddAggregationFunction(~field="level", ~aggType=ConseiljsType.COUNT)
+  ->labelAddAggregationFunction(~field="baker", ~aggType=ConseiljsType.COUNT)
+  ->addOrdering("count_level", ConseiljsType.DESC)
+  ->setLimit(3);
+
+let getQueryForOriginationAndRevealLastDay =
+    (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields(["kind", "operation_group_hash", "status"])
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddPredicate(
+      ~field="kind",
+      ~type_=ConseiljsType.IN,
+      ~aggrSetType=`Str([|"activate_account", "origination", "reveal"|]),
+    )
+  ->labelAddAggregationFunction(
+      ~field="operation_group_hash",
+      ~aggType=ConseiljsType.COUNT,
+    )
+  ->setLimit(1000);
+
+let getQueryForTop3BakersLastDay = () =>
+  blankQuery()
+  ->addFields(["account_id", "balance", "delegate_value"])
+  ->labelAddPredicateInverse(
+      ~field="delegate_value",
+      ~type_=ConseiljsType.ISNULL,
+      ~aggrSetType=`Str([|""|]),
+    )
+  ->labelAddAggregationFunction(
+      ~field="account_id",
+      ~aggType=ConseiljsType.COUNT,
+    )
+  ->labelAddAggregationFunction(~field="balance", ~aggType=ConseiljsType.SUM)
+  ->addOrdering("sum_balance", ConseiljsType.DESC)
+  ->setLimit(3);
+
+let getQueryForStorageDeltaLastDay = (startDate: float, endDate: float) =>
+  blankQuery()
+  ->addFields([
+      "paid_storage_size_diff",
+      "consumed_gas",
+      "fee",
+      "operation_group_hash",
+    ])
+  ->labelAddPredicate(
+      ~field="timestamp",
+      ~type_=ConseiljsType.BETWEEN,
+      ~aggrSetType=`Float([|startDate, endDate|]),
+    )
+  ->labelAddAggregationFunction(~field="fee", ~aggType=ConseiljsType.SUM)
+  ->labelAddAggregationFunction(
+      ~field="paid_storage_size_diff",
+      ~aggType=ConseiljsType.SUM,
+    )
+  ->labelAddAggregationFunction(
+      ~field="consumed_gas",
+      ~aggType=ConseiljsType.SUM,
+    )
+  ->labelAddAggregationFunction(
+      ~field="operation_group_hash",
+      ~aggType=ConseiljsType.COUNT,
+    )
+  ->setLimit(1000);
+
+let getQueryForTheLatestGovernance = () =>
+  blankQuery()
+  ->addFields(["voting_period", "cycle", "block_hash"])
+  ->addOrdering("voting_period", ConseiljsType.DESC)
+  ->setLimit(1);

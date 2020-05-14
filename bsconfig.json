@@ -10,7 +10,9 @@
       "utils",
       "styles",
       "store",
-      "routes"
+      "routes",
+      "hooks",
+      "api"
     ]
   },
   "package-specs": [
@@ -23,12 +25,14 @@
   "namespace": true,
   "bs-dependencies": [
     "bs-conseiljs",
+    "@glennsl/bs-json",
     "reason-react",
     "reason-future",
     "bs-css",
     "bs-css-emotion",
     "bs-react-intl",
     "bs-moment",
+    "bs-moment-timezone",
     "reductive"
   ],
   "refmt": 3

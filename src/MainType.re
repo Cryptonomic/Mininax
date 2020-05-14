@@ -33,67 +33,70 @@ type theme = {
   networkShadowCol: string,
 };
 
-type transInfo = {
-  countOriginatedContracts: string,
-  countAmount: string,
-  sumAmount: int,
+type transactionHash = {countedTransactions: int};
+
+type tezosBlock = {
+  active_proposal: option(string),
+  baker: option(string),
+  chain_id: option(string),
+  consumed_gas: option(int),
+  context: option(string),
+  current_expected_quorum: option(int),
+  expected_commitment: option(bool),
+  fitness: option(string),
+  hash: option(string),
+  level: option(int),
+  meta_cycle: option(int),
+  meta_cycle_position: option(int),
+  meta_level: option(int),
+  meta_level_position: option(int),
+  meta_voting_period: option(int),
+  meta_voting_period_position: option(int),
+  nonce_hash: option(string),
+  operations_hash: option(string),
+  period_kind: option(string),
+  predecessor: option(string),
+  priority: option(int),
+  proto: option(int),
+  protocol: option(string),
+  signature: option(string),
+  timestamp: option(float),
+  utc_day: option(int),
+  utc_month: option(int),
+  utc_time: option(string),
+  utc_year: option(int),
+  validation_pass: option(int),
 };
 
-type voteInfo = {
-  yay_rolls: int,
-  nay_rolls: int,
-  pass_rolls: int,
-  proposal_hash: string,
-  current_expected_quorum: int,
+let initTezosBlock = {
+  active_proposal: None,
+  baker: None,
+  chain_id: None,
+  consumed_gas: None,
+  context: None,
+  current_expected_quorum: None,
+  expected_commitment: None,
+  fitness: None,
+  hash: None,
+  level: None,
+  meta_cycle: None,
+  meta_cycle_position: None,
+  meta_level: None,
+  meta_level_position: None,
+  meta_voting_period: None,
+  meta_voting_period_position: None,
+  nonce_hash: None,
+  operations_hash: None,
+  period_kind: None,
+  predecessor: None,
+  priority: None,
+  proto: None,
+  protocol: None,
+  signature: None,
+  timestamp: None,
+  utc_day: None,
+  utc_month: None,
+  utc_time: None,
+  utc_year: None,
+  validation_pass: None,
 };
-
-type blockInfo = {
-  blockCount: int,
-  fundraiserCount: string,
-  totalFundraiserCount: string,
-  sum_fee: int,
-  sum_consumed_gas: int,
-  num_bakers: string,
-  bakers_sum_staking_balance: float,
-  totalTez: float,
-};
-
-type proposalInfo = {
-  count_operation_group_hash: string,
-  proposal: string,
-};
-
-type state = {
-  inited: int,
-  entity: string,
-  id: string,
-  isLoading: bool,
-  selectedConfig: int,
-  isOpenNetworkSelector: bool,
-  isError: bool,
-  error: string,
-  block: Js.Dict.t(string),
-  account: Js.Dict.t(string),
-  operation: array(Js.Dict.t(string)),
-  lastBlock: ConseiljsType.tezosBlock,
-  transinfo: transInfo,
-  blockinfo: blockInfo,
-  voteinfo: voteInfo,
-  proposals: array(proposalInfo),
-};
-
-type action =
-  | Init(int)
-  | SetId(string)
-  | SetLoading
-  | ChangeNetwork(int)
-  | SetParams(string, string)
-  | SetError(string)
-  | RemoveError
-  | SetBlock(Js.Dict.t(string), string, bool)
-  | SetAccount(Js.Dict.t(string), string)
-  | SetOperations(array(Js.Dict.t(string)), string)
-  | OpenNetwork(bool)
-  | SetLastBlock(ConseiljsType.tezosBlock, blockInfo, transInfo)
-  | SetProposals(array(proposalInfo))
-  | SetVoteInfo(voteInfo);
