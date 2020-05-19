@@ -74,7 +74,7 @@ let make = () => {
         <p className=inline> {" Top 3 bakers at the moment are:" |> str} </p>
         {bakersInfo.top3Bakers
          |> Helpers.optionToArray
-         |> Array.map((baker: DashboardStore.baker) =>
+         |> Array.map((baker: DashboardStore.Types_.baker) =>
               <div key={baker.countAccountId}>
                 <TextWithCopy
                   className={content1(theme)}

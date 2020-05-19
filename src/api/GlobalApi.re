@@ -62,7 +62,7 @@ module ReturningPromise = {
 
 open ReturningPromise;
 
-let getBlockHeadThunk = (~callback, ~config: MainType.config) =>
+let getBlockHeadThunk = (~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getBlockHead
   ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
   ->FutureJs.fromPromise(_err => None)
@@ -70,10 +70,9 @@ let getBlockHeadThunk = (~callback, ~config: MainType.config) =>
       fun
       | Ok(result) => Some(result)
       | _err => None,
-    )
-  ->Future.get(callback);
+    );
 
-let getBlockThunk = (~callback, ~id: string, ~config: MainType.config) =>
+let getBlockThunk = (~id: string, ~config: MainType.config) =>
   Js.Promise.all2((
     FutureJs.toPromise(getBlockFromApi(~id, ~config)),
     FutureJs.toPromise(getBlockTotalsThunk(~id, ~config)),
@@ -91,10 +90,9 @@ let getBlockThunk = (~callback, ~id: string, ~config: MainType.config) =>
         }
       | Ok((None, None)) => Error(ErrMessage.noAvailable)
       | _err => Error(ErrMessage.invalidId),
-    )
-  ->Future.get(callback);
+    );
 
-let getBlockHashThunk = (~callback, ~level: int, ~config: MainType.config) =>
+let getBlockHashThunk = (~level: int, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getBlockByLevel
   ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
   ->apply1(level)
@@ -103,10 +101,9 @@ let getBlockHashThunk = (~callback, ~level: int, ~config: MainType.config) =>
       fun
       | Ok(hashes) when hashes |> Js.Array.length > 0 => Some(hashes[0])
       | _err => None,
-    )
-  ->Future.get(callback);
+    );
 
-let getOperationThunk = (~callback, ~id: string, ~config: MainType.config) =>
+let getOperationThunk = (~id: string, ~config: MainType.config) =>
   ConseiljsRe.TezosConseilClient.getOperations
   ->applyTuple3SkipSecond(~tuple=Utils.getInfo(config))
   ->applyQuery(~query=Queries.getQueryForOperations(id))
@@ -117,10 +114,9 @@ let getOperationThunk = (~callback, ~id: string, ~config: MainType.config) =>
         operations |> Array.map(Convert.convertOperation) |> toResult
       | Ok(_) => Error(ErrMessage.noAvailable)
       | Error(e) => Error(e),
-    )
-  ->Future.get(callback);
+    );
 
-let getAccountThunk = (~callback, ~id: string, ~config: MainType.config) =>
+let getAccountThunk = (~id: string, ~config: MainType.config) =>
   Js.Promise.all2((
     getAccountFromApi(~id, ~config) |> FutureJs.toPromise,
     getAccountBakerThunk(~id, ~config) |> FutureJs.toPromise,
@@ -138,8 +134,7 @@ let getAccountThunk = (~callback, ~id: string, ~config: MainType.config) =>
         Error(ErrMessage.missingContract)
       | Ok(_) => Error(ErrMessage.invalidAccountId)
       | Error(err) => Error(err),
-    )
-  ->Future.get(callback);
+    );
 
 let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
   ConseiljsRe.ConseilDataClient.executeEntityQuery

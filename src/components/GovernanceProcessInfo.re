@@ -90,7 +90,7 @@ let make = () => {
            <div className=DashboardStyles.rightMdMainContainer>
              {proposals
               |> Helpers.optionToArray
-              |> Array.mapi((index, pr: DashboardStore.proposalInfo) => {
+              |> Array.mapi((index, pr: DashboardStore.Types_.proposalInfo) => {
                    let lastTxt =
                      if (index
                          == Js.Array.length(Helpers.optionToArray(proposals))

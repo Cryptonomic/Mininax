@@ -11,59 +11,61 @@ module Make = (()) => {
   module UseDashboard =
     DashboardHook.Make({});
 
-  let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) => {
-    dispatch(AppAction(SetLoading));
-    let callback = result =>
-      switch (result) {
-      | Ok((block, lastBlock)) =>
-        switch (isRoute, isMain, level) {
-        | (true, false, 0) =>
-          let url =
-            Utils.makeUrl(
-              ~network=configs[selectedConfig].network,
-              ~entity="blocks",
-              ~id,
-            );
-          ReasonReactRouter.push(url);
-          dispatch(AppAction(SetBlock(block, id, false)));
-        | (true, false, _) =>
-          let strLevel = string_of_int(level);
-          let url =
-            Utils.makeUrl(
-              ~network=configs[selectedConfig].network,
-              ~entity="blocks",
-              ~id=strLevel,
-            );
-          ReasonReactRouter.push(url);
-          dispatch(AppAction(SetBlock(block, strLevel, false)));
-        | (false, false, _) =>
-          dispatch(AppAction(SetBlock(block, id, false)))
-        | _ =>
-          dispatch(AppAction(SetBlock(block, "", true)));
-          switch (lastBlock##period_kind) {
-          | "proposal" => UseDashboard.getProposalsInfo(lastBlock)
-          | "testing" => ()
-          // TODO have to test
-          | _ => UseDashboard.getGovernanceProcessInfo(lastBlock)
-          };
-          // TODO should run them together for set loaded in the same time
-          UseDashboard.getTotalsInfo();
-          UseDashboard.getBakersInfo();
-          UseDashboard.getTheLatestGovernanceInfo();
-          UseDashboard.getBlockInfo(lastBlock);
-          ();
+  let getBlock = (id: string, isRoute: bool, isMain: bool, level: int) =>
+    AppAction(SetLoading)
+    ->Future.value
+    ->Future.map(dispatch)
+    ->Future.flatMap(_ =>
+        GlobalApi.getBlockThunk(~id, ~config=configs[selectedConfig])
+      )
+    ->Future.get(result =>
+        switch (result) {
+        | Ok((block, lastBlock)) =>
+          switch (isRoute, isMain, level) {
+          | (true, false, 0) =>
+            let url =
+              Utils.makeUrl(
+                ~network=configs[selectedConfig].network,
+                ~entity="blocks",
+                ~id,
+              );
+            ReasonReactRouter.push(url);
+            dispatch(AppAction(SetBlock(block, id, false)));
+          | (true, false, _) =>
+            let strLevel = string_of_int(level);
+            let url =
+              Utils.makeUrl(
+                ~network=configs[selectedConfig].network,
+                ~entity="blocks",
+                ~id=strLevel,
+              );
+            ReasonReactRouter.push(url);
+            dispatch(AppAction(SetBlock(block, strLevel, false)));
+          | (false, false, _) =>
+            dispatch(AppAction(SetBlock(block, id, false)))
+          | _ =>
+            dispatch(AppAction(SetBlock(block, "", true)));
+            switch (lastBlock##period_kind) {
+            | "proposal" => UseDashboard.getProposalsInfo(lastBlock)
+            | "testing" => ()
+            // TODO have to test
+            | _ => UseDashboard.getGovernanceProcessInfo(lastBlock)
+            };
+            UseDashboard.getDashboardInfo(lastBlock)
+            ->Future.get(_ => dispatch(AppAction(SetLoaded)));
+          }
+        | Error(err) => dispatch(AppAction(SetError(err)))
         }
-      | Error(err) => dispatch(AppAction(SetError(err)))
-      };
-    ApiCall.getBlockThunk(~callback, ~id, ~config=configs[selectedConfig]);
-  };
+      );
 
-  let getOperation = (id: string, isRoute: bool) => {
-    dispatch(AppAction(SetLoading));
-    ApiCall.getOperationThunk(
-      ~id,
-      ~config=configs[selectedConfig],
-      ~callback=
+  let getOperation = (id: string, isRoute: bool) =>
+    AppAction(SetLoading)
+    ->Future.value
+    ->Future.map(dispatch)
+    ->Future.flatMap(_ =>
+        GlobalApi.getOperationThunk(~id, ~config=configs[selectedConfig])
+      )
+    ->Future.get(
         fun
         | Ok(operations) when isRoute == true => {
             Utils.makeUrl(
@@ -77,15 +79,16 @@ module Make = (()) => {
         | Ok(operations) =>
           dispatch(AppAction(SetOperations(operations, id)))
         | Error(err) => dispatch(AppAction(SetError(err))),
-    );
-  };
+      );
 
-  let getAccount = (id: string, isRoute: bool) => {
-    dispatch(AppAction(SetLoading));
-    ApiCall.getAccountThunk(
-      ~id,
-      ~config=configs[selectedConfig],
-      ~callback=
+  let getAccount = (id: string, isRoute: bool) =>
+    AppAction(SetLoading)
+    ->Future.value
+    ->Future.map(dispatch)
+    ->Future.flatMap(_ =>
+        GlobalApi.getAccountThunk(~id, ~config=configs[selectedConfig])
+      )
+    ->Future.get(
         fun
         | Ok(account) when isRoute => {
             Utils.makeUrl(
@@ -98,32 +101,35 @@ module Make = (()) => {
           }
         | Ok(account) => dispatch(AppAction(SetAccount(account, id)))
         | Error(err) => dispatch(AppAction(SetError(err))),
-    );
-  };
+      );
 
-  let getHashByLevel = (level: int, ~isMain: bool) => {
-    dispatch(AppAction(SetLoading));
-    ApiCall.getBlockHashThunk(
-      ~level,
-      ~config=configs[selectedConfig],
-      ~callback=
+  let getHashByLevel = (level: int, ~isMain: bool) =>
+    AppAction(SetLoading)
+    ->Future.value
+    ->Future.map(dispatch)
+    ->Future.flatMap(_ =>
+        GlobalApi.getBlockHashThunk(~level, ~config=configs[selectedConfig])
+      )
+    ->Future.get(
         fun
         | Some(head) when isMain => getBlock(head##hash, false, true, level)
         | Some(head) => getBlock(head##hash, true, false, level)
         | _err => dispatch(AppAction(SetError(ErrMessage.noAvailable))),
-    );
-  };
+      );
 
-  let getMainPage = () => {
-    dispatch(AppAction(SetLoading));
-    let callback = result =>
-      switch (result) {
-      | Some(head) => getBlock(head##hash, false, true, 0)
-      | None => dispatch(AppAction(SetError(ErrMessage.noAvailable)))
-      };
-    ApiCall.getBlockHeadThunk(~callback, ~config=configs[selectedConfig]);
-    ();
-  };
+  let getMainPage = () =>
+    AppAction(SetLoading)
+    ->Future.value
+    ->Future.map(dispatch)
+    ->Future.flatMap(_ =>
+        GlobalApi.getBlockHeadThunk(~config=configs[selectedConfig])
+      )
+    ->Future.get(result =>
+        switch (result) {
+        | Some(head) => getBlock(head##hash, false, true, 0)
+        | None => dispatch(AppAction(SetError(ErrMessage.noAvailable)))
+        }
+      );
 
   let goToMainPage = network => {
     Js.log("Go to main page");
