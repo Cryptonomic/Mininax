@@ -133,3 +133,9 @@ let getLast24h = () => {
   let endTime = momentNow() |> Moment.valueOf;
   (startTime, endTime);
 };
+
+// let formatToMetricPrefix = (value: int) => {
+//   switch (value) {
+//   | x when x > 1000000 => x |> float_of_int 
+//   };
+// };

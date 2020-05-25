@@ -16,10 +16,11 @@ let make = () => {
   let tez_staked =
     switch (bakersInfo.bakersSumStakingBalance) {
     | Some(value) =>
-      intl->Intl.formatNumberWithOptions(
-        Utils.convertFromUtezfToTez(value),
-        numFormatOptions,
-      )
+      intl
+      ->Intl.formatNumberWithOptions(
+          Utils.convertFromUtezfToTez(value),
+          numFormatOptions,
+        )
       |> Helpers.toOption
     | None => None
     };
@@ -27,10 +28,11 @@ let make = () => {
   let total_tez =
     switch (bakersInfo.totalTez) {
     | Some(value) =>
-      intl->Intl.formatNumberWithOptions(
-        Utils.convertFromUtezfToTez(value),
-        numFormatOptions,
-      )
+      intl
+      ->Intl.formatNumberWithOptions(
+          Utils.convertFromUtezfToTez(value),
+          numFormatOptions,
+        )
       |> Helpers.toOption
     | None => None
     };
@@ -44,6 +46,13 @@ let make = () => {
     | _ => None
     };
 
+  let staked =
+    switch (tez_staked, total_tez, percent_staked) {
+    | (Some(tez), Some(total), Some(percent)) =>
+      Some((tez, total, percent))
+    | _ => None
+    };
+
   <div className={rightBottomContainer(theme)}>
     /*{ReasonReact.string("There are ")}
       <div className={DashboardStyles.networkContent(theme)}>
@@ -53,37 +62,48 @@ let make = () => {
       </div>
       {ReasonReact.string(" active bakers. A total of ")}*/
 
-      <IfOption validator=tez_staked>
-        <p className=inline>
-          {"A total of " |> str}
-          <span className={networkContent(theme)}>
-            {Helpers.optionToString(tez_staked) ++ " XTZ" |> str}
-          </span>
-          {" out of " |> str}
-          <span className={networkContent(theme)}>
-            {Helpers.optionToString(total_tez) ++ " XTZ" |> str}
-          </span>
-          {" or " |> str}
-          <span className={networkContent(theme)}>
-            {"(" ++ Helpers.optionToString(percent_staked) ++ "%)" |> str}
-          </span>
-          {" of TEZ, is being staked right now." |> str}
-        </p>
+      <IfOption validator=staked>
+        {
+          ((tez, total, percent)) =>
+            <p className=inline>
+              {"A total of " |> str}
+              <span className={networkContent(theme)}>
+                {tez ++ " XTZ" |> str}
+              </span>
+              {" out of " |> str}
+              <span className={networkContent(theme)}>
+                {total ++ " XTZ" |> str}
+              </span>
+              {" or " |> str}
+              <span className={networkContent(theme)}>
+                {"(" ++ percent ++ "%)" |> str}
+              </span>
+              {" of TEZ, is being staked right now." |> str}
+            </p>
+        }
       </IfOption>
       <IfOption validator={bakersInfo.top3Bakers}>
-        <p className=inline> {" Top 3 bakers at the moment are:" |> str} </p>
-        {bakersInfo.top3Bakers
-         |> Helpers.optionToArray
-         |> Array.map((baker: DashboardStore.Types_.baker) =>
-              <div key={baker.countAccountId}>
-                <TextWithCopy
-                  className={content1(theme)}
-                  value={baker.delegateValue}
-                  isReverse=true
-                />
-              </div>
-            )
-         |> ReasonReact.array}
+        {
+          value =>
+            <>
+              <p className=inline>
+                {" Top 3 bakers at the moment are:" |> str}
+              </p>
+              {
+                value
+                |> Array.map((baker: DashboardStore.Types_.baker) =>
+                     <div key={baker.countAccountId}>
+                       <TextWithCopy
+                         className={content1(theme)}
+                         value={baker.delegateValue}
+                         isReverse=true
+                       />
+                     </div>
+                   )
+                |> ReasonReact.array
+              }
+            </>
+        }
       </IfOption>
     </div>;
 };

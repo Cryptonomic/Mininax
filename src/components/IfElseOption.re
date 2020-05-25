@@ -1,12 +1,12 @@
 [@react.component]
 let make =
     (
-      ~children: (ReasonReact.reactElement, ReasonReact.reactElement),
+      ~children: ('a => ReasonReact.reactElement, ReasonReact.reactElement),
       ~validator,
     ) => {
   let (firstChild, secondChild) = children;
   switch (validator) {
-  | Some(_) => firstChild
+  | Some(value) => firstChild(value)
   | None => secondChild
   };
 };

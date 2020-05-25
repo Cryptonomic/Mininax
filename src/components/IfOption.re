@@ -1,7 +1,7 @@
 [@react.component]
-let make = (~children: ReasonReact.reactElement, ~validator) => {
+let make = (~children, ~validator) => {
   switch (validator) {
-  | Some(_) => children
+  | Some(value) => children(value)
   | None => ReasonReact.null
   };
 };
