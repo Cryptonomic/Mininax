@@ -44,9 +44,7 @@ let make = () => {
   let consumedGas =
     switch (info.sumConsumedGas) {
     | Some(value) =>
-      intl->Intl.formatNumber(Utils.convertFromUtezToTez(value))
-      // compactFormat,
-      |> toOption
+      value |> float_of_int |> Utils.largeNumberabbreviation |> toOption
     | None => None
     };
 
@@ -81,7 +79,7 @@ let make = () => {
            <>
              {" and " |> str}
              <span className={DashboardStyles.content3(theme)}>
-               {intl->Intl.formatNumber(float_of_int(value))->str}
+               {intl->Intl.formatNumber(float_of_int(value)) |> str}
              </span>
              {" contract invocations" |> str}
            </>}
