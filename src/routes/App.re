@@ -130,7 +130,7 @@ let make = () => {
               onClick={_ =>
                 Utils.open_("http://cryptonomic.tech/galleon.html", "_blank")
               }>
-              {ReasonReact.string("GALLEAON")}
+              {ReasonReact.string("GALLEON")}
             </div>
           </div>
           <Router />
