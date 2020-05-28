@@ -82,7 +82,8 @@ let make = () => {
              conf.network === network
            );
       dispatch(AppAction(Init(selectedIndex)));
-    | _ => dispatch(AppAction(Init(0)))
+    | _ =>
+      dispatch(AppAction(Init(0)));
     };
     let interval = Js.Global.setInterval(() => {getMainPage()}, 600000);
     Some(() => {Js.Global.clearInterval(interval)});
@@ -96,7 +97,9 @@ let make = () => {
         switch (url.path) {
         | [network, entity, id] => goToPage(network, entity, id)
         | [network] => goToNetwork(network)
-        | _ => goToMainPage(configs[selectedConfig].network)
+        | _ =>
+          goToNetwork(configs[selectedConfig].network);
+          ReasonReactRouter.push(configs[0].network);
         }
       };
       None;
