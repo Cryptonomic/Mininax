@@ -53,7 +53,7 @@ let make = () => {
     };
 
   <div className={leftTopContainer(theme)}>
-    <p>
+    <p className=inline>
       {"Greetings! The Tezos " |> str}
       <span className={networkContent(theme)}> {network |> str} </span>
       <IfOption validator=cyclyAndPeriod>
@@ -68,13 +68,13 @@ let make = () => {
                {intl->Intl.formatNumber(float_of_int(meta_voting_period))
                 |> str}
              </span>
-             {" period." |> str}
+             {" period. " |> str}
            </>}
       </IfOption>
     </p>
     <IfOption validator={blockinfo.blockCount}>
       {value =>
-         <p>
+         <p className=inline>
            {"Within this cycle, " |> str}
            <span className={content1(theme)}>
              {intl->Intl.formatNumber(float_of_int(value))
