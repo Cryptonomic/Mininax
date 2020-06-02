@@ -44,131 +44,150 @@ let make = () => {
   let consumedGas =
     switch (info.sumConsumedGas) {
     | Some(value) =>
-      intl->Intl.formatNumber(Utils.convertFromUtezToTez(value))
-      // compactFormat,
-      |> toOption
+      value |> float_of_int |> Utils.largeNumberabbreviation |> toOption
     | None => None
+    };
+
+  let reveals =
+    switch (info.reveals, info.contractDeployed) {
+    | (Some(reveals), Some(contractDeployed)) =>
+      Some((reveals, contractDeployed))
+    | _ => None
+    };
+
+  let fundraiserCount =
+    switch (info.totalFundraiserCount, fundraiserPercent) {
+    | (Some(totalFundraiserCount), Some(fundraiserPercent)) =>
+      Some((totalFundraiserCount, fundraiserPercent))
+    | _ => None
     };
 
   <div className={DashboardStyles.leftBottomContainer(theme)}>
     <p>
       {"In the past day there have been " |> str}
       <IfOption validator={info.countTransactions}>
-        <span className={DashboardStyles.content3(theme)}>
-          {intl
-           ->Intl.formatNumber(
-               float_of_int(optionToInt(info.countTransactions)),
-             )
-           ->str}
-        </span>
-        {" transactions " |> str}
+        {value =>
+           <If validator={value > 0}>
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(value)) |> str}
+             </span>
+             {" transactions " |> str}
+           </If>}
       </IfOption>
       <IfOption validator={info.countAmount}>
-        {" and " |> str}
-        <span className={DashboardStyles.content3(theme)}>
-          {intl
-           ->Intl.formatNumber(float_of_int(optionToInt(info.countAmount)))
-           ->str}
-        </span>
-        {" contract invocations" |> str}
+        {value =>
+           <If validator={value > 0}>
+             {" and " |> str}
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(value)) |> str}
+             </span>
+             {" contract invocations" |> str}
+           </If>}
       </IfOption>
       <IfOption validator=transactions_total_xtz>
-        {" for a total of " |> str}
-        <span className={DashboardStyles.content3(theme)}>
-          {optionToString(transactions_total_xtz) ++ " XTZ" |> str}
-        </span>
-        {" while " |> str}
+        {value =>
+           <If validator={value != "0"}>
+             {" for a total of " |> str}
+             <span className={DashboardStyles.content3(theme)}>
+               {value ++ " XTZ" |> str}
+             </span>
+             {" while " |> str}
+           </If>}
       </IfOption>
       <IfOption validator={info.countOriginatedContracts}>
-        <If validator={info.countOriginatedContracts |> optionToInt > 0}>
-          <span className={DashboardStyles.content3(theme)}>
-            {intl
-             ->Intl.formatNumber(
-                 float_of_int(optionToInt(info.countOriginatedContracts)),
-               )
-             ->str}
-          </span>
-          {" accounts were originated, " |> str}
-        </If>
+        {countOriginatedContracts =>
+           <If validator={countOriginatedContracts > 0}>
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(
+                  float_of_int(optionToInt(info.countOriginatedContracts)),
+                )
+                |> str}
+             </span>
+             {" accounts were originated, " |> str}
+           </If>}
       </IfOption>
       <IfOption validator={info.fundraiserCount}>
-        <span className={DashboardStyles.content3(theme)}>
-          {intl
-           ->Intl.formatNumber(
-               float_of_int(optionToInt(info.fundraiserCount)),
-             )
-           ->str}
-        </span>
-        <IfElse validator={network == "mainnet"}>
-          (" fundraiser " |> str, " faucet " |> str)
-        </IfElse>
-        {"accounts were activated, " |> str}
+        {value =>
+           <If validator={value > 0}>
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(value)) |> str}
+             </span>
+             <IfElse validator={network == "mainnet"}>
+               (" fundraiser " |> str, " faucet " |> str)
+             </IfElse>
+             {"accounts were activated, " |> str}
+           </If>}
       </IfOption>
       <IfOption validator={info.reveals}>
-        <span className={DashboardStyles.content3(theme)}>
-          {intl
-           ->Intl.formatNumber(float_of_int(optionToInt(info.reveals)))
-           ->str}
-        </span>
-        {" were revealed" |> str}
+        {value =>
+           <If validator={value > 0}>
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(value)) |> str}
+             </span>
+             {" were revealed" |> str}
+           </If>}
       </IfOption>
-      <IfOption validator={info.reveals}>
-        {" and " |> str}
-        <span className={DashboardStyles.content3(theme)}>
-          {intl
-           ->Intl.formatNumber(
-               float_of_int(optionToInt(info.contractDeployed)),
-             )
-           ->str}
-        </span>
-        <IfElse validator={optionToInt(info.contractDeployed) > 1}>
-          (" contracts were" |> str, " contract was" |> str)
-        </IfElse>
-        {" deployed." |> str}
+      <IfOption validator=reveals>
+        {((_, contractDeployed)) =>
+           <If validator={contractDeployed > 0}>
+             {" and " |> str}
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(contractDeployed))
+                |> str}
+             </span>
+             <IfElse validator={contractDeployed > 1}>
+               (" contracts were" |> str, " contract was" |> str)
+             </IfElse>
+             {" deployed." |> str}
+           </If>}
       </IfOption>
       <IfOption validator=sumFee>
-        {" A total of " |> str}
-        <span className={DashboardStyles.content3(theme)}>
-          {optionToString(sumFee) ++ " XTZ" |> str}
-        </span>
-        {" in fees have been paid out and " |> str}
+        {value =>
+           <If validator={value != "0"}>
+             {" A total of " |> str}
+             <span className={DashboardStyles.content3(theme)}>
+               {value ++ " XTZ" |> str}
+             </span>
+             {" in fees have been paid out and " |> str}
+           </If>}
       </IfOption>
       <IfOption validator=consumedGas>
-        <span className={DashboardStyles.content3(theme)}>
-          {optionToString(consumedGas) |> str}
-        </span>
-        {" gas has been consumed." |> str}
+        {value =>
+           <If validator={value != "0"}>
+             <span className={DashboardStyles.content3(theme)}>
+               {value |> str}
+             </span>
+             {" gas has been consumed." |> str}
+           </If>}
       </IfOption>
-      <IfOption validator={info.totalFundraiserCount}>
-        {" There have been " |> str}
-        <span className={DashboardStyles.content3(theme)}>
-          {intl->Intl.formatNumber(
-             float_of_int(optionToInt(info.totalFundraiserCount)),
-           )
-           ++ " of 30,317"
-           |> str}
-        </span>
-        <IfElse validator={network == "mainnet"}>
-          (" fundraiser " |> str, " faucet " |> str)
-        </IfElse>
-        {"accounts " |> str}
-        <span className={DashboardStyles.content2(theme)}>
-          {"("
-           ++ Js.Float.toString(optionToFloat(fundraiserPercent))
-           ++ "%)"
-           |> str}
-        </span>
-        {"  activated so far." |> str}
+      <IfOption validator=fundraiserCount>
+        {((totalFundraiserCount, fundraiserPercent)) =>
+           <If validator={totalFundraiserCount > 0}>
+             {" There have been " |> str}
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(totalFundraiserCount))
+                ++ " of 30,317"
+                |> str}
+             </span>
+             <IfElse validator={network == "mainnet"}>
+               (" fundraiser " |> str, " faucet " |> str)
+             </IfElse>
+             {"accounts " |> str}
+             <span className={DashboardStyles.content2(theme)}>
+               {"(" ++ Js.Float.toString(fundraiserPercent) ++ "%)" |> str}
+             </span>
+             {"  activated so far." |> str}
+           </If>}
       </IfOption>
       <IfOption validator={info.storageDelta}>
-        {" The last 24 h storage delta is " |> str}
-        <span className={DashboardStyles.content3(theme)}>
-          {intl->Intl.formatNumber(
-             float_of_int(optionToInt(info.storageDelta)),
-           )
-           |> str}
-        </span>
-        {"." |> str}
+        {value =>
+           <If validator={value > 0}>
+             {" The last 24 h storage delta is " |> str}
+             <span className={DashboardStyles.content3(theme)}>
+               {intl->Intl.formatNumber(float_of_int(value)) |> str}
+             </span>
+             {"." |> str}
+           </If>}
       </IfOption>
     </p>
   </div>;

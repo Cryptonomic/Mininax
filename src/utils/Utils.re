@@ -61,7 +61,7 @@ let formatString = (value, isConvert) => {
   };
 };
 
-let getFields = (~entity, ~kind=?, ()): array(MainType.field) => {
+let getFields = (~entity, ~kind=?, ()): array(MainType.field) =>
   switch (entity, kind) {
   | ("operation", Some("Transaction")) => operationTransactionArray
   | ("operation", Some("Activate Account")) => operationActiveAccountArray
@@ -77,24 +77,21 @@ let getFields = (~entity, ~kind=?, ()): array(MainType.field) => {
   | ("account", None) => accountArray
   | _ => [||]
   };
-};
 
 let getSecondTimeFromMilli = (nowTime: float) =>
   int_of_float(nowTime /. 1000.);
 
-let isNumber = (id: string) => {
+let isNumber = (id: string) =>
   switch (int_of_string(id)) {
   | exception _ => false
   | _ => true
   };
-};
 
-let getValueFromDict = (dict: Js.Dict.t(string), key_: string) => {
+let getValueFromDict = (dict: Js.Dict.t(string), key_: string) =>
   switch (Js.Dict.get(dict, key_)) {
   | None => ""
   | Some(value) => value
   };
-};
 
 let openSharedUrl =
     (query: ConseiljsType.conseilQuery, displayName: string, entity: string) => {
@@ -133,3 +130,25 @@ let getLast24h = () => {
   let endTime = momentNow() |> Moment.valueOf;
   (startTime, endTime);
 };
+
+type abberative = {
+  symbol: string,
+  value: float,
+};
+
+let largeNumberabbreviation = (value: float): string =>
+  [
+    {symbol: "t", value: 1000000000000.},
+    {symbol: "B", value: 1000000000.},
+    {symbol: "M", value: 1000000.},
+    {symbol: "K", value: 1000.},
+    {symbol: "", value: 1.},
+  ]
+  |> List.find(x => x.value < value)
+  |> (
+    x =>
+      x.symbol
+      |> (
+        value /. x.value |> Js.Float.toFixedWithPrecision(~digits=2) |> (++)
+      )
+  );

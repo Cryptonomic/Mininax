@@ -1,4 +1,4 @@
-open DashboardStore;
+open DashboardStore.Types_;
 
 let json_of_magic = magic => magic |> Obj.magic |> Js.Json.object_;
 

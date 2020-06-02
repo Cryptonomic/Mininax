@@ -39,104 +39,116 @@ let make = () => {
     | None => (None, None)
     };
 
+  let hash =
+    switch (block.hash, latestBlockTime, latestBlockDate) {
+    | (Some(value), result1, result2) => Some((value, result1, result2))
+    | _ => None
+    };
+
+  let cyclyAndPeriod =
+    switch (block.meta_cycle, block.meta_voting_period) {
+    | (Some(meta_cycle), Some(meta_voting_period)) =>
+      Some((meta_cycle, meta_voting_period))
+    | _ => None
+    };
+
   <div className={leftTopContainer(theme)}>
-    <p>
+    <p className=inline>
       {"Greetings! The Tezos " |> str}
       <span className={networkContent(theme)}> {network |> str} </span>
-      <IfOption validator={block.meta_cycle}>
-        {" is now in cycle " |> str}
-        <span className={content1(theme)}>
-          {intl
-           ->Intl.formatNumber(
-               float_of_int(Helpers.optionToInt(block.meta_cycle)),
-             )
-           ->str}
-        </span>
-        {"." |> str}
+      <IfOption validator=cyclyAndPeriod>
+        {((meta_cycle, meta_voting_period)) =>
+           <>
+             {" is now in cycle " |> str}
+             <span className={content1(theme)}>
+               {intl->Intl.formatNumber(float_of_int(meta_cycle)) |> str}
+             </span>
+             {" and " |> str}
+             <span className={content1(theme)}>
+               {intl->Intl.formatNumber(float_of_int(meta_voting_period))
+                |> str}
+             </span>
+             {" period. " |> str}
+           </>}
       </IfOption>
     </p>
     <IfOption validator={blockinfo.blockCount}>
-      <p>
-        {"Within this cycle, " |> str}
-        <span className={content1(theme)}>
-          {intl->Intl.formatNumber(
-             float_of_int(Helpers.optionToInt(blockinfo.blockCount)),
-           )
-           ++ " of "
-           ++ intl->Intl.formatNumber(float_of_int(blocksPerCycle))
-           |> str}
-        </span>
-        {" blocks " |> str}
-        <span className={content1(theme)}>
-          {"("
-           ++ percentBaked(Helpers.optionToInt(blockinfo.blockCount))
-           ++ "%)"
-           |> str}
-        </span>
-        {" have been baked." |> str}
-      </p>
+      {value =>
+         <p className=inline>
+           {"Within this cycle, " |> str}
+           <span className={content1(theme)}>
+             {intl->Intl.formatNumber(float_of_int(value))
+              ++ " of "
+              ++ intl->Intl.formatNumber(float_of_int(blocksPerCycle))
+              |> str}
+           </span>
+           {" blocks " |> str}
+           <span className={content1(theme)}>
+             {"(" ++ percentBaked(value) ++ "%)" |> str}
+           </span>
+           {" have been baked." |> str}
+         </p>}
     </IfOption>
     <IfOption validator={blockinfo.bakersWithOutput}>
-      <p className=inline>
-        {" In the past day, there have been " |> str}
-        <span className={content1(theme)}>
-          {intl->Intl.formatNumber(
-             float_of_int(Helpers.optionToInt(blockinfo.bakersWithOutput)),
-           )
-           |> str}
-        </span>
-        {" bakers who've made block and" |> str}
-      </p>
+      {value =>
+         <p className=inline>
+           {" In the past day, there have been " |> str}
+           <span className={content1(theme)}>
+             {intl->Intl.formatNumber(float_of_int(value)) |> str}
+           </span>
+           {" bakers who've made block and" |> str}
+         </p>}
     </IfOption>
     <IfOption validator={blockinfo.zeroPriorityBlocks}>
-      <p>
-        <span className={content1(theme)}>
-          {intl->Intl.formatNumber(
-             float_of_int(Helpers.optionToInt(blockinfo.zeroPriorityBlocks)),
-           )
-           |> str}
-        </span>
-        {" zero priority blocks." |> str}
-      </p>
+      {value =>
+         <p>
+           <span className={content1(theme)}>
+             {intl->Intl.formatNumber(float_of_int(value)) |> str}
+           </span>
+           {" zero priority blocks." |> str}
+         </p>}
     </IfOption>
-    <IfOption validator={block.hash}>
-      <p className=inline> {"The latest block " |> str} </p>
-      <TextWithCopy
-        className={content1(theme)}
-        value={Helpers.optionToString(block.hash)}
-        isReverse=true
-      />
-      <IfOption validator={block.level}>
-        <p className=inline> {" at level " |> str} </p>
-        <span className={content1(theme)}>
-          {intl
-           ->Intl.formatNumber(
-               float_of_int(Helpers.optionToInt(block.level)),
-             )
-           ->str}
-        </span>
-      </IfOption>
-      <IfOption validator={block.baker}>
-        <p className=inline> {" was baked by " |> str} </p>
-        <TextWithCopy
-          className={content1(theme)}
-          value={Helpers.optionToString(block.baker)}
-          isReverse=true
-        />
-      </IfOption>
-      <IfOption validator=latestBlockTime>
-        <p className=inline> {" at " |> str} </p>
-        <span className={content1(theme)}>
-          {latestBlockTime |> Helpers.optionToString |> str}
-        </span>
-      </IfOption>
-      <IfOption validator=latestBlockDate>
-        <p className=inline> {" on " |> str} </p>
-        <span className={content1(theme)}>
-          {latestBlockDate |> Helpers.optionToString |> str}
-        </span>
-      </IfOption>
-      <p className=inline> {"." |> str} </p>
+    <IfOption validator=hash>
+      {((value, latestBlockTime, latestBlockDate)) =>
+         <>
+           <p className=inline> {"The latest block " |> str} </p>
+           <TextWithCopy className={content1(theme)} value isReverse=true />
+           <IfOption validator={block.level}>
+             {level =>
+                <>
+                  <p className=inline> {" at level " |> str} </p>
+                  <span className={content1(theme)}>
+                    {intl->Intl.formatNumber(float_of_int(level)) |> str}
+                  </span>
+                </>}
+           </IfOption>
+           <IfOption validator={block.baker}>
+             {baker =>
+                <>
+                  <p className=inline> {" was baked by " |> str} </p>
+                  <TextWithCopy
+                    className={content1(theme)}
+                    value=baker
+                    isReverse=true
+                  />
+                </>}
+           </IfOption>
+           <IfOption validator=latestBlockTime>
+             {time =>
+                <>
+                  <p className=inline> {" at " |> str} </p>
+                  <span className={content1(theme)}> {time |> str} </span>
+                </>}
+           </IfOption>
+           <IfOption validator=latestBlockDate>
+             {date =>
+                <>
+                  <p className=inline> {" on " |> str} </p>
+                  <span className={content1(theme)}> {date |> str} </span>
+                </>}
+           </IfOption>
+           <p className=inline> {"." |> str} </p>
+         </>}
     </IfOption>
   </div>;
 };

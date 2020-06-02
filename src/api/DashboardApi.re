@@ -1,4 +1,7 @@
-open DashboardStore;
+open DashboardStore.ApiReducers;
+open DashboardStore.Types_;
+open DashboardStore.Inits;
+
 open Decode;
 open Helpers;
 
@@ -102,7 +105,7 @@ module Fold = {
 module Calls = {
   let getNumBlocks =
       (~metaCycle: int, ~timestamp: float, ~config: MainType.config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForNumBlocks(metaCycle, timestamp),
       ~field="blocks",
       ~config,
@@ -119,7 +122,7 @@ module Calls = {
       );
 
   let getAmountAndContracts = (~timestamp, ~config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForTransactionStats(timestamp),
       ~field="operations",
       ~config,
@@ -137,7 +140,7 @@ module Calls = {
       );
 
   let getFundraiserStats = (~timestamp, ~config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForFundraiserStats(timestamp),
       ~field="operations",
       ~config,
@@ -155,7 +158,7 @@ module Calls = {
       );
 
   let getQuorumInfo = (~hash: string, ~config: MainType.config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForQuorum(hash),
       ~field="blocks",
       ~config,
@@ -174,7 +177,7 @@ module Calls = {
 
   let getVoteInfo =
       (~hash: string, ~active_proposal: string, ~config: MainType.config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForVotingStats(hash, active_proposal),
       ~field="governance",
       ~config,
@@ -191,7 +194,7 @@ module Calls = {
       );
 
   let getSumStakingBalance = (~config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForBakerStats(),
       ~field="delegates",
       ~config,
@@ -209,7 +212,7 @@ module Calls = {
       );
 
   let getSumTez = (~config) =>
-    ApiCall.getForQueryApi(
+    GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForMarketCap(),
       ~field="accounts",
       ~config,
@@ -411,30 +414,37 @@ module Calls = {
 module Thunk = {
   open Calls;
   open Fold;
+  let getProposalsInfoThunk = (~metaCycle: int, ~config: MainType.config) =>
+    ConseiljsRe.ConseilDataClient.executeEntityQuery
+    ->applyTuple3(~tuple=Utils.getInfo(config))
+    ->applyField(~field="operations")
+    ->applyQuery(~query=Queries.getQueryForProposalInfo(metaCycle))
+    ->FutureJs.fromPromise(_err => None)
+    ->Future.map(
+        fun
+        | Ok(proposalStats) when proposalStats |> Array.length > 0 =>
+          proposalStats |> json_of_magic |> parseProposalsInfo |> toOption
+        | Ok(_) => Some([||])
+        | _err => None,
+      );
 
-  let getBlockInfoThunk =
-      (
-        ~callback,
-        ~metaCycle: int,
-        ~timestamp: float,
-        ~config: MainType.config,
-      ) => {
-    let startDate =
-      timestamp
-      |> MomentRe.momentWithTimestampMS
-      |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
-      |> MomentRe.Moment.valueOf;
+  let getGovernanceProcessInfoThunk =
+      (~hash: string, ~active_proposal: string, ~config: MainType.config) =>
     Future.all([
-      getNumBlocks(~metaCycle, ~timestamp, ~config),
-      getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
-      getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
+      getQuorumInfo(~hash, ~config),
+      getVoteInfo(~hash, ~active_proposal, ~config),
     ])
-    ->Future.map(reduceBlockInfo)
-    ->Future.get(callback);
-  };
+    ->Future.map(reduceGevernanceInfo);
 
-  let getTotalsInfoThunk =
-      (~callback, ~timestamp: float, ~config: MainType.config) => {
+  let getBakersInfoThunk = (~config: MainType.config) =>
+    Future.all([
+      getSumStakingBalance(~config),
+      getTop3Bakers(~config),
+      getSumTez(~config),
+    ])
+    ->Future.map(reduceBakersInfo);
+
+  let getTotalsInfoThunk = (~timestamp: float, ~config: MainType.config) => {
     let startDate =
       timestamp
       |> MomentRe.momentWithTimestampMS
@@ -451,46 +461,21 @@ module Thunk = {
       getLastDayTransactions(~startDate, ~endDate=timestamp, ~config),
       getLastDayOriginationAndReveal(~startDate, ~endDate=timestamp, ~config),
     ])
-    ->Future.map(reduceTotalsInfo)
-    ->Future.get(callback);
+    ->Future.map(reduceTotalsInfo);
   };
 
-  let getProposalsInfoThunk =
-      (~callback, ~metaCycle: int, ~config: MainType.config) =>
-    ConseiljsRe.ConseilDataClient.executeEntityQuery
-    ->applyTuple3(~tuple=Utils.getInfo(config))
-    ->applyField(~field="operations")
-    ->applyQuery(~query=Queries.getQueryForProposalInfo(metaCycle))
-    ->FutureJs.fromPromise(_err => None)
-    ->Future.map(
-        fun
-        | Ok(proposalStats) when proposalStats |> Array.length > 0 =>
-          proposalStats |> json_of_magic |> parseProposalsInfo |> toOption
-        | Ok(_) => Some([||])
-        | _err => None,
-      )
-    ->Future.get(callback);
-
-  let getGovernanceProcessInfoThunk =
-      (
-        ~callback,
-        ~hash: string,
-        ~active_proposal: string,
-        ~config: MainType.config,
-      ) =>
+  let getBlockInfoThunk =
+      (~metaCycle: int, ~timestamp: float, ~config: MainType.config) => {
+    let startDate =
+      timestamp
+      |> MomentRe.momentWithTimestampMS
+      |> MomentRe.Moment.subtract(~duration=MomentRe.duration(1., `days))
+      |> MomentRe.Moment.valueOf;
     Future.all([
-      getQuorumInfo(~hash, ~config),
-      getVoteInfo(~hash, ~active_proposal, ~config),
+      getNumBlocks(~metaCycle, ~timestamp, ~config),
+      getLastDayZeroPriorityBlocks(~startDate, ~endDate=timestamp, ~config),
+      getLastDayBakersWithOutput(~startDate, ~endDate=timestamp, ~config),
     ])
-    ->Future.map(reduceGevernanceInfo)
-    ->Future.get(callback);
-
-  let getBakersInfoThunk = (~callback, ~config: MainType.config) =>
-    Future.all([
-      getSumStakingBalance(~config),
-      getTop3Bakers(~config),
-      getSumTez(~config),
-    ])
-    ->Future.map(reduceBakersInfo)
-    ->Future.get(callback);
+    ->Future.map(reduceBlockInfo);
+  };
 };
