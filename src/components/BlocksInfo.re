@@ -45,7 +45,7 @@ let make = () => {
     | _ => None
     };
 
-  let cyclyAndPeriod =
+  let cycleAndPeriod =
     switch (block.meta_cycle, block.meta_voting_period) {
     | (Some(meta_cycle), Some(meta_voting_period)) =>
       Some((meta_cycle, meta_voting_period))
@@ -56,19 +56,14 @@ let make = () => {
     <p className=inline>
       {"Greetings! The Tezos " |> str}
       <span className={networkContent(theme)}> {network |> str} </span>
-      <IfOption validator=cyclyAndPeriod>
+      <IfOption validator=cycleAndPeriod>
         {((meta_cycle, meta_voting_period)) =>
            <>
              {" is now in cycle " |> str}
              <span className={content1(theme)}>
                {intl->Intl.formatNumber(float_of_int(meta_cycle)) |> str}
              </span>
-             {" and " |> str}
-             <span className={content1(theme)}>
-               {intl->Intl.formatNumber(float_of_int(meta_voting_period))
-                |> str}
-             </span>
-             {" period. " |> str}
+             {". " |> str}
            </>}
       </IfOption>
     </p>
@@ -80,33 +75,32 @@ let make = () => {
              {intl->Intl.formatNumber(float_of_int(value))
               ++ " of "
               ++ intl->Intl.formatNumber(float_of_int(blocksPerCycle))
+              ++ " ("
+              ++ percentBaked(value)
+              ++ "%)"
               |> str}
            </span>
-           {" blocks " |> str}
-           <span className={content1(theme)}>
-             {"(" ++ percentBaked(value) ++ "%)" |> str}
-           </span>
-           {" have been baked." |> str}
+           {" blocks have been baked." |> str}
          </p>}
     </IfOption>
     <IfOption validator={blockinfo.bakersWithOutput}>
       {value =>
-         <p className=inline>
-           {" In the past day, there have been " |> str}
+         <span>
+           {" In the past day, " |> str}
            <span className={content1(theme)}>
              {intl->Intl.formatNumber(float_of_int(value)) |> str}
            </span>
-           {" bakers who've made block and" |> str}
-         </p>}
+           {" blocks were baked of which " |> str}
+         </span>}
     </IfOption>
     <IfOption validator={blockinfo.zeroPriorityBlocks}>
       {value =>
-         <p>
+         <span>
            <span className={content1(theme)}>
              {intl->Intl.formatNumber(float_of_int(value)) |> str}
            </span>
-           {" zero priority blocks." |> str}
-         </p>}
+           {" have priority zero. " |> str}
+         </span>}
     </IfOption>
     <IfOption validator=hash>
       {((value, latestBlockTime, latestBlockDate)) =>
