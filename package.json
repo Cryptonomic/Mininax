@@ -1,6 +1,6 @@
 {
   "name": "mininax",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "scripts": {
     "build": "bsb -make-world",
     "start": "bsb -make-world -w",
@@ -49,7 +49,7 @@
     "url-loader": "2.1.0",
     "webpack": "4.41.2",
     "webpack-cli": "3.3.10",
-    "webpack-dev-server": "3.9.0"
+    "webpack-dev-server": "^3.11.0"
   },
   "engines": {
     "node": ">=10.17.x",
