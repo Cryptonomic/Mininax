@@ -425,15 +425,10 @@ let getQueryForBakersWithOutput = (startDate: float, endDate: float) =>
       ~type_=ConseiljsType.BETWEEN,
       ~aggrSetType=`Float([|startDate, endDate|]),
     )
-  ->labelAddPredicate(
-      ~field="level",
-      ~type_=ConseiljsType.GT,
-      ~aggrSetType=`Int([|0|]),
-    )
   ->labelAddAggregationFunction(~field="level", ~aggType=ConseiljsType.COUNT)
   ->labelAddAggregationFunction(~field="baker", ~aggType=ConseiljsType.COUNT)
   ->addOrdering("count_level", ConseiljsType.DESC)
-  ->setLimit(3);
+  ->setLimit(1);
 
 let getQueryForOriginationAndRevealLastDay =
     (startDate: float, endDate: float) =>
