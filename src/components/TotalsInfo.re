@@ -94,18 +94,6 @@ let make = () => {
              {" while " |> str}
            </If>}
       </IfOption>
-      <IfOption validator={info.countOriginatedContracts}>
-        {countOriginatedContracts =>
-           <If validator={countOriginatedContracts > 0}>
-             <span className={DashboardStyles.content3(theme)}>
-               {intl->Intl.formatNumber(
-                  float_of_int(optionToInt(info.countOriginatedContracts)),
-                )
-                |> str}
-             </span>
-             {" contracts were deployed, " |> str}
-           </If>}
-      </IfOption>
       <IfOption validator={info.fundraiserCount}>
         {value =>
            <If validator={value > 0}>
