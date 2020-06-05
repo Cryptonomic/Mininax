@@ -34,6 +34,13 @@ let make = () => {
     | None => None
     };
 
+  let cycleAndPeriod =
+    switch (block.meta_cycle, block.meta_voting_period) {
+    | (Some(meta_cycle), Some(meta_voting_period)) =>
+      Some((meta_cycle, meta_voting_period))
+    | _ => None
+    };
+
   let (rightTitle, proposalsTitle) =
     switch (block.period_kind, proposals) {
     | (Some("proposal"), Some(arr)) when arr |> Array.length == 0 => (
@@ -69,13 +76,23 @@ let make = () => {
         (
           value =>
             <>
-              {" phase of the governance process, that is in " |> str}
+              {" phase of the governance process, that is in cycle " |> str}
               <span className={content1(theme)}>
                 {
-                  intl->Intl.formatNumber(float_of_int(value)) ++ "/16" |> str
+                  intl->Intl.formatNumber(float_of_int(value)) ++ " of 16" |> str
                 }
               </span>
-              {" cycle." |> str}
+              <IfOption validator=cycleAndPeriod>
+                {((meta_cycle, meta_voting_period)) =>
+                  <>
+                    {" of period " |> str}
+                    <span className={content1(theme)}>
+                      {intl->Intl.formatNumber(float_of_int(meta_voting_period))
+                      |> str}
+                    </span>
+                  </>}
+              </IfOption>
+              {"." |> str}
             </>,
           <> {" phase of the governance process." |> str} </>,
         )

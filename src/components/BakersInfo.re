@@ -76,9 +76,9 @@ let make = () => {
               </span>
               {" or " |> str}
               <span className={networkContent(theme)}>
-                {"(" ++ percent ++ "%)" |> str}
+                {percent ++ "%" |> str}
               </span>
-              {" of TEZ, is being staked right now." |> str}
+              {" of XTZ, is being staked right now." |> str}
             </p>
         }
       </IfOption>

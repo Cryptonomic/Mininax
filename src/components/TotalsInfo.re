@@ -94,18 +94,6 @@ let make = () => {
              {" while " |> str}
            </If>}
       </IfOption>
-      <IfOption validator={info.countOriginatedContracts}>
-        {countOriginatedContracts =>
-           <If validator={countOriginatedContracts > 0}>
-             <span className={DashboardStyles.content3(theme)}>
-               {intl->Intl.formatNumber(
-                  float_of_int(optionToInt(info.countOriginatedContracts)),
-                )
-                |> str}
-             </span>
-             {" accounts were originated, " |> str}
-           </If>}
-      </IfOption>
       <IfOption validator={info.fundraiserCount}>
         {value =>
            <If validator={value > 0}>
@@ -124,7 +112,7 @@ let make = () => {
              <span className={DashboardStyles.content3(theme)}>
                {intl->Intl.formatNumber(float_of_int(value)) |> str}
              </span>
-             {" were revealed" |> str}
+             {" keys were revealed" |> str}
            </If>}
       </IfOption>
       <IfOption validator=reveals>
@@ -148,7 +136,7 @@ let make = () => {
              <span className={DashboardStyles.content3(theme)}>
                {value ++ " XTZ" |> str}
              </span>
-             {" in fees have been paid out and " |> str}
+             {" in fees have been spent and " |> str}
            </If>}
       </IfOption>
       <IfOption validator=consumedGas>
@@ -182,11 +170,14 @@ let make = () => {
       <IfOption validator={info.storageDelta}>
         {value =>
            <If validator={value > 0}>
-             {" The last 24 h storage delta is " |> str}
+             {" Finally, " |> str}
              <span className={DashboardStyles.content3(theme)}>
-               {intl->Intl.formatNumber(float_of_int(value)) |> str}
+               {
+                   intl->Intl.formatNumber(float_of_int(value) /. 1000.0)
+                   ++ " XTZ"
+                   |> str}
              </span>
-             {"." |> str}
+             {" was spent on storage." |> str}
            </If>}
       </IfOption>
     </p>
