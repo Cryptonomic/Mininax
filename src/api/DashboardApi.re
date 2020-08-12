@@ -196,7 +196,7 @@ module Calls = {
   let getSumStakingBalance = (~config) =>
     GlobalApi.getForQueryApi(
       ~query=Queries.getQueryForBakerStats(),
-      ~field="delegates",
+      ~field="bakers",
       ~config,
     )
     ->Future.map(

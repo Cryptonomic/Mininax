@@ -38,13 +38,13 @@ module ReturningPromise = {
   let getAccountBakerThunk = (~id: string, ~config: MainType.config) =>
     ConseiljsRe.ConseilDataClient.executeEntityQuery
     ->applyTuple3(~tuple=Utils.getInfo(config))
-    ->applyField(~field="delegates")
+    ->applyField(~field="bakers")
     ->applyQuery(~query=Queries.getQueryForBakerInfo(id))
     ->FutureJs.fromPromise(_err => None)
     ->Future.flatMap(
         fun
-        | Ok(delegates) when delegates |> Js.Array.length > 0 =>
-          Future.value(Some(delegates[0]))
+        | Ok(bakers) when bakers |> Js.Array.length > 0 =>
+          Future.value(Some(bakers[0]))
         | _err => Future.value(None),
       );
 
