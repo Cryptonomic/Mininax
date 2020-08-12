@@ -96,7 +96,7 @@ let make = () => {
         switch (url.path) {
         | [network, entity, id] => goToPage(network, entity, id)
         | [network] => goToNetwork(network)
-        | _ => goToMainPage(configs[state.selectedConfig].network)
+        | _ => goToMainPage(configs[state.selectedConfig].network);
         }
       };
       None;
@@ -104,7 +104,7 @@ let make = () => {
     [|state.inited, state.selectedConfig|],
   );
 
-  <ReactIntl.IntlProvider key="en" locale="en">
+  <ReactIntl.IntlProvider key={lang || 'en'}  locale={lang || 'en'}>
     <ContextProvider value={state.selectedConfig}>
       <div
         className={Style.container(state.selectedConfig)}

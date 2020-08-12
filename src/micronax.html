@@ -19,7 +19,7 @@
      /* ======= various utility functions =======*/
 
      async function getBlock(blockid) {
-	 block = (blockid == "head") ? 
+	 block = (blockid == "head") ?
 		 await conseiljs.TezosConseilClient.getBlockHead(conseilServer, network) :
 		 await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
 	 return block
@@ -64,12 +64,12 @@
 	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'block_hash', conseiljs.ConseilOperator.EQ, [hash], false);
 	 votingQuery = conseiljs.ConseilQueryBuilder.addPredicate(votingQuery, 'proposal_hash', conseiljs.ConseilOperator.EQ, [proposal], false);
 	 const votingStats = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'governance', votingQuery);
-	 
+
 	 let voteInfo = votingStats[0]
 	 voteInfo['expected_quorum'] = expectedQuorum
 	 return voteInfo
      }
-     
+
      function convertFromUtezToTez(amountInUtez) {
 	 const tezAmount = amountInUtez / 1000000
 	 return tezAmount
@@ -117,7 +117,7 @@
          document.getElementById("block_governance_period").innerHTML = block.period_kind
          document.getElementById("block_active_proposal").innerHTML = block.active_proposal
          document.getElementById("block_signature").innerHTML = block.signature
-	 
+
      }
 
      async function updateAccount(accountid) {
@@ -132,9 +132,9 @@
 
 
      /* ==========================================================
-	The following functions get the stats for the previous day 
-        The current day can be specified by a block hash 
-	(from onclick)     
+	The following functions get the stats for the previous day
+        The current day can be specified by a block hash
+	(from onclick)
 	========================================================== */
 
      async function updateTransactions(operationid) {
@@ -154,7 +154,7 @@
 	 document.getElementById("transaction_parameter").innerHTML = firstTransaction.parameters
 	 document.getElementById("transaction_status").innerHTML = firstTransaction.status
      }
-     
+
      async function updateNetworkStats(blockid) {
 	 const latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
 	 const latestBlockHash = latestBlock.hash;
@@ -207,7 +207,7 @@
 	 document.getElementById("transactions_num").innerHTML = transactions[0].count_amount
 	 document.getElementById("transactions_total_xtz").innerHTML = convertFromUtezToTez(transactions[0].sum_amount).toFixed(2)
 	 document.getElementById("accounts_activated_num").innerHTML = transactions[0].count_originated_contracts
-	 
+
      }
 
      async function updateFundraiserStats(blockid) {
@@ -252,7 +252,7 @@
      async function updateGovernanceStats(blockid) {
 	 const latestBlock = await conseiljs.TezosConseilClient.getBlock(conseilServer, network, blockid)
 	 const periodKind = latestBlock.period_kind;
-	 
+
 	 if (periodKind == "proposal") {
 	     setProposalInfo(latestBlock.meta_cycle);
 	 }
@@ -267,7 +267,7 @@
 	     setPromotionVoteInfo(latestBlock.hash, latestBlock.active_proposal);
 	 }
      }
-     
+
 
      /* ============================================================
 	The following functions set the governance tag appropriately
@@ -288,7 +288,7 @@
 	 if (proposalStats.length == 0) {
 	     document.getElementById('governance_info').innerHTML = 'There are no active proposals';
 	 }
-	 else { 
+	 else {
 	     for (proposal of proposalStats) {
 		 output += proposal.proposal + ' ' + proposal.count_operation_group_hash;
 	     }
@@ -318,7 +318,7 @@
 
 	 document.getElementById('governance_info').innerHTML = output;
      }
-     
+
      async function setPromotionVoteInfo(hash, proposal) {
 	 document.getElementById('phase').innerHTML = 'promotion vote';
 	 let output = 'The active proposal is: <br>';
@@ -403,7 +403,7 @@
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addPredicate(bakerQuery, 'deactivated', conseiljs.ConseilOperator.EQ, ['false'], false);
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'pkh', 'count');
 	 bakerQuery = conseiljs.ConseilQueryBuilder.addAggregationFunction(bakerQuery, 'staking_balance', 'sum');
-	 const numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'delegates', bakerQuery);
+	 const numBakers = await conseiljs.ConseilDataClient.executeEntityQuery(conseilServer, platform, network, 'bakers', bakerQuery);
 
 	 const totalTez = await getMarketCap();
 
@@ -427,7 +427,7 @@
      }
 
 
-     
+
     </script>
 
 
@@ -557,7 +557,7 @@
             <td id="transaction_status"></td>
         </tr>
 	</tbody></table>
-    
+
     <br>
     <hr>
     <br>
@@ -572,7 +572,7 @@
     </p>
 
     <h3> Transaction Info </h3>
-    
+
     <p>
 	In the past day there have been  <strong id="transactions_num">____</strong> transactions for a total of  <strong id="transactions_total_xtz">____</strong> <br>
 	while <strong id="accounts_activated_num">____</strong>  accounts were originated and <strong id="fundraisers_activated">____</strong> fundraiser <br> accounts were activated. A total of <strong id="fees_sum">____</strong> in fees <br> have been paid out while a total of <strong id="consumed_gas_sum">____</strong> <br> in gas has been consumed. <br> <br>
@@ -584,8 +584,8 @@
 	We are currently in the <strong id="phase">____</strong> phase of the governance process.
 	<p id="governance_info">___ </p>
     </p>
-    
-    
+
+
     <h3> Baker Info </h3>
     There are <strong id="num_bakers">____</strong> active bakers. A total of <strong id="tez_staked">____</strong> out of <strong id="total_tez"></strong> <br>
     i.e <strong id="percent_staked"> </strong> % is being staked right now.
