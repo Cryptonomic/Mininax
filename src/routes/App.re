@@ -105,7 +105,7 @@ let make = () => {
     [|state.inited, state.selectedConfig|],
   );
 
-  <ReactIntl.IntlProvider key={ lang || 'en' }  locale={lang || 'en'}>
+  <ReactIntl.IntlProvider key={ lang || "en" }  locale={lang || "en"}>
     <ContextProvider value={state.selectedConfig}>
       <div
         className={Style.container(state.selectedConfig)}
