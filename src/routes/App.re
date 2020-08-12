@@ -96,7 +96,8 @@ let make = () => {
         switch (url.path) {
         | [network, entity, id] => goToPage(network, entity, id)
         | [network] => goToNetwork(network)
-        | _ => goToMainPage(configs[state.selectedConfig].network)
+        | _ =>
+          goToMainPage(configs[state.selectedConfig].network);
         }
       };
       None;
