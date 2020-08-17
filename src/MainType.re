@@ -42,7 +42,6 @@ type tezosBlock = {
   consumed_gas: option(int),
   context: option(string),
   current_expected_quorum: option(int),
-  expected_commitment: option(bool),
   fitness: option(string),
   hash: option(string),
   level: option(int),
@@ -52,7 +51,6 @@ type tezosBlock = {
   meta_level_position: option(int),
   meta_voting_period: option(int),
   meta_voting_period_position: option(int),
-  nonce_hash: option(string),
   operations_hash: option(string),
   period_kind: option(string),
   predecessor: option(string),
@@ -65,7 +63,6 @@ type tezosBlock = {
   utc_month: option(int),
   utc_time: option(string),
   utc_year: option(int),
-  validation_pass: option(int),
 };
 
 let initTezosBlock = {
@@ -75,7 +72,6 @@ let initTezosBlock = {
   consumed_gas: None,
   context: None,
   current_expected_quorum: None,
-  expected_commitment: None,
   fitness: None,
   hash: None,
   level: None,
@@ -85,7 +81,6 @@ let initTezosBlock = {
   meta_level_position: None,
   meta_voting_period: None,
   meta_voting_period_position: None,
-  nonce_hash: None,
   operations_hash: None,
   period_kind: None,
   predecessor: None,
@@ -98,5 +93,4 @@ let initTezosBlock = {
   utc_month: None,
   utc_time: None,
   utc_year: None,
-  validation_pass: None,
 };

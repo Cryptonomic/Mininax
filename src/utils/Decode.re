@@ -92,8 +92,6 @@ let parseLatestBlock = (json): MainType.tezosBlock =>
       json
       |> field("current_expected_quorum", nullable(int))
       |> Js.nullToOption,
-    expected_commitment:
-      json |> field("expected_commitment", nullable(bool)) |> Js.nullToOption,
     fitness: json |> field("fitness", nullable(string)) |> Js.nullToOption,
     hash: json |> field("hash", nullable(string)) |> Js.nullToOption,
     level: json |> field("level", nullable(int)) |> Js.nullToOption,
@@ -111,8 +109,6 @@ let parseLatestBlock = (json): MainType.tezosBlock =>
       json
       |> field("meta_voting_period_position", nullable(int))
       |> Js.nullToOption,
-    nonce_hash:
-      json |> field("nonce_hash", nullable(string)) |> Js.nullToOption,
     operations_hash:
       json |> field("operations_hash", nullable(string)) |> Js.nullToOption,
     period_kind:
@@ -132,8 +128,6 @@ let parseLatestBlock = (json): MainType.tezosBlock =>
     utc_month: json |> field("utc_month", nullable(int)) |> Js.nullToOption,
     utc_time: json |> field("utc_time", nullable(string)) |> Js.nullToOption,
     utc_year: json |> field("utc_year", nullable(int)) |> Js.nullToOption,
-    validation_pass:
-      json |> field("validation_pass", nullable(int)) |> Js.nullToOption,
   };
 
 let parseAmountAndContracts = (json): amountAndContracts =>
