@@ -37,11 +37,13 @@ module.exports = {
       template: 'index.html',
       inject: false
     }),
-    new CopyPlugin([
-      { from: 'assets/fonts', to: 'assets/fonts' },
-      { from: 'assets/favicon.ico', to: 'assets/favicon.ico' },
-      { from: 'assets/style.css', to: 'assets/style.css' }
-    ])
+    new CopyPlugin({
+      patterns: [
+        { from: 'assets/fonts', to: 'assets/fonts' },
+        { from: 'assets/favicon.ico', to: 'assets/favicon.ico' },
+        { from: 'assets/style.css', to: 'assets/style.css' }
+      ]
+    })
   ],
   devServer: {
     compress: true,
