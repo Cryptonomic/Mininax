@@ -25,7 +25,7 @@ module Types_ = {
     sumFee: int,
     storageDelta: int,
     sumConsumedGas: int,
-    countOperationGroupHash: string,
+    countOperationGroupHash: int,
   };
 
   type latestGovernance = {

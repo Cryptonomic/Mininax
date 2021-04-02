@@ -142,9 +142,9 @@ let getForQueryApi = (~query, ~field: string, ~config: MainType.config) =>
   ->applyField(~field)
   ->applyQuery(~query)
   ->FutureJs.fromPromise(_err => None)
-  ->Future.flatMap(
+  ->Future.map(
       fun
       | Ok(value) when value |> Js.Array.length > 0 =>
-        value[0] |> toOption |> Future.value
-      | _ => None |> Future.value,
+        value[0] |> toOption
+      | _ => None,
     );

@@ -4,18 +4,15 @@ let json_of_magic = magic => magic |> Obj.magic |> Js.Json.object_;
 
 let countedTransactions = json =>
   json
-  |> Json.Decode.field("count_operation_group_hash", Json.Decode.string)
-  |> int_of_string;
+  |> Json.Decode.field("count_operation_group_hash", Json.Decode.int);
 
 let countedZeroPriorityBlocksLevels = json =>
   json
-  |> Json.Decode.field("count_level", Json.Decode.string)
-  |> int_of_string;
+  |> Json.Decode.field("count_level", Json.Decode.int)
 
 let countedBaker = json =>
   json
-  |> Json.Decode.field("count_baker", Json.Decode.string)
-  |> int_of_string;
+  |> Json.Decode.field("count_baker", Json.Decode.int)
 
 type originationKind =
   | Reveal
@@ -37,7 +34,7 @@ type originationAndReveals = {
 let countOriginationsAndReveals = json =>
   Json.Decode.{
     countOperation:
-      json |> field("count_operation_group_hash", string) |> int_of_string,
+      json |> field("count_operation_group_hash", int),
     kind:
       json
       |> field("kind", string)
@@ -62,7 +59,7 @@ let countOriginationsAndReveals = json =>
 
 let parseBaker = json =>
   Json.Decode.{
-    countAccountId: json |> field("count_account_id", string),
+    countAccountId: json |> field("count_account_id", int) |> string_of_int,
     sumBalance: json |> field("sum_balance", int),
     delegateValue: json |> field("delegate_value", string),
   };
@@ -73,11 +70,11 @@ let getStorageDelta = json =>
     storageDelta: json |> field("sum_paid_storage_size_diff", int),
     sumConsumedGas: json |> field("sum_consumed_gas", int),
     countOperationGroupHash:
-      json |> field("count_operation_group_hash", string),
+      json |> field("count_operation_group_hash", int),
   };
 
 let parseBlockCount = json =>
-  json |> Json.Decode.field("count_hash", Json.Decode.string) |> int_of_string;
+  json |> Json.Decode.field("count_hash", Json.Decode.int);
 
 let parseLatestBlock = (json): MainType.tezosBlock =>
   Json.Decode.{
@@ -135,20 +132,17 @@ let parseAmountAndContracts = (json): amountAndContracts =>
     sumAmount: json |> field("sum_amount", int) |> Helpers.toOption,
     countAmount:
       json
-      |> field("count_amount", string)
-      |> int_of_string
+      |> field("count_amount", int)
       |> Helpers.toOption,
     countOriginatedContracts:
       json
-      |> field("count_originated_contracts", string)
-      |> int_of_string
+      |> field("count_originated_contracts", int)
       |> Helpers.toOption,
   };
 
 let parseFundraiserStats = json => {
   json
-  |> Json.Decode.field("count_kind", Json.Decode.string)
-  |> int_of_string
+  |> Json.Decode.field("count_kind", Json.Decode.int)
   |> Helpers.toOption;
 };
 
@@ -167,7 +161,7 @@ let parseSumFeeAndGas = json =>
 let parseProposalInfo = json =>
   Json.Decode.{
     count_operation_group_hash:
-      json |> field("count_operation_group_hash", string) |> int_of_string,
+      json |> field("count_operation_group_hash", int),
     proposal: json |> field("proposal", nullable(string)) |> Js.nullToOption,
   };
 
