@@ -31,7 +31,7 @@
     "bs-moment-timezone": "0.6.0",
     "bs-react-intl": "1.0.0",
     "conseiljs": "0.4.3",
-    "moment": "2.27.0",
+    "moment": "2.29.4",
     "react": "16.8.1",
     "react-dom": "16.8.1",
     "react-intl": "3.0.0-beta-8",
